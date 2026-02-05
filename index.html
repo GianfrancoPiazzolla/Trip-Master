@@ -48,7 +48,7 @@
             border: 1px solid var(--border-color); flex-shrink: 0;
         }
 
-        .grid-stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; flex-shrink: 0; }
+        .grid-stats { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; flex-shrink: 0; }
         .stat-card { background: var(--card-bg); padding: 8px 4px; border-radius: 8px; border-bottom: 3px solid var(--primary); text-align: center; border: 1px solid var(--border-color); border-bottom-width: 3px; }
         .stat-label { font-size: 0.75rem; color: var(--label-color); text-transform: uppercase; display: block; }
         .stat-value { font-size: 0.85rem; font-weight: bold; }
@@ -149,10 +149,12 @@
 
     <div class="grid-stats">
         <div class="stat-card" style="border-bottom-color: var(--secondary);"><span class="stat-label">Trip Distance</span><span class="stat-value" id="distDisplay">0.00 Km</span></div>
+        <div class="stat-card" style="border-bottom-color: var(--secondary);"><span class="stat-label">Average Speed</span><span class="stat-value" id="avgSpeedDisplay">0.0 Km/h</span></div>
+        <div class="stat-card" style="border-bottom-color: var(--danger);"><span class="stat-label">Wh/Km</span><span class="stat-value" id="consDisplay">--</span></div>
         <div class="stat-card" style="border-bottom-color: var(--warning);"><span class="stat-label">Altitude</span><span class="stat-value" id="altDisplay">-- m</span></div>
         <div class="stat-card" style="border-bottom-color: var(--warning);"><span class="stat-label">Grade</span><span class="stat-value" id="gradeDisplay">0%</span></div>
-        <div class="stat-card" style="border-bottom-color: var(--primary);"><span class="stat-label">Regenerative Braking</span><span class="stat-value" id="regenDisplay">0 Wh</span></div>
-        <div class="stat-card" style="border-bottom-color: var(--danger);"><span class="stat-label">Wh/Km (Instantaneous)</span><span class="stat-value" id="consDisplay">--</span></div>
+        <div class="stat-card" style="border-bottom-color: var(--primary);"><span class="stat-label">Brake Regen</span><span class="stat-value" id="regenDisplay">0 Wh</span></div>
+
     </div>
 
     <div class="main-display">
@@ -174,6 +176,7 @@
 
 <script>
     let watchId = null, totalDistance = 0, totalRegenWh = 0, totalConsumedWh = 0, lastPoint = null, map, pathLine, altChart, consChart, energyChart;
+    let startTime = null;
     let currentTheme = 'light';
 
     function initializeSystem() {
@@ -214,7 +217,15 @@
     function setupCharts() {
         const commonOptions = {
             responsive: true, maintainAspectRatio: false,
-            scales: { x: { display: false }, y: { ticks: { font: { size: 9 } } } },
+            scales: { 
+                x: { 
+                    type: 'linear',
+                    display: true, 
+                    title: { display: true, text: 'Distance (Km)', font: { size: 9 } },
+                    ticks: { font: { size: 8 } }
+                }, 
+                y: { ticks: { font: { size: 9 } } } 
+            },
             plugins: { legend: { display: true, labels: { boxWidth: 8, font: { size: 10 } } } }
         };
 
@@ -233,7 +244,6 @@
         energyChart = new Chart(document.getElementById('energyBalanceChart').getContext('2d'), {
             type: 'bar',
             data: {
-                labels: ['Consumed', 'Regenerative Braking'],
                 datasets: [
                     { label: 'Consumed (Wh)', data: [0], backgroundColor: '#e74c3c' },
                     { label: 'Recovered (Wh)', data: [0], backgroundColor: '#2ecc71' }
@@ -256,6 +266,8 @@
         const color = isDark ? '#aaaaaa' : '#666';
         [altChart, consChart, energyChart].forEach(chart => {
             if(chart.options.scales.y.ticks) chart.options.scales.y.ticks.color = color;
+            if(chart.options.scales.x.ticks) chart.options.scales.x.ticks.color = color;
+            if(chart.options.scales.x.title) chart.options.scales.x.title.color = color;
             if(chart.options.plugins.legend.labels) chart.options.plugins.legend.labels.color = color;
             chart.update();
         });
@@ -266,6 +278,7 @@
         document.getElementById('btnStart').classList.add('active');
         document.getElementById('btnStop').disabled = false;
         document.getElementById('status').innerText = "● LIVE RECORDING ACTIVE";
+        startTime = Date.now();
         watchId = navigator.geolocation.watchPosition(updateLocation, null, { enableHighAccuracy: true });
     }
 
@@ -289,7 +302,10 @@
                 const grade = (deltaAlt / step) * 100;
                 const instantCons = calculatePhysics(step, deltaAlt, grade);
                 
-                refreshUI(totalDistance, currentAlt, grade, instantCons);
+                const elapsedHours = (Date.now() - startTime) / 3600000;
+                const avgSpeed = (totalDistance / 1000) / elapsedHours;
+
+                refreshUI(totalDistance, currentAlt, grade, instantCons, avgSpeed);
                 pathLine.addLatLng([latitude, longitude]);
                 map.panTo([latitude, longitude]);
                 updateCharts(totalDistance, currentAlt, instantCons);
@@ -330,8 +346,9 @@
         return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
     }
 
-    function refreshUI(dist, alt, grade, cons) {
+    function refreshUI(dist, alt, grade, cons, avgSpeed) {
         document.getElementById('distDisplay').innerText = (dist / 1000).toFixed(2) + " Km";
+        document.getElementById('avgSpeedDisplay').innerText = avgSpeed.toFixed(1) + " Km/h";
         document.getElementById('altDisplay').innerText = alt.toFixed(0) + " m";
         document.getElementById('gradeDisplay').innerText = grade.toFixed(1) + "%";
         document.getElementById('consDisplay').innerText = cons + " Wh/Km";
@@ -339,10 +356,11 @@
     }
 
     function updateCharts(dist, alt, cons) {
-        altChart.data.datasets[0].data.push({x: dist, y: alt});
-        consChart.data.datasets[0].data.push({x: dist, y: cons});
+        const distKm = parseFloat((dist / 1000).toFixed(3));
+        altChart.data.datasets[0].data.push({x: distKm, y: alt});
+        consChart.data.datasets[0].data.push({x: distKm, y: cons});
         
-        // Update Bar Chart con i dati accumulati
+        // Update Bar Chart with accumulated data
         energyChart.data.datasets[0].data = [totalConsumedWh];
         energyChart.data.datasets[1].data = [totalRegenWh];
         
