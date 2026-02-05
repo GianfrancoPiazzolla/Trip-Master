@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Trip Master</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        :root {
+            --primary: #2ecc71; --secondary: #3498db; --danger: #e74c3c;
+            --warning: #f39c12; --tesla-red: #e21017; 
+            --bg-color: #f5f5f7; --card-bg: #ffffff; 
+            --text-color: #1d1d1f; --input-bg: #f0f0f0;
+            --border-color: #d2d2d7; --label-color: #86868b;
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #000000; --card-bg: #1c1c1c; 
+            --text-color: #ffffff; --input-bg: #2b2b2b;
+            --border-color: #333333; --label-color: #aaaaaa;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-color); color: var(--text-color);
+            margin: 0; display: flex; flex-direction: column;
+            height: 100vh; overflow: hidden; transition: background 0.3s ease;
+        }
+
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; border-bottom: 1px solid var(--border-color); flex-shrink: 0; }
+        .container { display: flex; flex-direction: column; padding: 15px; gap: 12px; flex: 1; min-height: 0; }
+        h1 { margin: 0; font-size: 1.1rem; color: var(--tesla-red); text-transform: uppercase; letter-spacing: 1px; }
+
+        .config-grid { 
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; 
+            background: var(--card-bg); padding: 12px; border-radius: 8px; 
+            border: 1px solid var(--border-color); flex-shrink: 0;
+        }
+
+        .grid-stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; flex-shrink: 0; }
+        .stat-card { background: var(--card-bg); padding: 8px 4px; border-radius: 8px; border-bottom: 3px solid var(--primary); text-align: center; border: 1px solid var(--border-color); border-bottom-width: 3px; }
+        .stat-label { font-size: 0.55rem; color: var(--label-color); text-transform: uppercase; display: block; }
+        .stat-value { font-size: 0.85rem; font-weight: bold; }
+
+        .main-display { display: flex; flex-direction: column; flex: 1; gap: 12px; min-height: 0; }
+        #map { width: 100%; border-radius: 8px; border: 1px solid var(--border-color); flex: 1; min-height: 0; }
+        
+        .charts-wrapper { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; flex: 0.8; min-height: 0; }
+        .chart-container { background: var(--card-bg); padding: 8px; border-radius: 8px; border: 1px solid var(--border-color); display: flex; flex-direction: column; min-height: 0; }
+        canvas { flex: 1; min-height: 0; width: 100% !important; }
+
+        .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding-bottom: 5px; flex-shrink: 0; }
+        .action-btn { border: none; padding: 15px; border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer; text-transform: uppercase; transition: all 0.2s ease; }
+        .btn-start { background: var(--primary); color: white; box-shadow: 0 4px 0 #27ae60; }
+        .btn-start.active { background: #1e8449; box-shadow: inset 0 4px 8px rgba(0,0,0,0.2); transform: translateY(2px); }
+        .btn-stop { background: var(--danger); color: white; box-shadow: 0 4px 0 #c0392b; }
+        .btn-stop:disabled { background: #95a5a6; box-shadow: 0 4px 0 #7f8c8d; cursor: not-allowed; opacity: 0.6; }
+
+        #status { text-align: center; font-size: 0.75rem; color: var(--label-color); margin-bottom: 5px; }
+
+        @media (max-width: 800px) {
+            body { overflow-y: auto; height: auto; }
+            .container { height: auto; }
+            .main-display { display: block; }
+            #map { height: 250px; margin-bottom: 12px; }
+            .charts-wrapper { grid-template-columns: 1fr; }
+            .chart-container { height: 180px; }
+            .grid-stats { grid-template-columns: repeat(3, 1fr); }
+            .config-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body onload="initializeSystem()">
+
+<div class="header">
+    <h1>Trip Master</h1>
+    <button onclick="toggleTheme()" id="themeBtn" style="background:none; border:1px solid var(--border-color); color:var(--text-color); border-radius:20px; padding:4px 10px;">🌙</button>
+</div>
+
+<div class="container">
+    <div class="config-grid">
+        <div style="display:flex; flex-direction:column;">
+            <label style="font-size:0.6rem; color:var(--label-color);">Vehicle Weight (Kg)</label>
+            <input type="number" id="vehicleWeight" value="2200" step="50" style="padding:6px; border-radius:4px; border:1px solid var(--border-color); background:var(--input-bg); color:var(--text-color);">
+        </div>
+        <div style="display:flex; flex-direction:column;">
+            <label style="font-size:0.6rem; color:var(--label-color);">Temperature</label>
+            <select id="tempEfficiency" style="padding:6px; border-radius:4px; border:1px solid var(--border-color); background:var(--input-bg); color:var(--text-color);">
+                <option value="1.0">20°C (100%)</option>
+                <option value="0.85">10°C (85%)</option>
+                <option value="0.70">0°C (70%)</option>
+                <option value="0.55">-10°C (55%)</option>
+            </select>
+        </div>
+        <div style="display:flex; flex-direction:column;">
+            <label style="font-size:0.6rem; color:var(--label-color);">Headwind (Km/h)</label>
+            <input type="number" id="windSpeed" value="0" style="padding:6px; border-radius:4px; border:1px solid var(--border-color); background:var(--input-bg); color:var(--text-color);">
+        </div>
+    </div>
+
+    <div class="grid-stats">
+        <div class="stat-card" style="border-bottom-color: var(--secondary);"><span class="stat-label">Trip Distance</span><span class="stat-value" id="distDisplay">0.00 Km</span></div>
+        <div class="stat-card" style="border-bottom-color: var(--warning);"><span class="stat-label">Altitude</span><span class="stat-value" id="altDisplay">-- m</span></div>
+        <div class="stat-card" style="border-bottom-color: var(--warning);"><span class="stat-label">Grade</span><span class="stat-value" id="gradeDisplay">0%</span></div>
+        <div class="stat-card" style="border-bottom-color: var(--primary);"><span class="stat-label">Regenerative Braking</span><span class="stat-value" id="regenDisplay">0 Wh</span></div>
+        <div class="stat-card" style="border-bottom-color: var(--danger);"><span class="stat-label">Wh/km (Instantaneous)</span><span class="stat-value" id="consDisplay">--</span></div>
+    </div>
+
+    <div class="main-display">
+        <div id="map"></div>
+        <div class="charts-wrapper">
+            <div class="chart-container"><canvas id="altitudeChart"></canvas></div>
+            <div class="chart-container"><canvas id="consumptionChart"></canvas></div>
+            <div class="chart-container"><canvas id="energyBalanceChart"></canvas></div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button id="btnStart" class="action-btn btn-start" onclick="startTracking()">Start Trip</button>
+        <button id="btnStop" class="action-btn btn-stop" onclick="stopTracking()" disabled>Stop Trip</button>
+    </div>
+    
+    <div id="status">System Ready</div>
+</div>
+
+<script>
+    let watchId = null, totalDistance = 0, totalRegenWh = 0, totalConsumedWh = 0, lastPoint = null, map, pathLine, altChart, consChart, energyChart;
+    let currentTheme = 'light';
+
+    function initializeSystem() {
+        setupMap();
+        setupCharts();
+    }
+
+    function toggleTheme() {
+        const body = document.body;
+        const btn = document.getElementById('themeBtn');
+        currentTheme = (currentTheme === 'light') ? 'dark' : 'light';
+        if (currentTheme === 'dark') {
+            body.setAttribute('data-theme', 'dark');
+            btn.innerText = '☀️';
+        } else {
+            body.removeAttribute('data-theme');
+            btn.innerText = '🌙';
+        }
+        updateChartTheme();
+    }
+
+    function setupMap() {
+        map = L.map('map').setView([45.4642, 9.1900], 13);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(map);
+        pathLine = L.polyline([], {color: '#e21017', weight: 5}).addTo(map);
+    }
+
+    function setupCharts() {
+        const commonOptions = {
+            responsive: true, maintainAspectRatio: false,
+            scales: { x: { display: false }, y: { ticks: { font: { size: 9 } } } },
+            plugins: { legend: { display: true, labels: { boxWidth: 8, font: { size: 10 } } } }
+        };
+
+        altChart = new Chart(document.getElementById('altitudeChart').getContext('2d'), {
+            type: 'line',
+            data: { datasets: [{ label: 'Altitude (m)', data: [], borderColor: '#2ecc71', backgroundColor: 'rgba(46, 204, 113, 0.1)', fill: true, pointRadius: 0 }] },
+            options: commonOptions
+        });
+
+        consChart = new Chart(document.getElementById('consumptionChart').getContext('2d'), {
+            type: 'line',
+            data: { datasets: [{ label: 'Wh/Km', data: [], borderColor: '#3498db', backgroundColor: 'rgba(52, 152, 219, 0.1)', fill: true, pointRadius: 0 }] },
+            options: commonOptions
+        });
+
+        energyChart = new Chart(document.getElementById('energyBalanceChart').getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: ['Consumed', 'Regenerative Braking'],
+                datasets: [
+                    { label: 'Consumed (Wh)', data: [0], backgroundColor: '#e74c3c' },
+                    { label: 'Recovered (Wh)', data: [0], backgroundColor: '#f39c12' }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: true, labels: { boxWidth: 8, font: { size: 10 } } } },
+                scales: { 
+                    x: { display: true, ticks: { font: { size: 8 } } },
+                    y: { beginAtZero: true, ticks: { font: { size: 9 } } } 
+                }
+            }
+        });
+    }
+
+    function updateChartTheme() {
+        const isDark = (currentTheme === 'dark');
+        const color = isDark ? '#aaaaaa' : '#666';
+        [altChart, consChart, energyChart].forEach(chart => {
+            if(chart.options.scales.y.ticks) chart.options.scales.y.ticks.color = color;
+            if(chart.options.plugins.legend.labels) chart.options.plugins.legend.labels.color = color;
+            chart.update();
+        });
+    }
+
+    function startTracking() {
+        document.getElementById('btnStart').disabled = true;
+        document.getElementById('btnStart').classList.add('active');
+        document.getElementById('btnStop').disabled = false;
+        document.getElementById('status').innerText = "● LIVE RECORDING ACTIVE";
+        watchId = navigator.geolocation.watchPosition(updateLocation, null, { enableHighAccuracy: true });
+    }
+
+    function stopTracking() {
+        if (watchId) navigator.geolocation.clearWatch(watchId);
+        document.getElementById('btnStart').disabled = false;
+        document.getElementById('btnStart').classList.remove('active');
+        document.getElementById('btnStop').disabled = true;
+        document.getElementById('status').innerText = "Trip Paused";
+    }
+
+    function updateLocation(pos) {
+        const { latitude, longitude, altitude } = pos.coords;
+        const currentAlt = altitude || 0;
+
+        if (lastPoint) {
+            const step = computeDistance(lastPoint.lat, lastPoint.lon, latitude, longitude);
+            if (step > 4) {
+                totalDistance += step;
+                const deltaAlt = currentAlt - lastPoint.alt;
+                const grade = (deltaAlt / step) * 100;
+                const instantCons = calculatePhysics(step, deltaAlt, grade);
+                
+                refreshUI(totalDistance, currentAlt, grade, instantCons);
+                pathLine.addLatLng([latitude, longitude]);
+                map.panTo([latitude, longitude]);
+                updateCharts(totalDistance, currentAlt, instantCons);
+            }
+        } else {
+            map.setView([latitude, longitude], 15);
+        }
+        lastPoint = { lat: latitude, lon: longitude, alt: currentAlt };
+    }
+
+    function calculatePhysics(distanceM, deltaAltM, grade) {
+        const weight = parseFloat(document.getElementById('vehicleWeight').value);
+        const efficiency = parseFloat(document.getElementById('tempEfficiency').value);
+        const wind = parseFloat(document.getElementById('windSpeed').value);
+        const distKm = distanceM / 1000;
+        
+        const baseResistance = (120 + (wind * 0.8) + (weight * 0.012)) / efficiency; 
+        const potentialEnergyWh = (weight * 9.81 * deltaAltM) / 3600;
+        
+        let stepConsumptionWh = (baseResistance * distKm) + potentialEnergyWh;
+
+        if (stepConsumptionWh < 0) {
+            const regenWh = Math.abs(stepConsumptionWh) * 0.7;
+            totalRegenWh += regenWh;
+            stepConsumptionWh = 0;
+        } else {
+            totalConsumedWh += stepConsumptionWh;
+        }
+
+        return Math.round(stepConsumptionWh / distKm);
+    }
+
+    function computeDistance(lat1, lon1, lat2, lon2) {
+        const R = 6371e3;
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
+        return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
+    }
+
+    function refreshUI(dist, alt, grade, cons) {
+        document.getElementById('distDisplay').innerText = (dist / 1000).toFixed(2) + " Km";
+        document.getElementById('altDisplay').innerText = alt.toFixed(0) + " m";
+        document.getElementById('gradeDisplay').innerText = grade.toFixed(1) + "%";
+        document.getElementById('consDisplay').innerText = cons + " Wh/km";
+        document.getElementById('regenDisplay').innerText = totalRegenWh.toFixed(1) + " Wh";
+    }
+
+    function updateCharts(dist, alt, cons) {
+        altChart.data.datasets[0].data.push({x: dist, y: alt});
+        consChart.data.datasets[0].data.push({x: dist, y: cons});
+        
+        // Update Bar Chart con i dati accumulati
+        energyChart.data.datasets[0].data = [totalConsumedWh];
+        energyChart.data.datasets[1].data = [totalRegenWh];
+        
+        altChart.update('none');
+        consChart.update('none');
+        energyChart.update('none');
+    }
+</script>
+</body>
+</html>
