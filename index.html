@@ -50,7 +50,7 @@
 
         .grid-stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; flex-shrink: 0; }
         .stat-card { background: var(--card-bg); padding: 8px 4px; border-radius: 8px; border-bottom: 3px solid var(--primary); text-align: center; border: 1px solid var(--border-color); border-bottom-width: 3px; }
-        .stat-label { font-size: 0.55rem; color: var(--label-color); text-transform: uppercase; display: block; }
+        .stat-label { font-size: 0.75rem; color: var(--label-color); text-transform: uppercase; display: block; }
         .stat-value { font-size: 0.85rem; font-weight: bold; }
 
         .main-display { display: flex; flex-direction: column; flex: 1; gap: 12px; min-height: 0; }
@@ -129,11 +129,11 @@
 <div class="container">
     <div class="config-grid">
         <div style="display:flex; flex-direction:column;">
-            <label style="font-size:0.6rem; color:var(--label-color);">Vehicle Weight (Kg)</label>
+            <label style="font-size:0.9rem; color:var(--label-color);">Vehicle Weight (Kg)</label>
             <input type="number" id="vehicleWeight" value="2200" step="50" style="padding:6px; border-radius:4px; border:1px solid var(--border-color); background:var(--input-bg); color:var(--text-color);">
         </div>
         <div style="display:flex; flex-direction:column;">
-            <label style="font-size:0.6rem; color:var(--label-color);">Temperature</label>
+            <label style="font-size:0.9rem; color:var(--label-color);">Temperature</label>
             <select id="tempEfficiency" style="padding:6px; border-radius:4px; border:1px solid var(--border-color); background:var(--input-bg); color:var(--text-color);">
                 <option value="1.0">20°C (100%)</option>
                 <option value="0.85">10°C (85%)</option>
@@ -142,7 +142,7 @@
             </select>
         </div>
         <div style="display:flex; flex-direction:column;">
-            <label style="font-size:0.6rem; color:var(--label-color);">Headwind (Km/h)</label>
+            <label style="font-size:0.9rem; color:var(--label-color);">Headwind (Km/h)</label>
             <input type="number" id="windSpeed" value="0" style="padding:6px; border-radius:4px; border:1px solid var(--border-color); background:var(--input-bg); color:var(--text-color);">
         </div>
     </div>
@@ -220,13 +220,13 @@
 
         altChart = new Chart(document.getElementById('altitudeChart').getContext('2d'), {
             type: 'line',
-            data: { datasets: [{ label: 'Altitude (m)', data: [], borderColor: '#2ecc71', backgroundColor: 'rgba(46, 204, 113, 0.1)', fill: true, pointRadius: 0 }] },
+            data: { datasets: [{ label: 'Altitude (m)', data: [], borderColor: '#f39c12', backgroundColor: 'rgba(243, 156, 18, 0.1)', fill: true, pointRadius: 0 }] },
             options: commonOptions
         });
 
         consChart = new Chart(document.getElementById('consumptionChart').getContext('2d'), {
             type: 'line',
-            data: { datasets: [{ label: 'Wh/Km', data: [], borderColor: '#3498db', backgroundColor: 'rgba(52, 152, 219, 0.1)', fill: true, pointRadius: 0 }] },
+            data: { datasets: [{ label: 'Wh/Km', data: [], borderColor: '#e74c3c', backgroundColor: 'rgba(231, 76, 60, 0.1)', fill: true, pointRadius: 0 }] },
             options: commonOptions
         });
 
@@ -236,7 +236,7 @@
                 labels: ['Consumed', 'Regenerative Braking'],
                 datasets: [
                     { label: 'Consumed (Wh)', data: [0], backgroundColor: '#e74c3c' },
-                    { label: 'Recovered (Wh)', data: [0], backgroundColor: '#f39c12' }
+                    { label: 'Recovered (Wh)', data: [0], backgroundColor: '#2ecc71' }
                 ]
             },
             options: {
