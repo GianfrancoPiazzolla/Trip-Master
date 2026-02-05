@@ -152,7 +152,7 @@
         <div class="stat-card" style="border-bottom-color: var(--warning);"><span class="stat-label">Altitude</span><span class="stat-value" id="altDisplay">-- m</span></div>
         <div class="stat-card" style="border-bottom-color: var(--warning);"><span class="stat-label">Grade</span><span class="stat-value" id="gradeDisplay">0%</span></div>
         <div class="stat-card" style="border-bottom-color: var(--primary);"><span class="stat-label">Regenerative Braking</span><span class="stat-value" id="regenDisplay">0 Wh</span></div>
-        <div class="stat-card" style="border-bottom-color: var(--danger);"><span class="stat-label">Wh/km (Instantaneous)</span><span class="stat-value" id="consDisplay">--</span></div>
+        <div class="stat-card" style="border-bottom-color: var(--danger);"><span class="stat-label">Wh/Km (Instantaneous)</span><span class="stat-value" id="consDisplay">--</span></div>
     </div>
 
     <div class="main-display">
@@ -334,7 +334,7 @@
         document.getElementById('distDisplay').innerText = (dist / 1000).toFixed(2) + " Km";
         document.getElementById('altDisplay').innerText = alt.toFixed(0) + " m";
         document.getElementById('gradeDisplay').innerText = grade.toFixed(1) + "%";
-        document.getElementById('consDisplay').innerText = cons + " Wh/km";
+        document.getElementById('consDisplay').innerText = cons + " Wh/Km";
         document.getElementById('regenDisplay').innerText = totalRegenWh.toFixed(1) + " Wh";
     }
 
@@ -365,4 +365,3 @@
 
 </body>
 </html>
-
