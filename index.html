@@ -149,7 +149,7 @@
     <div class="grid-stats">
         <div class="stat-card" style="border-bottom-color: var(--secondary);"><span class="stat-label">Trip Distance</span><span class="stat-value" id="distDisplay">0.00 Km</span></div>
         <div class="stat-card" style="border-bottom-color: var(--secondary);"><span class="stat-label">Average Speed</span><span class="stat-value" id="avgSpeedDisplay">0.0 Km/h</span></div>
-        <div class="stat-card" style="border-bottom-color: var(--danger);"><span class="stat-label">Consumption</span><span class="stat-value" id="consDisplay">0 Wh/Km</span></div>
+        <div class="stat-card" style="border-bottom-color: var(--danger);"><span class="stat-label">Efficiency</span><span class="stat-value" id="consDisplay">0 Wh/Km</span></div>
         <div class="stat-card" style="border-bottom-color: var(--warning);"><span class="stat-label">Altitude</span><span class="stat-value" id="altDisplay">-- m</span></div>
         <div class="stat-card" style="border-bottom-color: var(--warning);"><span class="stat-label">Grade</span><span class="stat-value" id="gradeDisplay">0%</span></div>
         <div class="stat-card" style="border-bottom-color: var(--primary);"><span class="stat-label">Brake Regen</span><span class="stat-value" id="regenDisplay">0 Wh</span></div>
@@ -232,20 +232,20 @@
 
         altChart = new Chart(document.getElementById('altitudeChart').getContext('2d'), {
             type: 'line',
-            data: { datasets: [{ label: 'Altitude (m)', data: [], borderColor: '#f39c12', backgroundColor: 'rgba(243, 156, 18, 0.1)', fill: true, pointRadius: 0 }] },
+            data: { datasets: [{ label: 'Trip Altitude (m)', data: [], borderColor: '#f39c12', backgroundColor: 'rgba(243, 156, 18, 0.1)', fill: true, pointRadius: 0 }] },
             options: commonOptions
         });
 
         consChart = new Chart(document.getElementById('consumptionChart').getContext('2d'), {
             type: 'line',
-            data: { datasets: [{ label: 'Consumption (Wh/Km)', data: [], borderColor: '#e74c3c', backgroundColor: 'rgba(231, 76, 60, 0.1)', fill: true, pointRadius: 0 }] },
+            data: { datasets: [{ label: 'Trip Efficiency (Wh/Km)', data: [], borderColor: '#e74c3c', backgroundColor: 'rgba(231, 76, 60, 0.1)', fill: true, pointRadius: 0 }] },
             options: commonOptions
         });
 
         energyChart = new Chart(document.getElementById('energyBalanceChart').getContext('2d'), {
             type: 'bar',
             data: {
-                labels: ['Energy (Wh)'],
+                labels: ['Trip Energy (Wh)'],
                 datasets: [
                     { label: 'Consumed', data: [0], backgroundColor: '#e74c3c' },
                     { label: 'Recovered', data: [0], backgroundColor: '#2ecc71' }
