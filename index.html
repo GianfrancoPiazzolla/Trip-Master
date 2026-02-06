@@ -9,7 +9,7 @@
 	<meta name="apple-mobile-web-app-title" content="Trip Master">
 	<link rel="apple-touch-icon" href="icon-192x192.png">
 	<link rel="manifest" href="manifest.json">
-    <title>Trip Master</title>
+    <title>Trip Master - Tesla Optimized</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -69,7 +69,6 @@
 
         #status { text-align: center; font-size: 0.75rem; color: var(--label-color); margin-bottom: 5px; }
 
-        /* Modal Styles */
         .modal {
             display: none; position: fixed; z-index: 2000; left: 0; top: 0;
             width: 100%; height: 100%; background-color: var(--modal-overlay);
@@ -117,12 +116,9 @@
     <div class="modal-content">
         <span class="close-modal" onclick="toggleModal(false)">&times;</span>
         <h2 style="color:var(--tesla-red); margin-top:0; border-bottom: 1px solid var(--border-color); padding-bottom:10px;">About Trip Master</h2>
-        <p><strong>Synopsis:</strong> High-performance, real-time EV trip tracking and energy analysis dashboard</p>
+        <p><strong>Synopsis:</strong> Optimized for Tesla MCU2 - Real-time EV analysis</p>
         <p><strong>Author:</strong> Gianfranco Piazzolla</p>
-        <p><strong>GitHub repository:</strong> <a href="https://github.com/gianfrancopiazzolla/Trip-Master" target="_blank" style="color:var(--secondary); text-decoration:none;">Trip Master</a></p>
-        <p><strong>License:</strong> Distributed under the MIT License. Feel free to use, modify, and share.</p>
-        <hr style="border:0; border-top:1px solid var(--border-color); margin:20px 0;">
-        <p style="font-style: italic; font-size: 0.9rem; color: var(--label-color);">Developed for the sustainable mobility community. If you find this tool helpful, please leave a star on GitHub!</p>
+        <p><strong>Status:</strong> Active Polling Mode Enabled</p>
     </div>
 </div>
 
@@ -133,7 +129,7 @@
             <input type="number" id="vehicleWeight" value="2200" step="50" style="padding:6px; border-radius:4px; border:1px solid var(--border-color); background:var(--input-bg); color:var(--text-color);">
         </div>
         <div style="display:flex; flex-direction:column;">
-            <label style="font-size:0.9rem; color:var(--label-color);">Temperature (Efficiency)</label>
+            <label style="font-size:0.9rem; color:var(--label-color);">Temp Efficiency</label>
             <select id="tempEfficiency" style="padding:6px; border-radius:4px; border:1px solid var(--border-color); background:var(--input-bg); color:var(--text-color);">
                 <option value="1.0">20°C (100%)</option>
                 <option value="0.85">10°C (85%)</option>
@@ -149,12 +145,11 @@
 
     <div class="grid-stats">
         <div class="stat-card" style="border-bottom-color: var(--secondary);"><span class="stat-label">Trip Distance</span><span class="stat-value" id="distDisplay">0.00 Km</span></div>
-        <div class="stat-card" style="border-bottom-color: var(--secondary);"><span class="stat-label">Average Speed</span><span class="stat-value" id="avgSpeedDisplay">0.0 Km/h</span></div>
+        <div class="stat-card" style="border-bottom-color: var(--secondary);"><span class="stat-label">Avg Speed</span><span class="stat-value" id="avgSpeedDisplay">0.0 Km/h</span></div>
         <div class="stat-card" style="border-bottom-color: var(--danger);"><span class="stat-label">Wh/Km</span><span class="stat-value" id="consDisplay">--</span></div>
         <div class="stat-card" style="border-bottom-color: var(--warning);"><span class="stat-label">Altitude</span><span class="stat-value" id="altDisplay">-- m</span></div>
         <div class="stat-card" style="border-bottom-color: var(--warning);"><span class="stat-label">Grade</span><span class="stat-value" id="gradeDisplay">0%</span></div>
         <div class="stat-card" style="border-bottom-color: var(--primary);"><span class="stat-label">Brake Regen</span><span class="stat-value" id="regenDisplay">0 Wh</span></div>
-
     </div>
 
     <div class="main-display">
@@ -175,7 +170,7 @@
 </div>
 
 <script>
-    let watchId = null, totalDistance = 0, totalRegenWh = 0, totalConsumedWh = 0, lastPoint = null, map, pathLine, altChart, consChart, energyChart;
+    let pollInterval = null, totalDistance = 0, totalRegenWh = 0, totalConsumedWh = 0, lastPoint = null, map, pathLine, altChart, consChart, energyChart;
     let startTime = null;
     let currentTheme = 'light';
 
@@ -183,10 +178,13 @@
         setupMap();
         setupCharts();
         
-        // Close modal when clicking outside
         window.onclick = function(event) {
             const modal = document.getElementById('infoModal');
             if (event.target == modal) toggleModal(false);
+        }
+
+        if ('wakeLock' in navigator) {
+            navigator.wakeLock.request('screen').catch(() => console.log("WakeLock non supportato"));
         }
     }
 
@@ -251,8 +249,7 @@
                 ]
             },
             options: {
-                responsive: true,
-                maintainAspectRatio: false,
+                responsive: true, maintainAspectRatio: false,
                 plugins: { legend: { display: true, labels: { boxWidth: 8, font: { size: 10 } } } },
                 scales: { 
                     x: { display: true, ticks: { font: { size: 8 } } },
@@ -263,13 +260,12 @@
     }
 
     function updateChartTheme() {
-        const isDark = (currentTheme === 'dark');
-        const color = isDark ? '#aaaaaa' : '#666';
+        const color = (currentTheme === 'dark') ? '#aaaaaa' : '#666';
         [altChart, consChart, energyChart].forEach(chart => {
-            if(chart.options.scales.y.ticks) chart.options.scales.y.ticks.color = color;
-            if(chart.options.scales.x.ticks) chart.options.scales.x.ticks.color = color;
+            chart.options.scales.y.ticks.color = color;
+            chart.options.scales.x.ticks.color = color;
             if(chart.options.scales.x.title) chart.options.scales.x.title.color = color;
-            if(chart.options.plugins.legend.labels) chart.options.plugins.legend.labels.color = color;
+            chart.options.plugins.legend.labels.color = color;
             chart.update();
         });
     }
@@ -278,17 +274,28 @@
         document.getElementById('btnStart').disabled = true;
         document.getElementById('btnStart').classList.add('active');
         document.getElementById('btnStop').disabled = false;
-        document.getElementById('status').innerText = "● LIVE RECORDING ACTIVE";
+        document.getElementById('status').innerText = "● LIVE POLLING ACTIVE (MCU2)";
         startTime = Date.now();
-        watchId = navigator.geolocation.watchPosition(updateLocation, null, { enableHighAccuracy: true });
+        
+        // Risoluzione MCU2: Ciclo forzato ogni 1500ms invece di watchPosition passivo
+        pollInterval = setInterval(() => {
+            navigator.geolocation.getCurrentPosition(updateLocation, 
+                (err) => console.log("GPS Error:", err), 
+                { 
+                    enableHighAccuracy: true, 
+                    timeout: 2000, 
+                    maximumAge: 0 // Forza il GPS a ignorare la cache
+                }
+            );
+        }, 1500);
     }
 
     function stopTracking() {
-        if (watchId) navigator.geolocation.clearWatch(watchId);
+        if (pollInterval) clearInterval(pollInterval);
         document.getElementById('btnStart').disabled = false;
         document.getElementById('btnStart').classList.remove('active');
         document.getElementById('btnStop').disabled = true;
-        document.getElementById('status').innerText = "Trip Paused";
+        document.getElementById('status').innerText = "Trip Stopped";
     }
 
     function updateLocation(pos) {
@@ -297,7 +304,9 @@
 
         if (lastPoint) {
             const step = computeDistance(lastPoint.lat, lastPoint.lon, latitude, longitude);
-            if (step > 4) {
+            
+            // Soglia ridotta a 2 metri per MCU2 per evitare drop in città o bassa velocità
+            if (step > 2) {
                 totalDistance += step;
                 const deltaAlt = currentAlt - lastPoint.alt;
                 const grade = (deltaAlt / step) * 100;
@@ -352,7 +361,7 @@
         document.getElementById('avgSpeedDisplay').innerText = avgSpeed.toFixed(1) + " Km/h";
         document.getElementById('altDisplay').innerText = alt.toFixed(0) + " m";
         document.getElementById('gradeDisplay').innerText = grade.toFixed(1) + "%";
-        document.getElementById('consDisplay').innerText = cons + " Wh/Km";
+        document.getElementById('consDisplay').innerText = isFinite(cons) ? cons + " Wh/Km" : "0 Wh/Km";
         document.getElementById('regenDisplay').innerText = totalRegenWh.toFixed(1) + " Wh";
     }
 
@@ -360,8 +369,6 @@
         const distKm = parseFloat((dist / 1000).toFixed(3));
         altChart.data.datasets[0].data.push({x: distKm, y: alt});
         consChart.data.datasets[0].data.push({x: distKm, y: cons});
-        
-        // Update Bar Chart with accumulated data
         energyChart.data.datasets[0].data = [totalConsumedWh];
         energyChart.data.datasets[1].data = [totalRegenWh];
         
@@ -370,17 +377,5 @@
         energyChart.update('none');
     }
 </script>
-<script>
-    if ('serviceWorker' in navigator) {
-    window.addEventListener('load', function() {
-        navigator.serviceWorker.register('/sw.js').then(function(registration) {
-        console.log('ServiceWorker registration successful with scope: ', registration.scope);
-        }, function(err) {
-        console.log('ServiceWorker registration failed: ', err);
-        });
-    });
-    }
-</script>
-
 </body>
 </html>
