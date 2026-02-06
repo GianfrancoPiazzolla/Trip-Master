@@ -244,9 +244,10 @@
         energyChart = new Chart(document.getElementById('energyBalanceChart').getContext('2d'), {
             type: 'bar',
             data: {
+                labels: ['Energy (Wh)'],
                 datasets: [
-                    { label: 'Consumed (Wh)', data: [0], backgroundColor: '#e74c3c' },
-                    { label: 'Recovered (Wh)', data: [0], backgroundColor: '#2ecc71' }
+                    { label: 'Consumed', data: [0], backgroundColor: '#e74c3c' },
+                    { label: 'Recovered', data: [0], backgroundColor: '#2ecc71' }
                 ]
             },
             options: {
