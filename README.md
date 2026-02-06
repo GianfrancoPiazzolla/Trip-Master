@@ -1,12 +1,15 @@
-# Trip Master 🚗⚡
+# Trip Master: High-Performance EV Energy Dashboard 🚗⚡
 
-**Trip Master** is a high-performance, real-time Electric Vehicle (EV) trip tracking and energy analysis dashboard. Built as a Progressive Web App (PWA), it leverages geolocation and physics-based modeling to provide drivers with instantaneous consumption data, regenerative braking analytics, and terrain mapping.
+**Trip Master** is a real-time tracking application designed specifically for electric vehicle (EV) enthusiasts and sustainable mobility analysis. Built as a Progressive Web App (PWA), it transforms raw GPS data into actionable energy insights, providing a live "physics-engine" view of your trip's efficiency.
 
 ---
 
-## 🌟 Key Features
+## 🌟 Features
 
+* **MCU2 Optimized Polling**: Implements a forced 1500ms polling cycle to ensure high-fidelity tracking on various hardware, specifically optimized for Tesla MCU2 environments.
+* **Real-Time Physics Simulation**: Estimates energy consumption ($Wh/km$) based on vehicle weight, altitude changes, and environmental factors.
 * **Real-time Geolocation Tracking**: Live mapping using Leaflet.js with a dedicated "Tesla-inspired" aesthetic.
+* **Dynamic UI**: Includes a live Leaflet map and three synchronized Chart.js dashboards for Altitude, Consumption, and Energy Balance.
 * **Dynamic Physics Engine**: Calculates energy consumption ($Wh/km$) by accounting for:
     * **Vehicle Mass**: User-configurable weight impacts.
     * **Thermal Efficiency**: Adjusts battery performance based on ambient temperature.
@@ -17,17 +20,41 @@
     * **Altitude Profile**: Visualize the terrain elevation.
     * **Instantaneous Consumption**: Real-time efficiency tracking.
     * **Energy Balance**: Comparative bar chart of energy consumed vs. energy recovered.
+* **PWA Ready**: Features a manifest and mobile-optimized viewport for use as a standalone "Web App" on mobile devices.
 * **Responsive & Dark Mode**: Optimized for mobile use with a toggleable Dark/Light UI.
 
 ---
 
-## 🧬 The Physics Model
+## 🧮 Calculation Logic & Physics Engine
 
-The application calculates consumption using a simplified resistance model within the `calculatePhysics` function:
+The core of Trip Master is its ability to estimate energy usage without a direct OBDII connection. It uses the following logic to derive consumption:
 
-$$Consumption \approx \frac{BaseResistance + WindResistance + WeightResistance}{Efficiency} + \Delta PotentialEnergy$$
+### 1. Distance & Slope
+The system calculates the distance between two GPS coordinates using the **Haversine formula** to determine the shortest distance over the earth's surface. 
+Distance is validated against a 2-meter movement threshold to filter out GPS "jitter" during stops.
 
-When the resulting energy is negative (e.g., during a steep descent), the system applies a **70% recuperation efficiency** factor to calculate the regenerative braking gain.
+### 2. The Energy Formula
+For every recorded step, the energy consumption ($Wh$) is calculated using a simplified physics model:
+
+$$E_{step} = \frac{(R_{base} \cdot d_{km}) + E_{pot}}{Efficiency_{temp}}$$
+
+**Where:**
+* **Base Resistance ($R_{base}$)**: A derived constant accounting for rolling resistance and aerodynamic drag, adjusted by user-inputted headwind and vehicle weight. The formula used is roughly `(120 + (wind * 0.8) + (weight * 0.012))`.
+* **Potential Energy ($E_{pot}$)**: Calculated as $\frac{m \cdot g \cdot \Delta h}{3600}$ to convert Joules to Watt-hours, where $m$ is weight and $\Delta h$ is the change in altitude.
+* **Regenerative Braking**: If $E_{step}$ is negative (downhill), the system applies a **70% recuperation efficiency** factor to the potential energy gained, adding it to the "Brake Regen" total.
+
+---
+
+## ⚠️ Known Limitations & Assumptions
+
+To maintain a lightweight, client-side architecture, the following assumptions are made:
+
+* **Aerodynamic Drag**: The model uses a simplified linear scaling for wind resistance rather than a full quadratic drag equation. This is optimized for typical urban and suburban speeds.
+* **Constant Efficiency**: The "Temp Efficiency" selection applies a global multiplier to the base resistance to simulate battery internal resistance and HVAC load, but it does not vary dynamically during the trip.
+* **GPS Altitude**: The accuracy of "Grade" and "Potential Energy" calculations is highly dependent on the device's GPS altimeter, which can be less precise than barometric sensors.
+* **Regen Fixed Rate**: Regenerative braking is capped at a 70% return rate and assumes the battery is not at 100% State of Charge (where regen would be limited).
+
+*Disclaimer: This tool provides estimates based on physics models and GPS data; actual vehicle telemetry may vary.*
 
 ---
 
@@ -41,16 +68,16 @@ When the resulting energy is negative (e.g., during a steep descent), the system
 
 ---
 
-## 🚀 Getting Started
+## 🛠 Installation & Usage
 
 1.  **Clone the repository**:
     ```bash
-    git clone [https://github.com/yourusername/trip-master.git](https://github.com/yourusername/trip-master.git)
+    git clone [https://github.com/gianfrancopiazzolla/Trip-Master.git](https://github.com/gianfrancopiazzolla/Trip-Master.git)
     ```
 2.  **Deployment**:
     Since this is a client-side application, you can simply open `index.html` in any modern browser. For PWA features (Service Workers), it is recommended to serve it via HTTPS or a local server.
-3.  **Usage**:
-    * Enter your vehicle's parameters (Weight, Temperature, Wind).
+3.  **Configuration**: Input your specific **Vehicle Weight**, current **Ambient Temperature** and **Headwind**
+4.  **Usage**:
     * Grant Location Permissions when prompted.
     * Press **Start Trip** to begin recording data.
 
@@ -64,6 +91,14 @@ Trip Master is designed to feel like a native app.
 
 ---
 
-**Developed for EV Enthusiasts.** *Disclaimer: This tool provides estimates based on physics models and GPS data; actual vehicle telemetry may vary.*
+## 📄 License
+
+This project is distributed under the **MIT License**. Feel free to use, modify, and share.
+
+**Author**: Gianfranco Piazzolla  
+
+---
+
+**Developed for the sustainable mobility community.** If you find this tool helpful, please leave a star! 😉
 
 ---
