@@ -184,7 +184,6 @@
         <button id="btnStop" class="action-btn btn-stop" onclick="stopTracking()" disabled>Stop Trip</button>
     </div>
     
-    <div id="status">System Ready</div>
 </div>
 
 <script>
@@ -303,7 +302,6 @@
         document.getElementById('btnStart').disabled = true;
         document.getElementById('btnStart').classList.add('active');
         document.getElementById('btnStop').disabled = false;
-        document.getElementById('status').innerText = "● LIVE POLLING ACTIVE (MCU2)";
         startTime = Date.now();
         
         pollInterval = setInterval(() => {
@@ -319,7 +317,6 @@
         document.getElementById('btnStart').disabled = false;
         document.getElementById('btnStart').classList.remove('active');
         document.getElementById('btnStop').disabled = true;
-        document.getElementById('status').innerText = "Trip Stopped";
     }
 
     function updateLocation(pos) {
