@@ -132,7 +132,7 @@
             <input type="number" id="vehicleWeight" value="2200" step="50" style="padding:6px; border-radius:4px; border:1px solid var(--border-color); background:var(--input-bg); color:var(--text-color);">
         </div>
         <div style="display:flex; flex-direction:column;">
-            <label style="font-size:0.9rem; color:var(--label-color);">Temp Efficiency</label>
+            <label style="font-size:0.9rem; color:var(--label-color);">Thermal Efficiency</label>
             <select id="tempEfficiency" style="padding:6px; border-radius:4px; border:1px solid var(--border-color); background:var(--input-bg); color:var(--text-color);">
                 <option value="1.0">20°C (100%)</option>
                 <option value="0.85">10°C (85%)</option>
@@ -148,8 +148,8 @@
 
     <div class="grid-stats">
         <div class="stat-card" style="border-bottom-color: var(--secondary);"><span class="stat-label">Trip Distance</span><span class="stat-value" id="distDisplay">0.00 Km</span></div>
-        <div class="stat-card" style="border-bottom-color: var(--secondary);"><span class="stat-label">Avg Speed</span><span class="stat-value" id="avgSpeedDisplay">0.0 Km/h</span></div>
-        <div class="stat-card" style="border-bottom-color: var(--danger);"><span class="stat-label">Wh/Km</span><span class="stat-value" id="consDisplay">--</span></div>
+        <div class="stat-card" style="border-bottom-color: var(--secondary);"><span class="stat-label">Average Speed</span><span class="stat-value" id="avgSpeedDisplay">0.0 Km/h</span></div>
+        <div class="stat-card" style="border-bottom-color: var(--danger);"><span class="stat-label">Consumption</span><span class="stat-value" id="consDisplay">0 Wh/Km</span></div>
         <div class="stat-card" style="border-bottom-color: var(--warning);"><span class="stat-label">Altitude</span><span class="stat-value" id="altDisplay">-- m</span></div>
         <div class="stat-card" style="border-bottom-color: var(--warning);"><span class="stat-label">Grade</span><span class="stat-value" id="gradeDisplay">0%</span></div>
         <div class="stat-card" style="border-bottom-color: var(--primary);"><span class="stat-label">Brake Regen</span><span class="stat-value" id="regenDisplay">0 Wh</span></div>
@@ -238,7 +238,7 @@
 
         consChart = new Chart(document.getElementById('consumptionChart').getContext('2d'), {
             type: 'line',
-            data: { datasets: [{ label: 'Wh/Km', data: [], borderColor: '#e74c3c', backgroundColor: 'rgba(231, 76, 60, 0.1)', fill: true, pointRadius: 0 }] },
+            data: { datasets: [{ label: 'Consumption (Wh/Km)', data: [], borderColor: '#e74c3c', backgroundColor: 'rgba(231, 76, 60, 0.1)', fill: true, pointRadius: 0 }] },
             options: commonOptions
         });
 
