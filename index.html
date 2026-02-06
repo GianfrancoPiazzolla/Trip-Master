@@ -187,7 +187,7 @@
         }
 
         if ('wakeLock' in navigator) {
-            navigator.wakeLock.request('screen').catch(() => console.log("WakeLock non supportato"));
+            navigator.wakeLock.request('screen').catch(() => console.log("WakeLock not supported"));
         }
     }
 
@@ -210,7 +210,7 @@
     }
 
     function setupMap() {
-        map = L.map('map').setView([45.4642, 9.1900], 13);
+        map = L.map('map').setView([41.8919, 12.5113], 13);
         L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(map);
         pathLine = L.polyline([], {color: '#e21017', weight: 5}).addTo(map);
     }
@@ -280,17 +280,16 @@
         document.getElementById('status').innerText = "● LIVE POLLING ACTIVE (MCU2)";
         startTime = Date.now();
         
-        // Risoluzione MCU2: Ciclo forzato ogni 1500ms invece di watchPosition passivo
         pollInterval = setInterval(() => {
             navigator.geolocation.getCurrentPosition(updateLocation, 
                 (err) => console.log("GPS Error:", err), 
                 { 
                     enableHighAccuracy: true, 
-                    timeout: 2000, 
-                    maximumAge: 0 // Forza il GPS a ignorare la cache
+                    timeout: 6000, 
+                    maximumAge: 0
                 }
             );
-        }, 1500);
+        }, 5000);
     }
 
     function stopTracking() {
@@ -308,8 +307,7 @@
         if (lastPoint) {
             const step = computeDistance(lastPoint.lat, lastPoint.lon, latitude, longitude);
             
-            // Soglia ridotta a 2 metri per MCU2 per evitare drop in città o bassa velocità
-            if (step > 2) {
+            if (step > 5) {
                 totalDistance += step;
                 const deltaAlt = currentAlt - lastPoint.alt;
                 const grade = (deltaAlt / step) * 100;
