@@ -6,7 +6,6 @@
 
 ## 🌟 Features
 
-* **MCU2 Optimized Polling**: Implements a forced 1500ms polling cycle to ensure high-fidelity tracking on various hardware, specifically optimized for Tesla MCU2 environments.
 * **Real-Time Physics Simulation**: Estimates energy consumption ($Wh/km$) based on vehicle weight, altitude changes, and environmental factors.
 * **Real-time Geolocation Tracking**: Live mapping using Leaflet.js with a dedicated "Tesla-inspired" aesthetic.
 * **Dynamic UI**: Includes a live Leaflet map and three synchronized Chart.js dashboards for Altitude, Consumption, and Energy Balance.
