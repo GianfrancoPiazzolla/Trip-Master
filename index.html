@@ -257,13 +257,13 @@
 
         altChart = new Chart(document.getElementById('altitudeChart').getContext('2d'), {
             type: 'line',
-            data: { datasets: [{ label: 'Trip Altitude (m)', data: [], borderColor: '#f39c12', backgroundColor: 'rgba(243, 156, 18, 0.1)', fill: true, pointRadius: 0 }] },
+            data: { datasets: [{ label: 'Route Altitude (m)', data: [], borderColor: '#f39c12', backgroundColor: 'rgba(243, 156, 18, 0.1)', fill: true, pointRadius: 0 }] },
             options: commonOptions
         });
 
         consChart = new Chart(document.getElementById('consumptionChart').getContext('2d'), {
             type: 'line',
-            data: { datasets: [{ label: 'Trip Efficiency (Wh/Km)', data: [], borderColor: '#e74c3c', backgroundColor: 'rgba(231, 76, 60, 0.1)', fill: true, pointRadius: 0 }] },
+            data: { datasets: [{ label: 'Route Consumption (Wh/Km)', data: [], borderColor: '#e74c3c', backgroundColor: 'rgba(231, 76, 60, 0.1)', fill: true, pointRadius: 0 }] },
             options: commonOptions
         });
 
