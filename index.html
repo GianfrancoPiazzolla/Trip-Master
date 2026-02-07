@@ -180,8 +180,8 @@
     </div>
 
     <div class="controls">
-        <button id="btnStart" class="action-btn btn-start" onclick="startTracking()">Start Trip</button>
-        <button id="btnStop" class="action-btn btn-stop" onclick="stopTracking()" disabled>Stop Trip</button>
+        <button id="btnStart" class="action-btn btn-start" onclick="startTracking()">▶ Start Trip</button>
+        <button id="btnStop" class="action-btn btn-stop" onclick="stopTracking()" disabled>⏹ Stop Trip</button>
     </div>
     
 </div>
@@ -307,9 +307,9 @@
         pollInterval = setInterval(() => {
             navigator.geolocation.getCurrentPosition(updateLocation, 
                 (err) => console.log("GPS Error:", err), 
-                { enableHighAccuracy: true, timeout: 6000, maximumAge: 0 }
+                { enableHighAccuracy: true, timeout: 3000, maximumAge: 0 }
             );
-        }, 5000);
+        }, 2500);
     }
 
     function stopTracking() {
