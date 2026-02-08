@@ -35,7 +35,7 @@
         }
 
         [data-theme="dark"] #map {
-            filter: brightness(0.5) contrast(2.0) saturate(2.0);
+            filter: brightness(0.7) contrast(2.0) saturate(2.0);
         }
 
         body {
@@ -315,9 +315,9 @@
         pollInterval = setInterval(() => {
             navigator.geolocation.getCurrentPosition(updateLocation, 
                 (err) => console.log("GPS Error:", err), 
-                { enableHighAccuracy: true, timeout: 3000, maximumAge: 0 }
+                { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
             );
-        }, 2500);
+        }, 10000);
     }
 
     function stopTracking() {
@@ -407,6 +407,7 @@
 </script>
 </body>
 </html>
+
 
 
 
