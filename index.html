@@ -51,7 +51,7 @@
         h1 { margin: 0; font-size: 1.1rem; color: var(--tesla-red); text-transform: uppercase; letter-spacing: 1px; }
 
         .config-grid { 
-            display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; 
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; 
             background: var(--card-bg); padding: 12px; border-radius: 8px; 
             border: 1px solid var(--border-color); flex-shrink: 0;
         }
@@ -167,6 +167,17 @@
             <label style="font-size:0.9rem; color:var(--label-color); margin-bottom:5px;">Headwind (Km/h)</label>
             <input type="number" id="windSpeed" value="0">
         </div>
+        <div style="display:flex; flex-direction:column;">
+            <label style="font-size:0.9rem; color:var(--label-color); margin-bottom:5px;">GPS Polling (s)</label>
+            <div class="segmented-control" id="gpsPollingGroup">
+                <button type="button" class="segment" data-value="1">1</button>
+                <button type="button" class="segment active" data-value="5">5</button>
+                <button type="button" class="segment" data-value="10">10</button>
+                <button type="button" class="segment" data-value="30">30</button>
+                <button type="button" class="segment" data-value="60">60</button>
+            </div>
+            <input type="hidden" id="gpsPolling" value="10">
+        </div>
     </div>
 
     <div class="grid-stats">
@@ -215,11 +226,21 @@
     }
 
     function setupSegmentedControl() {
+        // Efficiency selector
         document.querySelectorAll('#tempEfficiencyGroup .segment').forEach(button => {
             button.addEventListener('click', function() {
                 document.querySelectorAll('#tempEfficiencyGroup .segment').forEach(b => b.classList.remove('active'));
                 this.classList.add('active');
                 document.getElementById('tempEfficiency').value = this.getAttribute('data-value');
+            });
+        });
+
+        // GPS Polling selector
+        document.querySelectorAll('#gpsPollingGroup .segment').forEach(button => {
+            button.addEventListener('click', function() {
+                document.querySelectorAll('#gpsPollingGroup .segment').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                document.getElementById('gpsPolling').value = this.getAttribute('data-value');
             });
         });
     }
@@ -312,12 +333,15 @@
         document.getElementById('btnStop').disabled = false;
         startTime = Date.now();
         
+        const pollingSeconds = parseInt(document.getElementById('gpsPolling').value);
+        const intervalMs = pollingSeconds * 1000;
+
         pollInterval = setInterval(() => {
             navigator.geolocation.getCurrentPosition(updateLocation, 
                 (err) => console.log("GPS Error:", err), 
                 { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
             );
-        }, 10000);
+        }, intervalMs);
     }
 
     function stopTracking() {
@@ -407,17 +431,3 @@
 </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
