@@ -7,7 +7,7 @@
 ## 🌟 Features
 
 * **Real-Time Physics Simulation**: Estimates energy consumption ($Wh/km$) based on vehicle weight, altitude changes, and environmental factors.
-* **Real-time Geolocation Tracking**: Live mapping using Leaflet.js with a dedicated "Tesla-inspired" aesthetic.
+* **Real-time Geolocation Tracking**: Live mapping using Leaflet.js and providing a configurable GPS polling interval.
 * **Dynamic UI**: Includes a live Leaflet map and three synchronized Chart.js dashboards for Altitude, Consumption, and Energy Balance.
 * **Dynamic Physics Engine**: Calculates energy consumption ($Wh/km$) by accounting for:
     * **Vehicle Mass**: User-configurable weight impacts.
@@ -30,7 +30,7 @@ The core of Trip Master is its ability to estimate energy usage without a direct
 
 ### 1. Distance & Slope
 The system calculates the distance between two GPS coordinates using the **Haversine formula** to determine the shortest distance over the earth's surface. 
-Distance is validated against a 2-meter movement threshold to filter out GPS "jitter" during stops.
+Distance is validated against a 5-meter movement threshold to filter out GPS "jitter" during stops.
 
 ### 2. The Energy Formula
 For every recorded step, the energy consumption ($Wh$) is calculated using a simplified physics model:
@@ -75,7 +75,7 @@ To maintain a lightweight, client-side architecture, the following assumptions a
     ```
 2.  **Deployment**:
     Since this is a client-side application, you can simply open `index.html` in any modern browser. For PWA features (Service Workers), it is recommended to serve it via HTTPS or a local server.
-3.  **Configuration**: Input your specific **Vehicle Weight**, current **Ambient Temperature** and **Headwind**
+3.  **Configuration**: Input your specific **Vehicle Weight**, current **Ambient Temperature**, **Headwind** and **GPS Polling**.
 4.  **Usage**:
     * Grant Location Permissions when prompted.
     * Press **Start Trip** to begin recording data.
