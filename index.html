@@ -264,9 +264,27 @@
     }
 
     function setupMap() {
-        map = L.map('map').setView([41.8919, 12.5113], 13);
+        map = L.map('map');
+        
         L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(map);
+        
         pathLine = L.polyline([], {color: '#e21017', weight: 5}).addTo(map);
+
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    const { latitude, longitude } = pos.coords;
+                    map.setView([latitude, longitude], 15);
+                },
+                (err) => {
+                    console.log("GEO initial loading error:", err);
+                    map.setView([41.8919, 12.5113], 13);
+                },
+                { enableHighAccuracy: true }
+            );
+        } else {
+            map.setView([41.8919, 12.5113], 13);
+        }
     }
 
     function setupCharts() {
@@ -431,4 +449,3 @@
 </script>
 </body>
 </html>
-
