@@ -67,8 +67,10 @@ To maintain a lightweight, client-side architecture, the following assumptions a
 
 ## 🛠 Installation & Usage
 
-1. 📂 **Clone the repository**:
-   git clone https://github.com/gianfrancopiazzolla/Trip-Master.git
+1.  📂 **Clone the repository (optional):**
+    ```bash
+    git clone https://github.com/your-username/ev-master.git
+    ```
 
 2. 🚀 **Deployment**:
    Since this is a client-side application, you can simply open index.html in any modern browser. For PWA features (Service Workers), it is recommended to serve it via HTTPS or a local server.
