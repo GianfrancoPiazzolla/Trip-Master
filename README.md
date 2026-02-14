@@ -97,4 +97,5 @@ This project is distributed under the **MIT License**. Feel free to use, modify,
 
 ---
 
-**Developed for the sustainable mobility community.** If you find this tool helpful, please leave a ⭐! 😉
+**Developed for the sustainable mobility community.**
+*If you find this tool helpful, please leave a ⭐!* 😉
