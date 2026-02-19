@@ -71,7 +71,7 @@ Upon receiving weather data, the system automatically updates the **Thermal Effi
 ### 🧪 Physics Integration
 The weather data feeds directly into the **Energy Consumption Algorithm**:
 * **Thermal Loss**: The `Efficiency Factor` is used to scale the base resistance, simulating the extra energy spent on battery thermal management or cabin heating.
-* **Wind Interaction**: Users can manually refine calculations by inputting the **Headwind (Km/h)** 🌬️ to adjust aerodynamic drag.
+* **Wind Interaction**: Users can manually refine calculations by inputting the **Headwind (Km/h)** 🌬️ to adjust aerodynamic drag starting from weather condition info shown.
 
 ---
 
