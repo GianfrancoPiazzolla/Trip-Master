@@ -44,6 +44,37 @@ $$E_{step} = \frac{(R_{base} \cdot d_{Km}) + E_{pot}}{Efficiency_{temp}}$$
 
 ---
 
+## 🌤️ Weather Condition & Dynamic Efficiency
+
+The **Weather Condition** provides real-time atmospheric data and automatically tunes the vehicle's efficiency parameters based on environmental factors.
+
+### 🛰️ Real-Time Synchronization
+* **Live Data**: The system polls the **Open-Meteo API** to fetch high-precision weather data based on your current GPS coordinates.
+* **Automatic Updates**: The weather is refreshed at the start of the trip and every 2km during navigation to ensure data accuracy.
+* **Atmospheric Insights**:
+    * **Iconography**: Dynamic pictograms (☀️, 🌧️, ❄️, etc.) represent current sky conditions.
+    * **Temperature Tracking**: Monitors current, minimum, and maximum daily temperatures 🌡️.
+    * **Barometric Pressure**: Displays local pressure in **hPa**.
+
+### ❄️ Smart Thermal Efficiency (Auto-Config)
+The dashboard features an **Intelligent Thermal Efficiency** logic. Electric Vehicle (EV) performance varies significantly with temperature, and this tool automates the adjustment. 
+
+Upon receiving weather data, the system automatically updates the **Thermal Efficiency (%@°C)** setting:
+
+| Temperature Range | Efficiency Factor | Description |
+| :--- | :---: | :--- |
+| **> 20 °C** | `1.0` | 100% Efficiency - Optimal conditions 🟢 |
+| **10 °C to 20 °C** | `0.85` | 85% Efficiency - Mild performance impact 🟡 |
+| **0 °C to 10 °C** | `0.70` | 70% Efficiency - Cold weather overhead 🟠 |
+| **< 0 °C** | `0.55` | 55% Efficiency - Significant winter range loss 🔴 |
+
+### 🧪 Physics Integration
+The weather data feeds directly into the **Energy Consumption Algorithm**:
+* **Thermal Loss**: The `Efficiency Factor` is used to scale the base resistance, simulating the extra energy spent on battery thermal management or cabin heating.
+* **Wind Interaction**: Users can manually refine calculations by inputting the **Headwind (Km/h)** 🌬️ to adjust aerodynamic drag.
+
+---
+
 ## ⚠️ Known Limitations & Assumptions
 
 To maintain a lightweight, client-side architecture, the following assumptions are made:
