@@ -54,7 +54,9 @@ The **Weather Condition** provides real-time atmospheric data and automatically 
 * **Atmospheric Insights**:
     * **Iconography**: Dynamic pictograms (☀️, 🌧️, ❄️, etc.) represent current sky conditions.
     * **Temperature Tracking**: Monitors current, minimum, and maximum daily temperatures 🌡️.
-    * **Barometric Pressure**: Displays local pressure in **hPa**.
+    * **Relative Humidity**: Displays local relative humidity 💧.
+    * **Wind Traking**: Monitors wind speed and direction 🌬️.
+    * **Barometric Pressure**: Displays local pressure ⏲️.
 
 ### ❄️ Smart Thermal Efficiency (Auto-Config)
 The dashboard features an **Intelligent Thermal Efficiency** logic. Electric Vehicle (EV) performance varies significantly with temperature, and this tool automates the adjustment. 
