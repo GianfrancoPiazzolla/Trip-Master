@@ -1,134 +1,273 @@
-# Trip Master: High-Performance EV Energy Dashboard 🚗⚡
+# ⚡ Trip Master
 
-**Trip Master** is a real-time tracking application designed specifically for electric vehicle (EV) enthusiasts and sustainable mobility analysis. Built as a Progressive Web App (PWA), it transforms raw GPS data into actionable energy insights, providing a live "physics-engine" view of your trip's efficiency.
+> **High-performance, real-time EV trip tracking and energy analysis dashboard**
 
----
-
-## 🌟 Features
-
-* ⚛️ **Real-Time Physics Simulation**: Estimates energy consumption ($Wh/Km$) based on vehicle weight, altitude changes, and environmental factors.
-* 📍 **Real-time Geolocation Tracking**: Live mapping using Leaflet.js and providing a configurable GPS polling interval.
-* 📊 **Dynamic UI**: Includes a live Leaflet map and three synchronized Chart.js dashboards for Altitude, Consumption, and Energy Balance.
-* ⚙️ **Dynamic Physics Engine**: Calculates energy consumption ($Wh/Km$) by accounting for:
-    * ⚖️ **Vehicle Mass**: User-configurable weight impacts.
-    * 🌡️ **Thermal Efficiency**: Adjusts battery performance based on ambient temperature.
-    * 🌬️ **Aerodynamics**: Factors in headwind speeds.
-    * ⛰️ **Potential Energy**: Real-time altitude and grade (slope) integration.
-* 🔋 **Energy Recovery Monitoring**: Tracks total regenerative braking gains ($Wh$) during descents.
-* 📈 **Interactive Analytics**: Three-tier chart system powered by Chart.js:
-    * 🗺️ **Altitude Profile**: Visualize the terrain elevation.
-    * ⚡ **Instantaneous Consumption**: Real-time efficiency tracking.
-    * ⚖️ **Energy Balance**: Comparative bar chart of energy consumed vs. energy recovered.
-* 📱 **PWA Ready**: Features a manifest and mobile-optimized viewport for use as a standalone "Web App" on mobile devices.
-* 🌙 **Responsive & Dark Mode**: Optimized for mobile use with a toggleable Dark/Light UI.
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
+[![PWA](https://img.shields.io/badge/PWA-Ready-blueviolet)](https://web.dev/progressive-web-apps/)
+[![HTML5](https://img.shields.io/badge/HTML5-E34F26?logo=html5&logoColor=white)](https://developer.mozilla.org/en-US/docs/Web/HTML)
+[![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?logo=javascript&logoColor=black)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
+[![Leaflet](https://img.shields.io/badge/Leaflet-199900?logo=leaflet&logoColor=white)](https://leafletjs.com/)
+[![Chart.js](https://img.shields.io/badge/Chart.js-FF6384?logo=chartdotjs&logoColor=white)](https://www.chartjs.org/)
 
 ---
 
-## 🧮 Calculation Logic & Physics Engine
-
-The core of Trip Master is its ability to estimate energy usage without a direct OBDII connection. It uses the following logic to derive consumption:
-
-### 1. Distance & Slope
-The system calculates the distance between two GPS coordinates using the **Haversine formula** to determine the shortest distance over the earth's surface. 
-Distance is validated against a 5-meter movement threshold to filter out GPS "jitter" during stops.
-
-### 2. The Energy Formula
-For every recorded step, the energy consumption ($Wh$) is calculated using a simplified physics model:
-
-$$E_{step} = \frac{(R_{base} \cdot d_{Km}) + E_{pot}}{Efficiency_{temp}}$$
-
-**Where:**
-* **Base Resistance ($R_{base}$)**: A derived constant accounting for rolling resistance and aerodynamic drag, adjusted by user-inputted headwind and vehicle weight. The formula used is roughly `(120 + (wind * 0.8) + (weight * 0.012))`.
-* **Potential Energy ($E_{pot}$)**: Calculated as $\frac{m \cdot g \cdot \Delta h}{3600}$ to convert Joules to Watt-hours, where $m$ is weight and $\Delta h$ is the change in altitude.
-* **Regenerative Braking**: If $E_{step}$ is negative (downhill), the system applies a **70% recuperation efficiency** factor to the potential energy gained, adding it to the "Brake Regen" total.
+**Trip Master** is a lightweight, zero-dependency, single-file web application designed for **electric vehicle (EV) drivers**. It provides real-time GPS-based trip tracking, physics-accurate energy consumption modelling, live weather integration, and interactive charts — all running entirely in the browser with no backend required.
 
 ---
 
-## 🌤️ Weather Condition & Dynamic Efficiency
+## ✨ Features
 
-The **Weather Condition** provides real-time atmospheric data and automatically tunes the vehicle's efficiency parameters based on environmental factors.
-
-### 🛰️ Real-Time Synchronization
-* **Live Data**: The system polls the **Open-Meteo API** to fetch high-precision weather data based on your current GPS coordinates.
-* **Automatic Updates**: The weather is refreshed at the start of the trip and every 2km during navigation to ensure data accuracy.
-* **Atmospheric Insights**:
-    * **Iconography**: Dynamic pictograms (☀️, 🌧️, ❄️, etc.) represent current sky conditions.
-    * **Temperature Tracking**: Monitors current, minimum, and maximum daily temperatures 🌡️.
-    * **Relative Humidity**: Displays local relative humidity 💧.
-    * **Wind Traking**: Monitors wind speed and direction 🌬️.
-    * **Barometric Pressure**: Displays local pressure ⏲️.
-
-### ❄️ Smart Thermal Efficiency (Auto-Config)
-The dashboard features an **Intelligent Thermal Efficiency** logic. Electric Vehicle (EV) performance varies significantly with temperature, and this tool automates the adjustment. 
-
-Upon receiving weather data, the system automatically updates the **Thermal Efficiency (%@°C)** setting:
-
-| Temperature Range | Efficiency Factor | Description |
-| :--- | :---: | :--- |
-| **> 20 °C** | `1.0` | 100% Efficiency - Optimal conditions 🟢 |
-| **10 °C to 20 °C** | `0.85` | 85% Efficiency - Mild performance impact 🟡 |
-| **0 °C to 10 °C** | `0.70` | 70% Efficiency - Cold weather overhead 🟠 |
-| **< 0 °C** | `0.55` | 55% Efficiency - Significant winter range loss 🔴 |
-
-### 🧪 Physics Integration
-The weather data feeds directly into the **Energy Consumption Algorithm**:
-* **Thermal Loss**: The `Efficiency Factor` is used to scale the base resistance, simulating the extra energy spent on battery thermal management or cabin heating.
-* **Wind Interaction**: Users can manually refine calculations by inputting the **Headwind (Km/h)** 🌬️ to adjust aerodynamic drag starting from weather condition info shown.
+### 🗺️ Live GPS Tracking & Map
+- Uses the browser's **Geolocation API** with `enableHighAccuracy: true` for precise positioning.
+- Renders an interactive map powered by **Leaflet.js** with **CartoDB Voyager** tiles (high-saturation visual style).
+- Draws the driven route as a **live red polyline** that updates in real time.
+- The map automatically **pans to follow** the current position as the trip progresses.
+- Falls back to a default **Rome, Italy** center view if geolocation is unavailable.
+- In **dark mode**, the map tile filter is adjusted (`brightness + contrast + saturation`) for comfortable night use.
 
 ---
 
-## ⚠️ Known Limitations & Assumptions
+### ⚙️ Trip Configuration Panel
+Four configurable parameters available before and during a trip:
 
-To maintain a lightweight, client-side architecture, the following assumptions are made:
+| Parameter | Description |
+|---|---|
+| 🏋️ **Vehicle Weight (Kg)** | Numeric input (default: 2200 kg). Used in physics calculations for rolling resistance and gravitational potential energy. |
+| 🌡️ **Thermal Efficiency (%@°C)** | Segmented control selecting battery efficiency based on ambient temperature: **100%** at 20°C, **85%** at 10°C, **70%** at 0°C, **55%** at -10°C. Color-coded green → yellow → orange → red. |
+| 💨 **Headwind (Km/h)** | Numeric input for wind resistance, factored into the aerodynamic drag component. |
+| 📡 **GPS Polling (s)** | Segmented control for the GPS sampling interval: **1s, 5s (default), 10s, 30s, 60s**. |
 
-* 🏎️ **Aerodynamic Drag**: The model uses a simplified linear scaling for wind resistance rather than a full quadratic drag equation.
-* 🌡️ **Constant Efficiency**: The "Temp Efficiency" selection applies a global multiplier to simulate battery internal resistance.
-* 🛰️ **GPS Altitude**: Accuracy is dependent on the device's GPS altimeter, which can be less precise than barometric sensors.
-* 🔌 **Regen Fixed Rate**: Regenerative braking is capped at a 70% return rate and assumes the battery is not at 100% SoC.
-
----
-
-## 🛠️ Technical Stack
-
-* 🌐 **Frontend**: HTML5, CSS3 (Custom properties for theming).
-* 🗺️ **Mapping**: [Leaflet.js](https://leafletjs.com/) with CartoDB Voyager tiles.
-* 📈 **Data Visualization**: [Chart.js](https://www.chartjs.org/).
-* 🔢 **Calculations**: Vanilla JavaScript implementation of the Haversine formula and kinetic energy physics.
-* 📦 **PWA**: Service Worker integration for offline readiness and "Add to Home Screen" support.
+> 💡 On app load, the **thermal efficiency preset is automatically selected** based on the current ambient temperature fetched from the weather API.
 
 ---
 
-## 🛠 Installation & Usage
+### 📊 Real-Time Statistics Dashboard
+Six stat cards updated live during the trip:
 
-1.  📂 **Clone the repository (optional):**
-    ```bash
-    git clone https://github.com/your-username/ev-master.git
-    ```
-
-2. 🚀 **Deployment**:
-   Since this is a client-side application, you can simply open index.html in any modern browser. For PWA features (Service Workers), it is recommended to serve it via HTTPS or a local server.
-
-3. ⚙️ **Configuration**: Input your specific **Vehicle Weight**, current **Ambient Temperature**, **Headwind** and **GPS Polling**.
-
-4. 🏁 **Usage**:
-    * Grant Location Permissions when prompted.
-    * Press **Start Trip** to begin recording data.
+| Stat | Unit | Accent |
+|---|---|---|
+| 📍 **Trip Distance** | Km | Blue |
+| 🚗 **Average Speed** | Km/h | Blue |
+| ⚡ **Run Consumption** | Wh/Km | Red |
+| 🏔️ **Route Altitude** | m | Yellow |
+| 📐 **Route Grade** | % | Yellow |
+| 🔋 **Brake Regen** | Wh | Green |
 
 ---
 
-## 📱 Mobile Installation
+### 🧠 Physics Engine
 
-Trip Master is designed to feel like a native app.
-* 🍎 **iOS**: Open in Safari -> Share -> "Add to Home Screen".
-* 🤖 **Android**: Open in Chrome -> Settings -> "Install App".
+#### 📏 Distance — Haversine Formula
+
+The distance between two consecutive GPS coordinates is computed using the **Haversine formula**, which gives the great-circle distance over a spherical Earth of radius $R = 6{,}371{,}000\ \text{m}$:
+
+$$a = \sin^2\!\left(\frac{\Delta\varphi}{2}\right) + \cos\varphi_1 \cdot \cos\varphi_2 \cdot \sin^2\!\left(\frac{\Delta\lambda}{2}\right)$$
+
+$$d = 2R\,\arctan2\!\left(\sqrt{a},\,\sqrt{1-a}\right)$$
+
+where $\varphi$ is latitude and $\lambda$ is longitude, both in radians.
+
+> 🚫 GPS readings with $d \leq 5\ \text{m}$ are **discarded** to suppress positioning noise.
+
+---
+
+#### ⚡ Energy Consumption per Step
+
+For each accepted GPS step of distance $d\ [\text{km}]$, the total energy expenditure is:
+
+$$E_{\text{step}} = \underbrace{R_{\text{base}} \cdot d}_{\text{resistive losses}} + \underbrace{\dfrac{m\,g\,\Delta h}{3600}}_{\text{potential energy}} \qquad [\text{Wh}]$$
+
+where the **base resistance** $R_{\text{base}}$ is:
+
+$$R_{\text{base}} = \frac{120 + 0.8\,v_w + 0.012\,m}{\eta} \qquad \left[\frac{\text{Wh}}{\text{km}}\right]$$
+
+| Symbol | Quantity | Unit |
+|---|---|---|
+| $m$ | Vehicle mass | kg |
+| $g$ | Gravitational acceleration $(9.81)$ | m/s² |
+| $\Delta h$ | Altitude change between two GPS points | m |
+| $v_w$ | Headwind speed | km/h |
+| $\eta$ | Thermal efficiency factor | dimensionless $\in (0,\,1]$ |
+| $d$ | Step distance | km |
+
+---
+
+#### 🔋 Regenerative Braking Model
+
+When $E_{\text{step}} < 0$ (downhill or deceleration), energy is **not consumed** but partially recovered at a recovery efficiency of **70%**:
+
+$$E_{\text{step}} < 0 \;\Longrightarrow\; \begin{cases} E_{\text{regen}} \mathrel{+}= \left|E_{\text{step}}\right| \cdot 0.70 \\ E_{\text{consumed}} \mathrel{+}= 0 \end{cases}$$
+
+When $E_{\text{step}} \geq 0$:
+
+$$E_{\text{step}} \geq 0 \;\Longrightarrow\; \begin{cases} E_{\text{consumed}} \mathrel{+}= E_{\text{step}} \\ E_{\text{regen}} \mathrel{+}= 0 \end{cases}$$
+
+The **instantaneous specific consumption** reported in the dashboard is:
+
+$$c_{\text{inst}} = \left\lfloor \frac{E_{\text{step}}}{d} \right\rfloor \qquad \left[\frac{\text{Wh}}{\text{km}}\right]$$
+
+---
+
+#### 📐 Road Grade
+
+The road gradient between two consecutive GPS points is expressed as a percentage:
+
+$$G = \frac{\Delta h}{d_{\text{m}}} \times 100 \qquad [\%]$$
+
+where $d_{\text{m}}$ is the step distance in **metres**.
+
+---
+
+#### 🚗 Average Speed
+
+The average speed over the entire trip is:
+
+$$\bar{v} = \frac{D_{\text{total}}\ [\text{km}]}{\Delta t\ [\text{h}]} \qquad \left[\frac{\text{km}}{\text{h}}\right]$$
+
+where $\Delta t$ is the elapsed time since **Start Trip** was pressed.
+
+---
+
+### 🌡️ Thermal Efficiency Presets
+
+The factor $\eta$ is automatically selected from the current ambient temperature at startup:
+
+| Temperature Range | $\eta$ | Label | Color |
+|---|---|---|---|
+| $T \geq 20\ °\text{C}$ | $1.00$ | 100% @ 20°C | 🟢 Green |
+| $10 \leq T < 20\ °\text{C}$ | $0.85$ | 85% @ 10°C | 🟡 Yellow |
+| $0 \leq T < 10\ °\text{C}$ | $0.70$ | 70% @ 0°C | 🟠 Orange |
+| $T < 0\ °\text{C}$ | $0.55$ | 55% @ −10°C | 🔴 Red |
+
+---
+
+### 📈 Live Charts (Chart.js)
+
+Four chart panels displayed side by side (2×2 on tablet, stacked on mobile):
+
+| Chart | Type | X-Axis | Description |
+|---|---|---|---|
+| 🏔️ **Altitude Profile** | Line (filled) | Distance (Km) | Elevation in metres over distance traveled. Orange line. |
+| ⚡ **Consumption Profile** | Line (filled) | Distance (Km) | $c_{\text{inst}}\ [\text{Wh/km}]$ over distance. Red line. |
+| 🔋 **Energy Balance** | Bar (grouped) | Trip Total | $E_{\text{consumed}}$ (red) vs $E_{\text{regen}}$ (green). |
+| 🌤️ **Weather Condition** | Custom widget | — | Live weather panel. |
+
+All charts use `update('none')` for maximum rendering performance. Axis colours adapt dynamically to the active theme.
+
+---
+
+### 🌦️ Live Weather Integration
+- Powered by the **Open-Meteo API** (free, no API key required).
+- Fetched automatically at **app startup** based on current GPS position.
+- **Refreshed every 2 km** of distance traveled during a trip.
+- The weather panel displays:
+  - 🌡️ Current temperature (°C)
+  - ⬇️ Min / Max daily temperature (°C)
+  - 💧 Relative humidity (%)
+  - 💨 Wind speed (Km/h)
+  - 🧭 Wind direction — 8-point compass with arrow glyphs (N ↑, NE ↗, E →, …)
+  - 🔵 Surface pressure (hPa)
+  - 🌈 Weather pictogram — emoji icon mapped from WMO weather code
+- Each value is **colour-coded** on update: 🟢 green if increased, 🔴 red if decreased vs. the previous reading.
+
+---
+
+### 🎮 Trip Controls
+- ▶️ **Start Trip** — Begins GPS polling at the configured interval, records `startTime`, disables itself, enables Stop.
+- ⏹️ **Stop Trip** — Clears the polling interval, re-enables Start. All accumulated data is preserved for review.
+
+---
+
+### 🌗 Light / Dark Theme
+- Toggle button in the header (🌙 / ☀️).
+- Full CSS variable-based theming: backgrounds, cards, inputs, borders, labels, and modal overlays.
+- Dark mode uses pure black (`#000000`) for OLED-friendly display.
+- Map tile filter and chart axis colours update dynamically on toggle.
+
+---
+
+### 📱 Progressive Web App (PWA)
+- Includes a **Web App Manifest** (`manifest.json`) for home-screen installability on Android and iOS.
+- Registers a **Service Worker** (`sw.js`) for offline caching capability.
+- Apple-specific meta tags for full-screen display and status bar styling.
+- Requests a **Screen Wake Lock** (`navigator.wakeLock`) on startup to keep the screen on during navigation.
+
+---
+
+### 📐 Responsive Layout
+
+| Breakpoint | Layout |
+|---|---|
+| > 1100 px | 4-column chart grid |
+| 800–1100 px | 2-column chart grid |
+| < 800 px | Single-column, scrollable; 250px fixed map; 3-column stat grid |
+
+---
+
+## 🛠️ Tech Stack
+
+| Technology | Role |
+|---|---|
+| 🌐 **HTML5 / CSS3 / Vanilla JS** | Core application — no build step, no framework |
+| 🗺️ **Leaflet.js v1.9.4** | Interactive map rendering |
+| 📊 **Chart.js** | Real-time charts |
+| 🌦️ **Open-Meteo API** | Free weather data (no API key needed) |
+| 📡 **Browser Geolocation API** | GPS positioning |
+| 📱 **Service Worker + Manifest** | PWA support |
+| 🔒 **Screen Wake Lock API** | Keeps screen active during trips |
+
+---
+
+## 🚀 Getting Started
+
+### Option 1 — Open directly in browser
+```bash
+git clone https://github.com/gianfrancopiazzolla/Trip-Master.git
+cd Trip-Master
+open index.html
+```
+
+> ⚠️ For GPS and Service Worker to function correctly, the app must be served over **HTTPS** or `localhost`.
+
+### Option 2 — Local development server
+```bash
+# Python
+python3 -m http.server 8080
+
+# Node.js
+npx serve .
+```
+Then open `http://localhost:8080`.
+
+### Option 3 — Static deployment
+Upload all files to any static host (GitHub Pages, Netlify, Vercel). No server-side processing required.
+
+---
+
+## 📁 File Structure
+
+```
+Trip-Master/
+├── index.html          # 🧠 Main application (self-contained)
+├── manifest.json       # 📱 PWA manifest
+├── sw.js               # ⚙️  Service Worker
+├── favicon.ico         # 🔖 Browser tab icon
+└── icon-192x192.png    # 📲 PWA home screen icon
+```
 
 ---
 
 ## 📄 License
 
-This project is distributed under the **MIT License**. Feel free to use, modify, and share.
+Distributed under the **MIT License**. Feel free to use, modify, and share.
 
 ---
 
-**Developed for the sustainable mobility community.**
-*If you find this tool helpful, please leave a ⭐!* 😉
+## 👤 Author
+
+**Gianfranco Piazzolla**
+- 🐙 GitHub: [@gianfrancopiazzolla](https://github.com/gianfrancopiazzolla)
+
+---
+
+> _Developed for the sustainable mobility community. If you find this tool helpful, please leave a ⭐ on GitHub!_
