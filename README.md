@@ -61,9 +61,13 @@ Six stat cards updated live during the trip:
 
 The distance between two consecutive GPS coordinates is computed using the **Haversine formula**, which gives the great-circle distance over a spherical Earth of radius $R = 6{,}371{,}000\ \text{m}$:
 
-$$a = \sin^2\!\left(\frac{\Delta\varphi}{2}\right) + \cos\varphi_1 \cdot \cos\varphi_2 \cdot \sin^2\!\left(\frac{\Delta\lambda}{2}\right)$$
+```math
+a = \sin^2\!\left(\frac{\Delta\varphi}{2}\right) + \cos\varphi_1 \cdot \cos\varphi_2 \cdot \sin^2\!\left(\frac{\Delta\lambda}{2}\right)
+```
 
-$$d = 2R\,\arctan2\!\left(\sqrt{a},\,\sqrt{1-a}\right)$$
+```math
+d = 2R\,\arctan2\!\left(\sqrt{a},\,\sqrt{1-a}\right)
+```
 
 where $\varphi$ is latitude and $\lambda$ is longitude, both in radians.
 
@@ -73,22 +77,26 @@ where $\varphi$ is latitude and $\lambda$ is longitude, both in radians.
 
 #### ⚡ Energy Consumption per Step
 
-For each accepted GPS step of distance $d\ [\text{km}]$, the total energy expenditure is:
+For each accepted GPS step of distance $d\ [\text{Km}]$, the total energy expenditure is:
 
-$$E_{\text{step}} = \underbrace{R_{\text{base}} \cdot d}_{\text{resistive losses}} + \underbrace{\dfrac{m\,g\,\Delta h}{3600}}_{\text{potential energy}} \qquad [\text{Wh}]$$
+```math
+E_{\text{step}} = \underbrace{R_{\text{base}} \cdot d}_{\text{resistive losses}} + \underbrace{\dfrac{m\,g\,\Delta h}{3600}}_{\text{potential energy}} \qquad [\text{Wh}]
+```
 
 where the **base resistance** $R_{\text{base}}$ is:
 
-$$R_{\text{base}} = \frac{120 + 0.8\,v_w + 0.012\,m}{\eta} \qquad \left[\frac{\text{Wh}}{\text{km}}\right]$$
+```math
+R_{\text{base}} = \frac{120 + 0.8\,v_w + 0.012\,m}{\eta} \qquad \left[\frac{\text{Wh}}{\text{Km}}\right]
+```
 
 | Symbol | Quantity | Unit |
 |---|---|---|
 | $m$ | Vehicle mass | kg |
 | $g$ | Gravitational acceleration $(9.81)$ | m/s² |
 | $\Delta h$ | Altitude change between two GPS points | m |
-| $v_w$ | Headwind speed | km/h |
-| $\eta$ | Thermal efficiency factor | dimensionless $\in (0,\,1]$ |
-| $d$ | Step distance | km |
+| $v_w$ | Headwind speed | Km/h |
+| $\eta$ | Thermal efficiency factor | dimensionless $\in (0..1]$ |
+| $d$ | Step distance | Km |
 
 ---
 
@@ -96,15 +104,21 @@ $$R_{\text{base}} = \frac{120 + 0.8\,v_w + 0.012\,m}{\eta} \qquad \left[\frac{\t
 
 When $E_{\text{step}} < 0$ (downhill or deceleration), energy is **not consumed** but partially recovered at a recovery efficiency of **70%**:
 
-$$E_{\text{step}} < 0 \;\Longrightarrow\; \begin{cases} E_{\text{regen}} \mathrel{+}= \left|E_{\text{step}}\right| \cdot 0.70 \\ E_{\text{consumed}} \mathrel{+}= 0 \end{cases}$$
+```math
+E_{\text{step}} < 0 \;\Longrightarrow\; \begin{cases} E_{\text{regen}} \mathrel{+}= \left|E_{\text{step}}\right| \cdot 0.70 \\ E_{\text{consumed}} \mathrel{+}= 0 \end{cases}
+```
 
 When $E_{\text{step}} \geq 0$:
 
-$$E_{\text{step}} \geq 0 \;\Longrightarrow\; \begin{cases} E_{\text{consumed}} \mathrel{+}= E_{\text{step}} \\ E_{\text{regen}} \mathrel{+}= 0 \end{cases}$$
+```math
+E_{\text{step}} \geq 0 \;\Longrightarrow\; \begin{cases} E_{\text{consumed}} \mathrel{+}= E_{\text{step}} \\ E_{\text{regen}} \mathrel{+}= 0 \end{cases}
+```
 
 The **instantaneous specific consumption** reported in the dashboard is:
 
-$$c_{\text{inst}} = \left\lfloor \frac{E_{\text{step}}}{d} \right\rfloor \qquad \left[\frac{\text{Wh}}{\text{km}}\right]$$
+```math
+c_{\text{inst}} = \left\lfloor \frac{E_{\text{step}}}{d} \right\rfloor \qquad \left[\frac{\text{Wh}}{\text{Km}}\right]
+```
 
 ---
 
@@ -112,7 +126,9 @@ $$c_{\text{inst}} = \left\lfloor \frac{E_{\text{step}}}{d} \right\rfloor \qquad 
 
 The road gradient between two consecutive GPS points is expressed as a percentage:
 
-$$G = \frac{\Delta h}{d_{\text{m}}} \times 100 \qquad [\%]$$
+```math
+G = \frac{\Delta h}{d_{\text{m}}} \times 100 \qquad [\%]
+```
 
 where $d_{\text{m}}$ is the step distance in **metres**.
 
@@ -122,7 +138,9 @@ where $d_{\text{m}}$ is the step distance in **metres**.
 
 The average speed over the entire trip is:
 
-$$\bar{v} = \frac{D_{\text{total}}\ [\text{km}]}{\Delta t\ [\text{h}]} \qquad \left[\frac{\text{km}}{\text{h}}\right]$$
+```math
+\bar{v} = \frac{D_{\text{total}}\ [\text{Km}]}{\Delta t\ [\text{h}]} \qquad \left[\frac{\text{Km}}{\text{h}}\right]
+```
 
 where $\Delta t$ is the elapsed time since **Start Trip** was pressed.
 
@@ -148,7 +166,7 @@ Four chart panels displayed side by side (2×2 on tablet, stacked on mobile):
 | Chart | Type | X-Axis | Description |
 |---|---|---|---|
 | 🏔️ **Altitude Profile** | Line (filled) | Distance (Km) | Elevation in metres over distance traveled. Orange line. |
-| ⚡ **Consumption Profile** | Line (filled) | Distance (Km) | $c_{\text{inst}}\ [\text{Wh/km}]$ over distance. Red line. |
+| ⚡ **Consumption Profile** | Line (filled) | Distance (Km) | $c_{\text{inst}}\ [\text{Wh/Km}]$ over distance. Red line. |
 | 🔋 **Energy Balance** | Bar (grouped) | Trip Total | $E_{\text{consumed}}$ (red) vs $E_{\text{regen}}$ (green). |
 | 🌤️ **Weather Condition** | Custom widget | — | Live weather panel. |
 
@@ -159,7 +177,7 @@ All charts use `update('none')` for maximum rendering performance. Axis colours 
 ### 🌦️ Live Weather Integration
 - Powered by the **Open-Meteo API** (free, no API key required).
 - Fetched automatically at **app startup** based on current GPS position.
-- **Refreshed every 2 km** of distance traveled during a trip.
+- **Refreshed every 2 Km** of distance traveled during a trip.
 - The weather panel displays:
   - 🌡️ Current temperature (°C)
   - ⬇️ Min / Max daily temperature (°C)
