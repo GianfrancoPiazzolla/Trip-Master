@@ -12,8 +12,6 @@
     <title>Trip Master</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet">
     <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
@@ -38,7 +36,7 @@
             --card-shadow-hover: 0 8px 28px rgba(0,0,0,0.13), 0 2px 6px rgba(0,0,0,0.07);
         }
 
-        #map { filter: saturate(1.8) brightness(1.02); }
+        
 
         [data-theme="dark"] {
             --bg-color: #080b10; --card-bg: #0f1318;
@@ -54,11 +52,11 @@
         }
 
         [data-theme="dark"] #map {
-            filter: brightness(0.55) contrast(2.1) saturate(2.0);
+            filter: brightness(0.75);
         }
 
         [data-theme="dark"] #map3d {
-            filter: brightness(5) contrast(3.5) saturate(3.5);
+            filter: brightness(0.75);
         }
 
         * { box-sizing: border-box; }
@@ -1143,11 +1141,47 @@
         document.getElementById('themeBtn').innerText = currentTheme === 'dark' ? '☀️' : '🌙';
         updateChartTheme();
 
+        // Update 2D map style
+        const lightStyle = 'https://tiles.openfreemap.org/styles/liberty';
+        map.setStyle(lightStyle);
+        map.once('styledata', () => {
+            if (map3dCoords.length > 1) {
+                if (!map.getSource('trip-path-2d')) {
+                    map.addSource('trip-path-2d', {
+                        type: 'geojson',
+                        data: { type: 'Feature', geometry: { type: 'LineString', coordinates: map3dCoords } }
+                    });
+                    pathLine = map.getSource('trip-path-2d');
+                    map.addLayer({
+                        id: 'trip-path-2d-layer',
+                        type: 'line',
+                        source: 'trip-path-2d',
+                        layout: { 'line-join': 'round', 'line-cap': 'round' },
+                        paint: { 'line-color': '#e21017', 'line-width': 5, 'line-opacity': 0.9 }
+                    });
+                }
+            } else {
+                if (!map.getSource('trip-path-2d')) {
+                    map.addSource('trip-path-2d', {
+                        type: 'geojson',
+                        data: { type: 'Feature', geometry: { type: 'LineString', coordinates: [] } }
+                    });
+                    pathLine = map.getSource('trip-path-2d');
+                    map.addLayer({
+                        id: 'trip-path-2d-layer',
+                        type: 'line',
+                        source: 'trip-path-2d',
+                        layout: { 'line-join': 'round', 'line-cap': 'round' },
+                        paint: { 'line-color': '#e21017', 'line-width': 5, 'line-opacity': 0.9 }
+                    });
+                }
+            }
+        });
+
         // Update 3D map style if already initialized
         if (map3d) {
             const lightStyle = 'https://tiles.openfreemap.org/styles/liberty';
-            const darkStyle  = 'https://tiles.openfreemap.org/styles/dark';
-            map3d.setStyle(currentTheme === 'dark' ? darkStyle : lightStyle);
+            map3d.setStyle(lightStyle);
             map3d.once('styledata', () => {
                 if (map3dCoords.length > 1) {
                     map3dSource = map3d.getSource('trip-path');
@@ -1171,28 +1205,50 @@
     }
 
     function setupMap() {
-        map = L.map('map');
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(map);
-        pathLine = L.polyline([], { color: '#e21017', weight: 5 }).addTo(map);
+        const lightStyle = 'https://tiles.openfreemap.org/styles/liberty';
+        const darkStyle  = 'https://tiles.openfreemap.org/styles/dark';
+
+        map = new maplibregl.Map({
+            container: 'map',
+            style: lightStyle,
+            center: [12.5113, 41.8919],
+            zoom: 13,
+            pitch: 0,
+            bearing: 0,
+            antialias: true
+        });
+
+        map.on('load', () => {
+            map.addSource('trip-path-2d', {
+                type: 'geojson',
+                data: { type: 'Feature', geometry: { type: 'LineString', coordinates: [] } }
+            });
+            pathLine = map.getSource('trip-path-2d');
+            map.addLayer({
+                id: 'trip-path-2d-layer',
+                type: 'line',
+                source: 'trip-path-2d',
+                layout: { 'line-join': 'round', 'line-cap': 'round' },
+                paint: { 'line-color': '#e21017', 'line-width': 5, 'line-opacity': 0.9 }
+            });
+        });
 
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition((pos) => {
                 const { latitude, longitude } = pos.coords;
-                map.setView([latitude, longitude], 15);
+                map.setCenter([longitude, latitude]);
+                map.setZoom(15);
                 fetchWeather(latitude, longitude);
-            }, () => map.setView([41.8919, 12.5113], 13), { enableHighAccuracy: true });
-        } else {
-            map.setView([41.8919, 12.5113], 13);
+            }, () => {}, { enableHighAccuracy: true });
         }
     }
 
     function setup3DMap(lat, lng) {
         const lightStyle = 'https://tiles.openfreemap.org/styles/liberty';
-        const darkStyle  = 'https://tiles.openfreemap.org/styles/dark';
 
         map3d = new maplibregl.Map({
             container: 'map3d',
-            style: currentTheme === 'dark' ? darkStyle : lightStyle,
+            style: lightStyle,
             center: [lng, lat],
             zoom: 15,
             pitch: 60,
@@ -1246,7 +1302,7 @@
             btn.classList.remove('active');
             map3dEl.style.display = 'none';
             mapEl.style.display = 'block';
-            map.invalidateSize();
+            map.resize();
         }
     }
 
@@ -1495,11 +1551,14 @@
                 const instantCons = calculatePhysics(step, deltaAlt, lastSpeedKmh);
 
                 refreshUI(totalDistance, currentAlt, grade, instantCons, avgSpeed, lastSpeedKmh);
-                pathLine.addLatLng([latitude, longitude]);
-                map.panTo([latitude, longitude]);
 
-                // Update 3D path coordinates
+                // Update 2D map path
                 map3dCoords.push([longitude, latitude]);
+                if (pathLine) {
+                    pathLine.setData({ type: 'Feature', geometry: { type: 'LineString', coordinates: map3dCoords } });
+                }
+                map.panTo([longitude, latitude]);
+
                 if (map3d && map3dSource) {
                     map3dSource.setData({ type: 'Feature', geometry: { type: 'LineString', coordinates: map3dCoords } });
                 }
