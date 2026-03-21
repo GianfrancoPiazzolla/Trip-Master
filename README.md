@@ -6,7 +6,6 @@
 
 [![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)](https://developer.mozilla.org/en-US/docs/Web/HTML)
 [![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
-[![Leaflet](https://img.shields.io/badge/Leaflet-199900?style=for-the-badge&logo=leaflet&logoColor=white)](https://leafletjs.com/)
 [![MapLibre GL](https://img.shields.io/badge/MapLibre%20GL-396CB2?style=for-the-badge&logo=maplibre&logoColor=white)](https://maplibre.org/)
 [![Chart.js](https://img.shields.io/badge/Chart.js-FF6384?style=for-the-badge&logo=chartdotjs&logoColor=white)](https://www.chartjs.org/)
 [![PWA](https://img.shields.io/badge/PWA-5A0FC8?style=for-the-badge&logo=pwa&logoColor=white)](https://web.dev/progressive-web-apps/)
@@ -49,7 +48,9 @@
 
 ## 🌐 Overview
 
-**Trip Master** is a zero-backend, single-file web application designed for **electric vehicle drivers** who want real-time telemetry, energy analytics, and route visualization without installing a native app. It leverages the browser's native **Geolocation API**, a physics-based energy model, live weather data from **Open-Meteo**, and interactive charts powered by **Chart.js** and **Leaflet.js**.
+**Trip Master** is a zero-backend, single-file web application designed for **electric vehicle drivers** who want real-time telemetry, energy analytics, and route visualization without installing a native app. It leverages the browser's native **Geolocation API**, a physics-based energy model, live weather data from **Open-Meteo**, and interactive charts powered by **Chart.js**.
+
+Both the flat **2D view** and the immersive **3D perspective view** are rendered by **MapLibre GL JS** — a single, unified WebGL-based vector map engine — with tiles served by **OpenFreeMap**.
 
 The app runs entirely client-side. There is no server, no database, and no build pipeline. Drop the `index.html` file onto any web host and it works immediately.
 
@@ -60,13 +61,13 @@ The app runs entirely client-side. There is no server, no database, and no build
 | Feature | Description |
 |---|---|
 | 🛰️ **Real-time GPS Tracking** | Polls the device's GPS at user-selected intervals |
-| ⚡ **Physics-based Energy Model** | Computes consumption from first principles every GPS step |
+| ⚡ **Physics-based Energy Model** | Computes consumption from first principles on every GPS step |
 | 🔋 **SOC & Range Estimator** | Live battery state-of-charge widget with adaptive range forecast |
-| 🗺️ **Interactive Route Map** | Leaflet map rendering the live route polyline on a CartoDB tile layer |
-| 🌐 **3D Perspective Map** | MapLibre GL powered 3D map with tilted perspective and live route rendering |
+| 🗺️ **2D Route Map** | MapLibre GL flat top-down view with live route polyline on OpenFreeMap vector tiles |
+| 🌐 **3D Perspective Map** | MapLibre GL 3D tilted-perspective view with identical route data and WebGL rendering |
 | 🔄 **2D / 3D Map Toggle** | One-click button to switch between flat 2D view and immersive 3D view |
 | 📊 **4 Live Charts** | Elevation profile, consumption vs. distance, speed profile, energy balance |
-| 🌡️ **Live Weather Panel** | Auto-fetches Open-Meteo for temperature, humidity, wind, pressure |
+| 🌡️ **Live Weather Panel** | Auto-fetches Open-Meteo for temperature, humidity, wind, and pressure |
 | 🌙 **Dark / Light Theme** | Full dual-theme UI with smooth CSS variable transitions |
 | 📱 **PWA / Installable** | Service Worker + Web Manifest for offline use and home-screen install |
 | 🔒 **Wake Lock** | Prevents device screen from sleeping during active tracking |
@@ -419,7 +420,7 @@ Each profile snapshot captures exactly four configuration fields:
 | `batteryKwh` | `batteryCapacity` | Total usable battery capacity [kWh] |
 | `theme` | `currentTheme` | Active UI theme (`"light"` or `"dark"`) |
 
-> **Note:** Temperature efficiency and headwind speed are intentionally excluded — they represent real-time environmental conditions rather than vehicle-specific parameters.
+> 💡 **Note:** Temperature efficiency and headwind speed are intentionally excluded — they represent real-time environmental conditions rather than vehicle-specific parameters.
 
 ### ⚙️ Profile Functions
 
@@ -459,7 +460,7 @@ The profiles modal is accessible from the **👤 button** in the application hea
 
 Themes are implemented entirely via **CSS custom properties** on the `<body>` element's `data-theme` attribute. Toggling calls `toggleTheme()` which flips `currentTheme` and re-runs `updateChartTheme()` to recolor Chart.js axes and grid lines programmatically.
 
-**Light theme** key variables:
+**☀️ Light theme** key variables:
 
 ```css
 --bg-color: #f0f2f5;
@@ -467,7 +468,7 @@ Themes are implemented entirely via **CSS custom properties** on the `<body>` el
 --text-color: #0d0d12;
 ```
 
-**Dark theme** key variables:
+**🌙 Dark theme** key variables:
 
 ```css
 --bg-color: #080b10;
@@ -475,9 +476,9 @@ Themes are implemented entirely via **CSS custom properties** on the `<body>` el
 --text-color: #e8edf2;
 ```
 
-The Leaflet map also applies a CSS `filter` per theme:
-- **Light:** `saturate(1.8) brightness(1.02)` — vivid, high-contrast cartography
-- **Dark:** `brightness(0.55) contrast(2.1) saturate(2.0)` — moody dark cartography
+The MapLibre GL map style is switched per theme at initialization time (see [Map Modes](#️-map-modes-2d--3d)):
+- ☀️ **Light:** `liberty` style — vivid, high-contrast vector cartography
+- 🌙 **Dark:** `dark` style — low-contrast, moody dark vector cartography
 
 ### 🖋️ Typography
 
@@ -510,8 +511,8 @@ The Leaflet map also applies a CSS `filter` per theme:
 │  [kWh] [SOC%] [═══Battery Bar═══] [Range] [Remaining]  │
 ├────────────── MAP ──────┬───── CHARTS PANEL ───────────┤
 │                         │  Elevation Profile           │
-│  Leaflet 2D / MapLibre  │  Consumption vs Distance     │
-│  3D Route Map           │  Speed Profile               │
+│  MapLibre GL 2D / 3D    │  Consumption vs Distance     │
+│  Route Map              │  Speed Profile               │
 │  [3D ↔ 2D toggle btn]   │  Energy Balance              │
 │                         │  Power Breakdown             │
 │                         │  Weather Panel               │
@@ -529,10 +530,10 @@ Trip Master ships as a fully installable PWA.
 ### 📄 Web Manifest (`manifest.json`)
 
 Enables the "Add to Home Screen" prompt on Android and iOS. Configures:
-- App name: **Trip Master**
-- Display mode: `standalone` (full-screen, no browser chrome)
-- Status bar: `black-translucent`
-- Icons: `icon-192x192.png`, `favicon.ico`
+- 📛 App name: **Trip Master**
+- 🖥️ Display mode: `standalone` (full-screen, no browser chrome)
+- 🎨 Status bar: `black-translucent`
+- 🖼️ Icons: `icon-192x192.png`, `favicon.ico`
 
 ### 🔧 Service Worker (`sw.js`)
 
@@ -543,9 +544,9 @@ navigator.serviceWorker.register('/sw.js')
 ```
 
 Provides:
-- **Offline caching** of the app shell
-- **Background sync** capability
-- Enables re-launch without an internet connection
+- 📦 **Offline caching** of the app shell
+- 🔁 **Background sync** capability
+- 🚀 Enables re-launch without an internet connection
 
 ### 🔒 Wake Lock API
 
@@ -584,14 +585,14 @@ Clicking the **📋 Summary** button opens a modal with a post-trip analytics sn
 
 | Metric | Formula |
 |---|---|
-| Total Distance | $D_{\text{total}} / 1000$ (Km) |
-| Trip Duration | HH:MM:SS from `tripSeconds` |
-| Avg Consumption | $E_{\text{consumed,total}} / D_{\text{total}}\,\text{(Km)}$ (Wh/Km) |
-| Total Consumed | $E_{\text{consumed,total}}$ (Wh) |
-| Total Recovered | $E_{\text{regen,total}}$ (Wh) |
-| Regen Efficiency | $E_{\text{regen}} / E_{\text{consumed}} \times 100$ (%) |
-| Data Points | `altChart.data.datasets[0].data.length` |
-| Net Energy | $E_{\text{consumed}} - E_{\text{regen}}$ (Wh) |
+| 🗺️ Total Distance | $D_{\text{total}} / 1000$ (Km) |
+| ⏱️ Trip Duration | HH:MM:SS from `tripSeconds` |
+| ⚡ Avg Consumption | $E_{\text{consumed,total}} / D_{\text{total}}\,\text{(Km)}$ (Wh/Km) |
+| 🔋 Total Consumed | $E_{\text{consumed,total}}$ (Wh) |
+| ♻️ Total Recovered | $E_{\text{regen,total}}$ (Wh) |
+| 📈 Regen Efficiency | $E_{\text{regen}} / E_{\text{consumed}} \times 100$ (%) |
+| 📍 Data Points | `altChart.data.datasets[0].data.length` |
+| 🔌 Net Energy | $E_{\text{consumed}} - E_{\text{regen}}$ (Wh) |
 
 ### 🏆 Efficiency Badge
 
@@ -607,7 +608,7 @@ The average consumption $\bar{C}$ (Wh/Km) triggers one of three badges:
 
 ## 🗺️ Map Modes: 2D & 3D
 
-Trip Master provides two distinct map rendering modes that can be toggled at any time during a trip — even while recording is active. The two modes share the same GPS coordinate stream and the same route polyline data, but use entirely different rendering engines and tile sources.
+Trip Master provides two distinct map rendering modes that can be toggled at any time during a trip — even while recording is active. **Both modes are powered by MapLibre GL JS**, using a single WebGL-based rendering engine with OpenFreeMap vector tiles. The two modes share the same GPS coordinate stream and the same GeoJSON route data source.
 
 ### 🔄 Toggle Button
 
@@ -615,7 +616,6 @@ A floating **`3D` / `2D` button** is permanently overlaid in the **top-right cor
 
 - 🗺️ **Label `3D`** → the map is currently in **2D mode**; clicking will activate the 3D view
 - 🌐 **Label `2D`** (highlighted in `--secondary` blue) → the map is currently in **3D mode**; clicking will return to the flat 2D view
-
 
 ```
 ┌─────────── MAP WRAPPER ────────────────┐
@@ -627,59 +627,63 @@ A floating **`3D` / `2D` button** is permanently overlaid in the **top-right cor
 
 ---
 
-### 🗺️ 2D Mode — Leaflet + CartoDB Voyager
+### 🗺️ 2D Mode — MapLibre GL + OpenFreeMap
 
-The default map mode uses **Leaflet.js v1.9.4** with raster tiles from **CartoDB Voyager**.
-
-| 🔧 Property | 📋 Value |
-|---|---|
-| 🏗️ Engine | Leaflet.js `1.9.4` |
-| 🌍 Tile provider | CartoDB Basemaps CDN |
-| 🎨 Tile style | Voyager (raster PNG) |
-| 🛣️ Route polyline | `L.polyline` — color `#e21017`, weight `5` |
-| 🔍 Initial zoom | `15` (set on first GPS fix) |
-| 🧭 Map follows GPS | `map.panTo([lat, lng])` on each GPS step |
-| 🌙 Dark filter | `brightness(0.55) contrast(2.1) saturate(2.0)` via CSS |
-| ☀️ Light filter | `saturate(1.8) brightness(1.02)` via CSS |
-
-The 2D map is contained in the `<div id="map">` element. The route is built incrementally: each new GPS coordinate is pushed into the `pathLine` polyline via `pathLine.addLatLng([latitude, longitude])`.
-
----
-
-### 🌐 3D Mode — MapLibre GL + OpenFreeMap
-
-The 3D mode uses **MapLibre GL JS v4.7.1**, a WebGL-based vector map renderer. It provides a fully perspective-projected, tilted view of the terrain and route.
+The default map mode uses **MapLibre GL JS v4.7.1** rendering a flat, top-down vector map. This is a fully WebGL-rendered view with no raster tile fallback.
 
 | 🔧 Property | 📋 Value |
 |---|---|
 | 🏗️ Engine | MapLibre GL JS `4.7.1` |
 | 🌍 Tile provider | OpenFreeMap |
-| 🎨 Light style | `https://tiles.openfreemap.org/styles/liberty` |
-| 🎨 Dark style | `https://tiles.openfreemap.org/styles/dark` |
+| ☀️ Light style | `https://tiles.openfreemap.org/styles/liberty` |
+| 🌙 Dark style | `https://tiles.openfreemap.org/styles/dark` |
+| 📐 Camera pitch | `0°` (flat top-down view) |
+| 🧭 Camera bearing | `0°` (north-up) |
+| ✨ Antialiasing | `true` |
+| 🛣️ Route layer type | `line` (GeoJSON `LineString`) — source ID `trip-path-2d` |
+| 🎨 Route color | `#e21017` |
+| 📏 Route line width | `5` px |
+| 🔍 Initial zoom | `15` (set on first GPS fix) |
+| 🧭 Map follows GPS | `map.setCenter([longitude, latitude])` on each GPS step |
+
+The 2D map is contained in the `<div id="map">` element and initialized at page load via `setupMap()`. The route is built incrementally: each new GPS coordinate is pushed into the shared `map3dCoords` buffer and applied to the GeoJSON source via `pathLine.setData(...)`.
+
+---
+
+### 🌐 3D Mode — MapLibre GL + OpenFreeMap
+
+The 3D mode reuses **MapLibre GL JS v4.7.1** with a pitched, tilted camera that gives a perspective-projected terrain view. It uses the same tile provider and the same GeoJSON route data as the 2D mode.
+
+| 🔧 Property | 📋 Value |
+|---|---|
+| 🏗️ Engine | MapLibre GL JS `4.7.1` |
+| 🌍 Tile provider | OpenFreeMap |
+| ☀️ Light style | `https://tiles.openfreemap.org/styles/liberty` |
+| 🌙 Dark style | `https://tiles.openfreemap.org/styles/dark` |
 | 📐 Camera pitch | `60°` (tilted perspective) |
 | 🧭 Camera bearing | `-20°` (slightly rotated north) |
 | ✨ Antialiasing | `true` (smooth WebGL rendering) |
-| 🛣️ Route layer type | `line` (GeoJSON `LineString`) |
+| 🛣️ Route layer type | `line` (GeoJSON `LineString`) — source ID `trip-path` |
 | 🎨 Route color | `#e21017` |
 | 📏 Route line width | `5` px |
 | 🔍 Initial zoom | `15` |
 
 The 3D map is rendered inside `<div id="map3d">`, which is overlaid absolutely on top of the 2D map container via `z-index: 5` and initially hidden (`display: none`). When 3D mode is activated, the 2D `#map` is hidden and `#map3d` is revealed.
 
-#### 🏗️ Initialization — `setup3DMap(lat, lng)`
+#### 🏗️ Initialization — `setupMap()` and `setup3DMap(lat, lng)`
 
-The 3D map is **lazily initialized** on first activation — it is not created at page load. This preserves resources and avoids unnecessary WebGL context allocation when the user never uses 3D mode.
-
-On subsequent activations (after the first), the map is **not re-created**. Instead, only the center position and route data are refreshed:
+- The **2D map** (`#map`) is initialized unconditionally at page load via `setupMap()`. It is always ready and consumes minimal GPU resources when hidden.
+- The **3D map** (`#map3d`) is **lazily initialized** on the first activation — it is not created at page load. This preserves WebGL context budget and avoids resource allocation when the user never switches to 3D mode.
+- On subsequent activations (after the first), the 3D map is **not re-created**. Instead, only the center position and route data are refreshed.
 
 #### 🔄 Toggle Logic — `toggle3DMap()`
 
 | 🔀 Direction | ⚙️ Actions |
 |---|---|
-| ➡️ **2D → 3D** | Sets `is3DMode = true` · Changes button label to `2D` · Adds `.active` CSS class · Hides `#map` · Shows `#map3d` · Initializes or recenters MapLibre map |
-| ⬅️ **3D → 2D** | Sets `is3DMode = false` · Changes button label to `3D` · Removes `.active` CSS class · Hides `#map3d` · Shows `#map` · Calls `map.invalidateSize()` to fix Leaflet layout after being hidden |
+| ➡️ **2D → 3D** | Sets `is3DMode = true` · Changes button label to `2D` · Adds `.active` CSS class · Hides `#map` · Shows `#map3d` · Initializes or recenters the 3D MapLibre instance |
+| ⬅️ **3D → 2D** | Sets `is3DMode = false` · Changes button label to `3D` · Removes `.active` CSS class · Hides `#map3d` · Shows `#map` · The 2D MapLibre map resumes rendering immediately from its preserved state |
 
-> ⚠️ **Note:** `map.invalidateSize()` is critical when returning to 2D mode. Leaflet cannot detect that its container was hidden and re-shown, so tile rendering may be incomplete without this explicit resize call.
+> ✅ **Note:** Unlike raster-based map libraries, MapLibre GL JS does not require an explicit resize/invalidation call when the container is re-shown. The WebGL canvas re-renders correctly as soon as the element becomes visible again.
 
 ---
 
@@ -687,31 +691,40 @@ On subsequent activations (after the first), the map is **not re-created**. Inst
 
 Both map modes consume the **same coordinate buffer**: `map3dCoords` — an array of `[longitude, latitude]` pairs accumulated at every GPS fix.
 
-This ensures that switching between 2D and 3D at any point during a trip displays the **complete route recorded so far** in both views without any data loss.
+```
+GPS Fix → map3dCoords.push([lng, lat])
+             │
+             ├─► 2D map: pathLine.setData({ type: 'LineString', coordinates: map3dCoords })
+             └─► 3D map: map3dSource.setData({ type: 'LineString', coordinates: map3dCoords })
+```
+
+This ensures that switching between 2D and 3D at any point during a trip displays the **complete route recorded so far** in both views without any data loss or re-processing.
 
 ---
 
 ### 🎨 Theme-Aware Map Styles
 
-The 3D map style is selected based on the active UI theme at the moment `setup3DMap()` is called. The style selection mirrors the behavior of the 2D map's CSS `filter`:
+Both the 2D and 3D MapLibre instances select their vector tile style based on the active UI theme at initialization time:
 
-| 🌙 Theme | 🗺️ MapLibre Style |
-|---|---|
-| ☀️ Light | `https://tiles.openfreemap.org/styles/liberty` (bright, detailed vector style) |
-| 🌙 Dark | `https://tiles.openfreemap.org/styles/dark` (low-contrast, dark vector style) |
+| 🌙 Theme | 🗺️ MapLibre Style | 🏷️ Description |
+|---|---|---|
+| ☀️ Light | `https://tiles.openfreemap.org/styles/liberty` | Bright, detailed vector cartography |
+| 🌙 Dark | `https://tiles.openfreemap.org/styles/dark` | Low-contrast, dark vector cartography |
 
-> 💡 **Tip:** If you switch themes **after** the 3D map has already been initialized, the map style will not automatically update. To apply the new theme to the 3D view, switch back to 2D and then re-open 3D mode; this forces a fresh `setup3DMap()` call with the updated theme value.
+> 💡 **Tip:** If you switch themes **after** a map instance has already been initialized, the map style is updated live via `map.setStyle()` / `map3d.setStyle()` and the route GeoJSON layer is re-injected automatically via the `styledata` event listener. No manual toggle is required.
 
 ---
 
-### 📦 3D Map State Variables
+### 📦 Map State Variables
 
 | 🔤 Variable | 📋 Type | 📖 Description |
 |---|---|---|
-| `map3d` | `maplibregl.Map \| null` | MapLibre GL map instance; `null` until first 3D activation |
-| `map3dSource` | `GeoJSONSource \| null` | Reference to the `trip-path` GeoJSON source for live updates |
+| `map` | `maplibregl.Map` | MapLibre GL instance for the 2D flat view; initialized at page load |
+| `pathLine` | `GeoJSONSource \| null` | Reference to the `trip-path-2d` GeoJSON source for live 2D route updates |
+| `map3d` | `maplibregl.Map \| null` | MapLibre GL instance for the 3D perspective view; `null` until first 3D activation |
+| `map3dSource` | `GeoJSONSource \| null` | Reference to the `trip-path` GeoJSON source for live 3D route updates |
 | `is3DMode` | `boolean` | `true` while the 3D view is active |
-| `map3dCoords` | `[number, number][]` | Coordinate buffer (`[lng, lat]` pairs) shared with the 3D renderer |
+| `map3dCoords` | `[number, number][]` | Shared coordinate buffer (`[lng, lat]` pairs) consumed by both map instances |
 
 ---
 
@@ -721,27 +734,27 @@ All dependencies are loaded from CDN — no `npm install` required.
 
 | Library | Version | Purpose | CDN |
 |---|---|---|---|
-| 🗺️ Leaflet.js | `1.9.4` | Interactive 2D map, GPS polyline | unpkg |
-| 🌐 MapLibre GL JS | `4.7.1` | WebGL-powered 3D perspective map | unpkg |
+| 🌐 MapLibre GL JS | `4.7.1` | WebGL-powered vector map engine for both 2D and 3D modes | unpkg |
 | 📊 Chart.js | `latest` | All real-time charts | jsDelivr |
 | 📌 chartjs-plugin-annotation | `3.0.1` | Zero-baseline line on charts | jsDelivr |
-| 🌐 Open-Meteo API | — | Live weather data | Free REST API |
-| 🗺️ CartoDB Voyager Tiles | — | 2D map tile layer | Basemaps CDN |
-| 🌍 OpenFreeMap Tiles | — | 3D vector map styles (liberty / dark) | OpenFreeMap CDN |
+| 🌦️ Open-Meteo API | — | Live weather data | Free REST API |
+| 🌍 OpenFreeMap Tiles | — | Vector map styles (`liberty` / `dark`) for both 2D and 3D | OpenFreeMap CDN |
 | 🔤 Google Fonts (Syne) | — | UI typography | Google CDN |
 | 🔤 Google Fonts (JetBrains Mono) | — | Numeric readouts | Google CDN |
+
+> 🚫 **No Leaflet.js.** The entire mapping stack — both flat 2D and perspective 3D — is handled by a single MapLibre GL JS instance per view, with no secondary mapping library.
 
 ---
 
 ## 🚀 Getting Started
 
-### Prerequisites
+### 🛠️ Prerequisites
 
-- A modern browser (Chrome 80+, Firefox 75+, Safari 14+, Edge 80+)
-- HTTPS host (required for Geolocation API in production)
-- `manifest.json`, `sw.js`, `icon-192x192.png`, `favicon.ico` in the same directory
+- 🌐 A modern browser (Chrome 80+, Firefox 75+, Safari 14+, Edge 80+) with WebGL support
+- 🔐 HTTPS host (required for Geolocation API in production)
+- 📂 `manifest.json`, `sw.js`, `icon-192x192.png`, `favicon.ico` in the same directory
 
-### Local Development
+### 💻 Local Development
 
 ```bash
 # Clone or download the project
@@ -762,12 +775,14 @@ Upload the following files to any static web host (GitHub Pages, Netlify, Vercel
 
 ```
 trip-master/
-├── index.html        ← Main application
+├── index.html        ← Main application (all JS, CSS, and map logic)
 ├── manifest.json     ← PWA manifest
 ├── sw.js             ← Service Worker
 ├── favicon.ico
 └── icon-192x192.png
 ```
+
+> 🗺️ **No tile server required.** Map tiles are served on-demand by OpenFreeMap's public CDN directly to the browser.
 
 ---
 
@@ -775,33 +790,33 @@ trip-master/
 
 A consolidated reference of all formulas used in the application.
 
-### Haversine Distance
+### 🌍 Haversine Distance
 
 $$a = \sin^2\left(\frac{\Delta\phi}{2}\right) + \cos\phi_1 \cdot \cos\phi_2 \cdot \sin^2\left(\frac{\Delta\lambda}{2}\right)$$
 
 $$d = 2R \cdot \mathrm{arctan2}\left(\sqrt{a},\ \sqrt{1 - a}\right) $$
 
-### Total Segment Energy
+### ⚡ Total Segment Energy
 
 $$E_{\text{step}} = \frac{120 + 0.8\,v_w + 0.012\,m}{\eta_T} \cdot d + \frac{m \cdot 9.81 \cdot \Delta h}{3600}$$
 
-### Regen Branch
+### ♻️ Regen Branch
 
 $$E_{\text{regen}} = \left|E_{\text{step}}\right| \cdot 0.70 \quad \text{if } E_{\text{step}} < 0$$
 
-### Instantaneous Power
+### 🔌 Instantaneous Power
 
 $$P = \frac{E_{\text{step}}}{\Delta t / 3600}$$
 
-### Estimated Range
+### 🔋 Estimated Range
 
 $$R = \frac{C_{\text{bat}} \times 10^3 \times \text{SOC}/100}{\bar{C}_{\text{Wh/Km}}}$$
 
-### Regen Efficiency
+### 📈 Regen Efficiency
 
 $$\eta_{\text{regen}} = \frac{\sum E_{\text{regen}}}{\sum E_{\text{consumed}}} \times 100$$
 
-### Road Grade
+### 📐 Road Grade
 
 $$G = \frac{\Delta h}{d} \times 100$$
 
@@ -813,4 +828,4 @@ Distributed under the **MIT License**. Feel free to use, modify, and share.
 
 ---
 
-> _Developed for the sustainable mobility community. If you find this tool helpful, please leave a ⭐ on GitHub!_
+> _⚡ Developed for the sustainable mobility community. If you find this tool helpful, please leave a ⭐ on GitHub!_
