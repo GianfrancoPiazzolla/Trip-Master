@@ -14,6 +14,8 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet">
+    <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -53,6 +55,10 @@
 
         [data-theme="dark"] #map {
             filter: brightness(0.55) contrast(2.1) saturate(2.0);
+        }
+
+        [data-theme="dark"] #map3d {
+            filter: brightness(5) contrast(3.5) saturate(3.5);
         }
 
         * { box-sizing: border-box; }
@@ -250,6 +256,31 @@
         /* === MAIN DISPLAY === */
         .main-display { display: flex; gap: 10px; flex: 1; min-height: 0; }
         #map { border-radius: 12px; border: 1px solid var(--border-color); flex: 1; min-height: 0; box-shadow: var(--card-shadow); }
+
+        /* === 3D MAP OVERLAY === */
+        .map-wrapper { flex: 1; min-height: 0; position: relative; border-radius: 12px; }
+        .map-wrapper #map { width: 100%; height: 100%; border-radius: 12px; }
+        #map3d {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            border-radius: 12px; border: 1px solid var(--border-color);
+            box-shadow: var(--card-shadow);
+            display: none;
+            z-index: 5;
+        }
+        .map3d-toggle-btn {
+            position: absolute; top: 10px; right: 10px; z-index: 10;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            border-radius: 8px; padding: 5px 10px;
+            cursor: pointer; font-size: 0.75rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700; letter-spacing: 0.5px;
+            transition: all 0.2s ease;
+            box-shadow: var(--card-shadow);
+        }
+        .map3d-toggle-btn:hover { background: var(--border-color); transform: translateY(-1px); }
+        .map3d-toggle-btn.active { background: var(--secondary); color: #000; border-color: var(--secondary); box-shadow: 0 2px 8px rgba(41,182,246,0.4); }
 
         /* === CHARTS PANEL === */
         .charts-panel {
@@ -477,7 +508,8 @@
             body { overflow-y: auto; height: auto; }
             .container { height: auto; }
             .main-display { display: block; }
-            #map { height: 250px; margin-bottom: 10px; }
+            .map-wrapper { height: 250px; margin-bottom: 10px; }
+            #map { height: 250px; }
             .charts-panel { width: 100%; flex-direction: column; }
             .chart-container { width: 100%; height: 160px; }
             .grid-stats { grid-template-columns: repeat(2, 1fr); }
@@ -670,7 +702,11 @@
 
     <!-- MAP + CHARTS SIDE BY SIDE -->
     <div class="main-display">
-        <div id="map"></div>
+        <div class="map-wrapper">
+            <div id="map"></div>
+            <div id="map3d"></div>
+            <button class="map3d-toggle-btn" id="btn3DToggle" onclick="toggle3DMap()" title="Toggle 3D Map">3D</button>
+        </div>
 
         <div class="charts-panel">
 
@@ -831,6 +867,8 @@
     let lastSpeedKmh = 0;
     let lastInstantPowerW = 0;
     let initialSoc = 100;
+    let map3d = null, map3dSource = null, is3DMode = false;
+    let map3dCoords = [];
 
     // Per-segment power breakdown accumulator
     let powerBreakdown = { drag: 0, gravity: 0, aero: 0, regen: 0, samples: 0 };
@@ -1104,6 +1142,32 @@
         document.body.setAttribute('data-theme', currentTheme === 'dark' ? 'dark' : '');
         document.getElementById('themeBtn').innerText = currentTheme === 'dark' ? '☀️' : '🌙';
         updateChartTheme();
+
+        // Update 3D map style if already initialized
+        if (map3d) {
+            const lightStyle = 'https://tiles.openfreemap.org/styles/liberty';
+            const darkStyle  = 'https://tiles.openfreemap.org/styles/dark';
+            map3d.setStyle(currentTheme === 'dark' ? darkStyle : lightStyle);
+            map3d.once('styledata', () => {
+                if (map3dCoords.length > 1) {
+                    map3dSource = map3d.getSource('trip-path');
+                    if (!map3dSource) {
+                        map3d.addSource('trip-path', {
+                            type: 'geojson',
+                            data: { type: 'Feature', geometry: { type: 'LineString', coordinates: map3dCoords } }
+                        });
+                        map3dSource = map3d.getSource('trip-path');
+                        map3d.addLayer({
+                            id: 'trip-path-layer',
+                            type: 'line',
+                            source: 'trip-path',
+                            layout: { 'line-join': 'round', 'line-cap': 'round' },
+                            paint: { 'line-color': '#e21017', 'line-width': 5, 'line-opacity': 0.9 }
+                        });
+                    }
+                }
+            });
+        }
     }
 
     function setupMap() {
@@ -1119,6 +1183,70 @@
             }, () => map.setView([41.8919, 12.5113], 13), { enableHighAccuracy: true });
         } else {
             map.setView([41.8919, 12.5113], 13);
+        }
+    }
+
+    function setup3DMap(lat, lng) {
+        const lightStyle = 'https://tiles.openfreemap.org/styles/liberty';
+        const darkStyle  = 'https://tiles.openfreemap.org/styles/dark';
+
+        map3d = new maplibregl.Map({
+            container: 'map3d',
+            style: currentTheme === 'dark' ? darkStyle : lightStyle,
+            center: [lng, lat],
+            zoom: 15,
+            pitch: 60,
+            bearing: -20,
+            antialias: true
+        });
+
+        map3d.on('load', () => {
+            map3d.addSource('trip-path', {
+                type: 'geojson',
+                data: { type: 'Feature', geometry: { type: 'LineString', coordinates: map3dCoords } }
+            });
+            map3dSource = map3d.getSource('trip-path');
+
+            map3d.addLayer({
+                id: 'trip-path-layer',
+                type: 'line',
+                source: 'trip-path',
+                layout: { 'line-join': 'round', 'line-cap': 'round' },
+                paint: { 'line-color': '#e21017', 'line-width': 5, 'line-opacity': 0.9 }
+            });
+        });
+    }
+
+    function toggle3DMap() {
+        const btn = document.getElementById('btn3DToggle');
+        const map3dEl = document.getElementById('map3d');
+        const mapEl = document.getElementById('map');
+        const center = map.getCenter();
+
+        if (!is3DMode) {
+            // Switch to 3D
+            is3DMode = true;
+            btn.textContent = '2D';
+            btn.classList.add('active');
+            mapEl.style.display = 'none';
+            map3dEl.style.display = 'block';
+
+            if (!map3d) {
+                setup3DMap(center.lat, center.lng);
+            } else {
+                map3d.setCenter([center.lng, center.lat]);
+                if (map3dSource) {
+                    map3dSource.setData({ type: 'Feature', geometry: { type: 'LineString', coordinates: map3dCoords } });
+                }
+            }
+        } else {
+            // Switch back to 2D
+            is3DMode = false;
+            btn.textContent = '3D';
+            btn.classList.remove('active');
+            map3dEl.style.display = 'none';
+            mapEl.style.display = 'block';
+            map.invalidateSize();
         }
     }
 
@@ -1369,6 +1497,15 @@
                 refreshUI(totalDistance, currentAlt, grade, instantCons, avgSpeed, lastSpeedKmh);
                 pathLine.addLatLng([latitude, longitude]);
                 map.panTo([latitude, longitude]);
+
+                // Update 3D path coordinates
+                map3dCoords.push([longitude, latitude]);
+                if (map3d && map3dSource) {
+                    map3dSource.setData({ type: 'Feature', geometry: { type: 'LineString', coordinates: map3dCoords } });
+                }
+                if (is3DMode && map3d) {
+                    map3d.panTo([longitude, latitude]);
+                }
                 updateCharts(totalDistance, currentAlt, instantCons, lastSpeedKmh);
                 updatePowerBreakdown(step, deltaAlt, lastSpeedKmh);
                 computeRangeEstimate();
@@ -1566,5 +1703,3 @@
 </script>
 </body>
 </html>
-
-
