@@ -7,6 +7,7 @@
 [![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)](https://developer.mozilla.org/en-US/docs/Web/HTML)
 [![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
 [![Leaflet](https://img.shields.io/badge/Leaflet-199900?style=for-the-badge&logo=leaflet&logoColor=white)](https://leafletjs.com/)
+[![MapLibre GL](https://img.shields.io/badge/MapLibre%20GL-396CB2?style=for-the-badge&logo=maplibre&logoColor=white)](https://maplibre.org/)
 [![Chart.js](https://img.shields.io/badge/Chart.js-FF6384?style=for-the-badge&logo=chartdotjs&logoColor=white)](https://www.chartjs.org/)
 [![PWA](https://img.shields.io/badge/PWA-5A0FC8?style=for-the-badge&logo=pwa&logoColor=white)](https://web.dev/progressive-web-apps/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
@@ -39,9 +40,10 @@
 12. [Progressive Web App](#-progressive-web-app)
 13. [Stat Cards Reference](#-stat-cards-reference)
 14. [Trip Summary Modal](#-trip-summary--efficiency-scoring)
-15. [Dependencies](#-dependencies)
-16. [Getting Started](#-getting-started)
-17. [Mathematical Reference](#-mathematical-reference)
+15. [Map Modes: 2D & 3D](#️-map-modes-2d--3d)
+16. [Dependencies](#-dependencies)
+17. [Getting Started](#-getting-started)
+18. [Mathematical Reference](#-mathematical-reference)
 
 ---
 
@@ -61,6 +63,8 @@ The app runs entirely client-side. There is no server, no database, and no build
 | ⚡ **Physics-based Energy Model** | Computes consumption from first principles every GPS step |
 | 🔋 **SOC & Range Estimator** | Live battery state-of-charge widget with adaptive range forecast |
 | 🗺️ **Interactive Route Map** | Leaflet map rendering the live route polyline on a CartoDB tile layer |
+| 🌐 **3D Perspective Map** | MapLibre GL powered 3D map with tilted perspective and live route rendering |
+| 🔄 **2D / 3D Map Toggle** | One-click button to switch between flat 2D view and immersive 3D view |
 | 📊 **4 Live Charts** | Elevation profile, consumption vs. distance, speed profile, energy balance |
 | 🌡️ **Live Weather Panel** | Auto-fetches Open-Meteo for temperature, humidity, wind, pressure |
 | 🌙 **Dark / Light Theme** | Full dual-theme UI with smooth CSS variable transitions |
@@ -506,9 +510,9 @@ The Leaflet map also applies a CSS `filter` per theme:
 │  [kWh] [SOC%] [═══Battery Bar═══] [Range] [Remaining]  │
 ├────────────── MAP ──────┬───── CHARTS PANEL ───────────┤
 │                         │  Elevation Profile           │
-│  Leaflet Route Map      │  Consumption vs Distance     │
-│  (CartoDB Voyager)      │  Speed Profile               │
-│                         │  Energy Balance              │
+│  Leaflet 2D / MapLibre  │  Consumption vs Distance     │
+│  3D Route Map           │  Speed Profile               │
+│  [3D ↔ 2D toggle btn]   │  Energy Balance              │
 │                         │  Power Breakdown             │
 │                         │  Weather Panel               │
 ├─────────────────────── CONTROLS ───────────────────────┤
@@ -601,17 +605,129 @@ The average consumption $\bar{C}$ (Wh/Km) triggers one of three badges:
 
 ---
 
+## 🗺️ Map Modes: 2D & 3D
+
+Trip Master provides two distinct map rendering modes that can be toggled at any time during a trip — even while recording is active. The two modes share the same GPS coordinate stream and the same route polyline data, but use entirely different rendering engines and tile sources.
+
+### 🔄 Toggle Button
+
+A floating **`3D` / `2D` button** is permanently overlaid in the **top-right corner** of the map panel. Clicking it switches between modes instantly:
+
+- 🗺️ **Label `3D`** → the map is currently in **2D mode**; clicking will activate the 3D view
+- 🌐 **Label `2D`** (highlighted in `--secondary` blue) → the map is currently in **3D mode**; clicking will return to the flat 2D view
+
+
+```
+┌─────────── MAP WRAPPER ────────────────┐
+│                              ┌───────┐ │
+│   (map content here)         │  3D   │ │  ← toggle button (top-right)
+│                              └───────┘ │
+└────────────────────────────────────────┘
+```
+
+---
+
+### 🗺️ 2D Mode — Leaflet + CartoDB Voyager
+
+The default map mode uses **Leaflet.js v1.9.4** with raster tiles from **CartoDB Voyager**.
+
+| 🔧 Property | 📋 Value |
+|---|---|
+| 🏗️ Engine | Leaflet.js `1.9.4` |
+| 🌍 Tile provider | CartoDB Basemaps CDN |
+| 🎨 Tile style | Voyager (raster PNG) |
+| 🛣️ Route polyline | `L.polyline` — color `#e21017`, weight `5` |
+| 🔍 Initial zoom | `15` (set on first GPS fix) |
+| 🧭 Map follows GPS | `map.panTo([lat, lng])` on each GPS step |
+| 🌙 Dark filter | `brightness(0.55) contrast(2.1) saturate(2.0)` via CSS |
+| ☀️ Light filter | `saturate(1.8) brightness(1.02)` via CSS |
+
+The 2D map is contained in the `<div id="map">` element. The route is built incrementally: each new GPS coordinate is pushed into the `pathLine` polyline via `pathLine.addLatLng([latitude, longitude])`.
+
+---
+
+### 🌐 3D Mode — MapLibre GL + OpenFreeMap
+
+The 3D mode uses **MapLibre GL JS v4.7.1**, a WebGL-based vector map renderer. It provides a fully perspective-projected, tilted view of the terrain and route.
+
+| 🔧 Property | 📋 Value |
+|---|---|
+| 🏗️ Engine | MapLibre GL JS `4.7.1` |
+| 🌍 Tile provider | OpenFreeMap |
+| 🎨 Light style | `https://tiles.openfreemap.org/styles/liberty` |
+| 🎨 Dark style | `https://tiles.openfreemap.org/styles/dark` |
+| 📐 Camera pitch | `60°` (tilted perspective) |
+| 🧭 Camera bearing | `-20°` (slightly rotated north) |
+| ✨ Antialiasing | `true` (smooth WebGL rendering) |
+| 🛣️ Route layer type | `line` (GeoJSON `LineString`) |
+| 🎨 Route color | `#e21017` |
+| 📏 Route line width | `5` px |
+| 🔍 Initial zoom | `15` |
+
+The 3D map is rendered inside `<div id="map3d">`, which is overlaid absolutely on top of the 2D map container via `z-index: 5` and initially hidden (`display: none`). When 3D mode is activated, the 2D `#map` is hidden and `#map3d` is revealed.
+
+#### 🏗️ Initialization — `setup3DMap(lat, lng)`
+
+The 3D map is **lazily initialized** on first activation — it is not created at page load. This preserves resources and avoids unnecessary WebGL context allocation when the user never uses 3D mode.
+
+On subsequent activations (after the first), the map is **not re-created**. Instead, only the center position and route data are refreshed:
+
+#### 🔄 Toggle Logic — `toggle3DMap()`
+
+| 🔀 Direction | ⚙️ Actions |
+|---|---|
+| ➡️ **2D → 3D** | Sets `is3DMode = true` · Changes button label to `2D` · Adds `.active` CSS class · Hides `#map` · Shows `#map3d` · Initializes or recenters MapLibre map |
+| ⬅️ **3D → 2D** | Sets `is3DMode = false` · Changes button label to `3D` · Removes `.active` CSS class · Hides `#map3d` · Shows `#map` · Calls `map.invalidateSize()` to fix Leaflet layout after being hidden |
+
+> ⚠️ **Note:** `map.invalidateSize()` is critical when returning to 2D mode. Leaflet cannot detect that its container was hidden and re-shown, so tile rendering may be incomplete without this explicit resize call.
+
+---
+
+### 📡 Live Route Synchronization
+
+Both map modes consume the **same coordinate buffer**: `map3dCoords` — an array of `[longitude, latitude]` pairs accumulated at every GPS fix.
+
+This ensures that switching between 2D and 3D at any point during a trip displays the **complete route recorded so far** in both views without any data loss.
+
+---
+
+### 🎨 Theme-Aware Map Styles
+
+The 3D map style is selected based on the active UI theme at the moment `setup3DMap()` is called. The style selection mirrors the behavior of the 2D map's CSS `filter`:
+
+| 🌙 Theme | 🗺️ MapLibre Style |
+|---|---|
+| ☀️ Light | `https://tiles.openfreemap.org/styles/liberty` (bright, detailed vector style) |
+| 🌙 Dark | `https://tiles.openfreemap.org/styles/dark` (low-contrast, dark vector style) |
+
+> 💡 **Tip:** If you switch themes **after** the 3D map has already been initialized, the map style will not automatically update. To apply the new theme to the 3D view, switch back to 2D and then re-open 3D mode; this forces a fresh `setup3DMap()` call with the updated theme value.
+
+---
+
+### 📦 3D Map State Variables
+
+| 🔤 Variable | 📋 Type | 📖 Description |
+|---|---|---|
+| `map3d` | `maplibregl.Map \| null` | MapLibre GL map instance; `null` until first 3D activation |
+| `map3dSource` | `GeoJSONSource \| null` | Reference to the `trip-path` GeoJSON source for live updates |
+| `is3DMode` | `boolean` | `true` while the 3D view is active |
+| `map3dCoords` | `[number, number][]` | Coordinate buffer (`[lng, lat]` pairs) shared with the 3D renderer |
+
+---
+
 ## 📦 Dependencies
 
 All dependencies are loaded from CDN — no `npm install` required.
 
 | Library | Version | Purpose | CDN |
 |---|---|---|---|
-| 🗺️ Leaflet.js | `1.9.4` | Interactive map, GPS polyline | unpkg |
+| 🗺️ Leaflet.js | `1.9.4` | Interactive 2D map, GPS polyline | unpkg |
+| 🌐 MapLibre GL JS | `4.7.1` | WebGL-powered 3D perspective map | unpkg |
 | 📊 Chart.js | `latest` | All real-time charts | jsDelivr |
 | 📌 chartjs-plugin-annotation | `3.0.1` | Zero-baseline line on charts | jsDelivr |
 | 🌐 Open-Meteo API | — | Live weather data | Free REST API |
-| 🗺️ CartoDB Voyager Tiles | — | Map tile layer | Basemaps CDN |
+| 🗺️ CartoDB Voyager Tiles | — | 2D map tile layer | Basemaps CDN |
+| 🌍 OpenFreeMap Tiles | — | 3D vector map styles (liberty / dark) | OpenFreeMap CDN |
 | 🔤 Google Fonts (Syne) | — | UI typography | Google CDN |
 | 🔤 Google Fonts (JetBrains Mono) | — | Numeric readouts | Google CDN |
 
@@ -694,13 +810,6 @@ $$G = \frac{\Delta h}{d} \times 100$$
 ## 📄 License
 
 Distributed under the **MIT License**. Feel free to use, modify, and share.
-
----
-
-## 👤 Author
-
-**Gianfranco Piazzolla**
-- 🐙 GitHub: [@gianfrancopiazzolla](https://github.com/gianfrancopiazzolla)
 
 ---
 
