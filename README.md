@@ -13,12 +13,6 @@
 
 > A **single-file Progressive Web App** that turns any smartphone or browser into a professional-grade electric vehicle trip computer — tracking GPS position, computing physics-based energy consumption in real time, visualizing live charts, and displaying live weather data.
 
----
-
-<img src="https://img.shields.io/badge/Status-Production%20Ready-00e676?style=flat-square" />
-<img src="https://img.shields.io/badge/Platform-Web%20%7C%20iOS%20%7C%20Android-29b6f6?style=flat-square" />
-<img src="https://img.shields.io/badge/Dependencies-Zero%20Build%20Step-b39ddb?style=flat-square" />
-
 </div>
 
 ---
@@ -79,6 +73,7 @@ The app runs entirely client-side. There is no server, no database, and no build
 | 🟢 **Start & End Markers** | Green `S` and red `E` circular markers placed automatically at the first and last coordinate of any imported trip file |
 | 📊 **4 Live Charts** | Elevation profile, consumption vs. distance, speed profile, energy balance |
 | 🌡️ **Live Weather Panel** | Auto-fetches Open-Meteo for temperature, humidity, wind, and pressure |
+| 🌧️ **Weather Radar Overlay** | One-click RainViewer precipitation radar projected on both 2D and 3D maps |
 | 🌙 **Dark / Light Theme** | Full dual-theme UI with smooth CSS variable transitions |
 | 📱 **PWA / Installable** | Service Worker + Web Manifest for offline use and home-screen install |
 | 🔒 **Wake Lock** | Prevents device screen from sleeping during active tracking |
@@ -297,9 +292,15 @@ where $P_{\max} = \max(P_{\text{rolling}},\ P_{\text{gravity}},\ P_{\text{aero}}
 
 ## 🌡️ Weather Integration
 
+Trip Master provides two complementary weather visualization features: a **Weather Condition Panel** that displays real-time meteorological data fetched from Open-Meteo, and a **Weather Radar Overlay** that projects live precipitation radar tiles directly onto the 2D and 3D maps using the RainViewer API.
+
+---
+
+### 🌤️ Weather Condition Panel
+
 Trip Master integrates with the **Open-Meteo API** (free, no API key required) to fetch real-time meteorological data.
 
-### 🌐 API Endpoint
+#### 🌐 API Endpoint
 
 ```
 GET https://api.open-meteo.com/v1/forecast
@@ -311,12 +312,12 @@ GET https://api.open-meteo.com/v1/forecast
   &timezone=auto
 ```
 
-### 📡 Fetch Triggers
+#### 📡 Fetch Triggers
 
 1. **On app load** — fires once when the first GPS fix is obtained.
 2. **Every 2 Km of travel** — triggered when `Math.floor(totalDistance / 2000)` increments.
 
-### 🌬️ Weather Fields Displayed
+#### 🌬️ Weather Fields Displayed
 
 | Field | Source | Unit |
 |---|---|---|
@@ -329,11 +330,11 @@ GET https://api.open-meteo.com/v1/forecast
 | 📉 Pressure | `current.surface_pressure` | hPa |
 | ☀️ Weather Icon | `current.weather_code` (WMO codes) | Emoji |
 
-### 🌈 Delta Color Highlighting
+#### 🌈 Delta Color Highlighting
 
 Each weather value is compared against its previous reading. Values that have **increased** render in `--up-color` (`#00e676` green); values that have **decreased** render in `--down-color` (`#ff1744` red); unchanged values use the default text color. This delta coloring is implemented in `applyValueStyle()`.
 
-### 🌡️ Automatic Thermal Efficiency Calibration
+#### 🌡️ Automatic Thermal Efficiency Calibration
 
 On the first weather sync, `updateEfficiencyByTemp()` auto-selects the thermal efficiency factor $\eta_T$ based on the retrieved ambient temperature:
 
@@ -343,6 +344,85 @@ On the first weather sync, `updateEfficiencyByTemp()` auto-selects the thermal e
 | $10\ °C \leq T < 20\ °C$ | $0.85$ | 🟡 Mild |
 | $0\ °C \leq T < 10\ °C$ | $0.70$ | 🟠 Cold |
 | $T < 0\ °C$ | $0.55$ | 🔴 Extreme Cold |
+
+---
+
+### 🌧️ Weather Radar Overlay
+
+Trip Master can project a **live precipitation radar layer** directly onto both the 2D and 3D maps. The overlay is powered by the **RainViewer API** (free, no API key required) and rendered as a raster tile layer on top of the active MapLibre GL JS map instance.
+
+#### 🔘 Toggle Button
+
+A floating **`🌧` button** is permanently overlaid in the **top-right area of the map panel**, between the Heading toggle and the 3D toggle:
+
+```
+┌──────────────── MAP WRAPPER ─────────────────────────────────┐
+│    ┌───┐  ┌───┐  ┌───┐      ┌───────┐ ┌───────┐ ┌───┐ ┌───┐  │
+│    │ − │  │ ⊕ │ │ − │      │   ▲   │ │  3D   │ │ 🌧 ││ ⛶ │  │
+│    └───┘  └───┘  └───┘      └───────┘ └───────┘ └───┘ └───┘  │
+└──────────────────────────────────────────────────────────────┘
+```
+
+#### 🌐 RainViewer API — Timestamp Fetch
+
+Before the first overlay render, `fetchRainViewerTimestamp()` retrieves the timestamp of the most recent available radar frame:
+
+```
+GET https://api.rainviewer.com/public/weather-maps.json
+```
+
+The function reads `data.radar.past` and returns the `time` value of the **last element** (most recent frame). This timestamp is stored in `weatherOverlayTimestamp` and reused for subsequent overlay operations without re-fetching.
+
+#### 🗺️ Radar Tile Source
+
+The precipitation radar is served as standard raster tiles. The tile URL pattern used is:
+
+```
+https://tilecache.rainviewer.com/v2/radar/{timestamp}/256/{z}/{x}/{y}/2/1_1.png
+```
+
+| Parameter | Value / Description |
+|---|---|
+| `{timestamp}` | UNIX timestamp of the selected radar frame, obtained from the RainViewer API |
+| `{z}/{x}/{y}` | Standard XYZ tile coordinates |
+| Tile size | 256 px |
+| Min zoom | 0 |
+| Max zoom | 7 |
+| Raster opacity | `0.6` |
+| Attribution | `RainViewer` |
+
+#### ⚙️ Toggle Logic — `toggleWeatherOverlay()`
+
+```javascript
+async function toggleWeatherOverlay()
+```
+
+| Direction | Actions |
+|---|---|
+| **Off → On** | Sets `isWeatherOverlayOn = true` · Adds `.active` CSS class to the button · Fetches the RainViewer timestamp if not yet cached · Calls `addWeatherOverlayToMap(activeMap, timestamp)` on the currently active map instance; if the map style is not yet loaded, defers via `map.once('styledata', ...)` |
+| **On → Off** | Sets `isWeatherOverlayOn = false` · Removes `.active` CSS class · Calls `removeWeatherOverlayFromMap(map)` and `removeWeatherOverlayFromMap(map3d)` to clean up both map instances simultaneously |
+
+#### 🔧 Internal Helper Functions
+
+| Function | Description |
+|---|---|
+| `fetchRainViewerTimestamp()` | Async function that fetches `https://api.rainviewer.com/public/weather-maps.json` and returns the UNIX timestamp of the most recent radar frame from `data.radar.past`; returns `null` on error |
+| `addWeatherOverlayToMap(targetMap, timestamp)` | Adds the `rainviewer-source` raster source and `rainviewer-layer` raster layer to `targetMap`; no-ops if the source already exists on that instance |
+| `removeWeatherOverlayFromMap(targetMap)` | Removes both `rainviewer-layer` and `rainviewer-source` from `targetMap` if they exist; safe to call even if neither is present |
+
+#### 🔄 Integration with Map Mode Switching
+
+The radar overlay is automatically synchronized whenever the map mode or theme changes:
+
+- **2D ↔ 3D toggle (`toggle3DMap()`):** When switching to 3D, the overlay is removed from the 2D map instance and re-applied to the 3D instance (deferred via `styledata` if needed). When switching back to 2D, the reverse applies.
+- **Theme toggle (`toggleTheme()`):** After the map style is reloaded (via `map.setStyle()` / `map3d.setStyle()`), the overlay is re-injected via the `styledata` event listener if `isWeatherOverlayOn` is `true`, ensuring the radar layer survives theme changes.
+
+#### 📦 State Variables
+
+| Variable | Type | Description |
+|---|---|---|
+| `isWeatherOverlayOn` | `boolean` | `true` while the radar overlay is active; `false` when hidden |
+| `weatherOverlayTimestamp` | `number \| null` | UNIX timestamp of the most recently fetched RainViewer radar frame; `null` until the first overlay activation |
 
 ---
 
@@ -413,6 +493,7 @@ Profiles are serialized as a JSON object where each key is the user-defined prof
     "batteryKwh": 100,
     "is3DMode": true,
     "isHeadingUp": true,
+    "isWeatherOverlayOn": false,
     "theme": "dark"
   },
   "My Tesla Model X": {
@@ -421,6 +502,7 @@ Profiles are serialized as a JSON object where each key is the user-defined prof
     "batteryKwh": 100,
     "is3DMode": false,
     "isHeadingUp": false,
+    "isWeatherOverlayOn": true,
     "theme": "light"
   }
 }
@@ -428,7 +510,7 @@ Profiles are serialized as a JSON object where each key is the user-defined prof
 
 ### 💾 Saved Parameters
 
-Each profile snapshot captures six configuration fields:
+Each profile snapshot captures seven configuration fields:
 
 | Field | Source Element ID | Description |
 |---|---|---|
@@ -437,6 +519,7 @@ Each profile snapshot captures six configuration fields:
 | `batteryKwh` | `batteryCapacity` | Total usable battery capacity [kWh] |
 | `is3DMode` | `is3DMode` | Whether the 3D map view was active (`true` / `false`) |
 | `isHeadingUp` | `isHeadingUp` | Whether heading-up orientation was active (`true` / `false`) |
+| `isWeatherOverlayOn` | `isWeatherOverlayOn` | Whether the RainViewer precipitation radar overlay was active (`true` / `false`) |
 | `theme` | `currentTheme` | Active UI theme (`"light"` or `"dark"`) |
 
 > 💡 **Note:** Temperature efficiency and headwind speed are intentionally excluded — they represent real-time environmental conditions rather than vehicle-specific parameters.
@@ -451,7 +534,7 @@ Each profile snapshot captures six configuration fields:
 | `closeProfilesModal()` | Hides the profiles modal |
 | `renderProfilesList()` | Iterates all saved profiles and injects them as `profile-item` cards into the modal; shows an empty-state message when no profiles exist |
 | `saveProfile()` | Reads the profile name input and all six config fields, merges them into the profiles object, and persists via `saveProfiles()` |
-| `loadProfile(name)` | Restores `vehicleWeight` and `batteryCapacity` fields, updates the `batteryKwh` display via `updateBattery()`, syncs the GPS polling segmented control by toggling the matching `.active` segment, and restores the saved Light/Dark theme preference by calling `toggleTheme()` if the stored `theme` value differs from the current one. Additionally restores `is3DMode` (calls `toggle3DMap()` if different) and `isHeadingUp` (calls `toggleHeadingMode()` if different) |
+| `loadProfile(name)` | Restores `vehicleWeight` and `batteryCapacity` fields, updates the `batteryKwh` display via `updateBattery()`, syncs the GPS polling segmented control by toggling the matching `.active` segment, and restores the saved Light/Dark theme preference by calling `toggleTheme()` if the stored `theme` value differs from the current one. Additionally restores `is3DMode` (calls `toggle3DMap()` if different), `isHeadingUp` (calls `toggleHeadingMode()` if different), and `isWeatherOverlayOn` (calls `toggleWeatherOverlay()` if different) |
 | `overwriteProfile(name)` | Overwrites an existing profile with the current configuration values without renaming; updates the profiles list in place |
 | `deleteProfile(name)` | Removes the named key from the profiles object and refreshes the list |
 | `escapeHtml(str)` | Sanitizes a string for safe HTML injection by replacing `&`, `<`, `>`, `"`, and `'` with their corresponding HTML entities; used internally by `renderProfilesList()` |
@@ -465,14 +548,15 @@ When a profile is loaded via `loadProfile()`, the UI is updated atomically:
 3. The GPS polling segmented control iterates all `.segment` buttons in `#gpsPollingGroup`, removes the `active` class from all of them, and re-applies it to the button whose `data-value` attribute matches the stored `gpsPolling` value. The hidden `#gpsPolling` input is also updated to keep it in sync.
 4. If the profile contains an `is3DMode` boolean that differs from the current state, `toggle3DMap()` is called to switch the map view accordingly.
 5. If the profile contains an `isHeadingUp` boolean that differs from the current state, `toggleHeadingMode()` is called to restore the heading orientation.
-6. If the profile contains a `theme` value that differs from the current `currentTheme`, `toggleTheme()` is called to switch the UI to the saved Light/Dark mode.
-7. The modal is closed automatically.
+6. If the profile contains an `isWeatherOverlayOn` boolean that differs from the current state, `toggleWeatherOverlay()` is called to activate or deactivate the RainViewer precipitation radar overlay accordingly.
+7. If the profile contains a `theme` value that differs from the current `currentTheme`, `toggleTheme()` is called to switch the UI to the saved Light/Dark mode.
+8. The modal is closed automatically.
 
 ### 🖥️ UI Entry Point
 
 The profiles modal is accessible from the **👤 button** in the application header. The modal contains:
 
-- A scrollable list of saved profile cards, each showing the profile name and a compact summary (`Weight · Battery · GPS · Map mode / Heading mode · Theme`), along with **Load**, **Overwrite**, and **Delete** action buttons.
+- A scrollable list of saved profile cards, each showing the profile name and a compact summary (`Weight · Battery · GPS · Map mode / Heading mode · Weather overlay · Theme`), along with **Load**, **Overwrite**, and **Delete** action buttons.
 - A text input field (max 40 characters) and a **💾 Save** button to persist the active configuration under a new name.
 
 ---
@@ -532,13 +616,13 @@ The MapLibre GL map style is switched per theme at initialization time (see [Map
 │ Dist │ Avg Spd │ Cons │ Regen │ Alt │ Grade │ Pwr │ ⏱ │
 ├──────────────── RANGE ESTIMATOR ───────────────────────┤
 │  [kWh ±] [SOC% ±] [═══ Battery Bar ═══] [Range] [Rem.] │
-├────────────── MAP ──────┬───── CHARTS PANEL ───────────┤
-│                         │  Elevation Profile           │
-│  MapLibre GL 2D / 3D    │  Consumption vs Distance     │
-│  Route Map              │  Speed Profile               │
-│ [−][⊕][+]   [▲][3D][⛶] │  Energy Balance              │
-│                         │  Power Breakdown             │
-│                         │  Weather Panel               │
+├───────────── MAP ──────────┬───── CHARTS PANEL ────────┤
+│ [−][⊕][+]  [▲][3D][🌧][⛶] │  Elevation Profile        │
+│                            │  Consumption vs Distance  │
+│                            │  Speed Profile            │
+│          Route Map         │  Energy Balance           │
+│                            │  Power Breakdown          │
+│                            │  Weather Panel            │
 ├─────────────────────── CONTROLS ───────────────────────┤
 │           [▶ Start Trip]    [⏹ Stop Trip]             │
 └────────────────────────────────────────────────────────┘
@@ -925,6 +1009,8 @@ Both the 2D and 3D MapLibre instances select their vector tile style based on th
 | `positionMarker` | `maplibregl.Marker \| null` | Live GPS position marker on the 2D map; initialized at page load |
 | `positionMarker3d` | `maplibregl.Marker \| null` | Live GPS position marker on the 3D map; initialized on first 3D activation |
 | `isMapFullscreen` | `boolean` | `true` while the map fullscreen mode is active; `false` in normal layout |
+| `isWeatherOverlayOn` | `boolean` | `true` while the RainViewer precipitation radar overlay is active; `false` when hidden |
+| `weatherOverlayTimestamp` | `number \| null` | UNIX timestamp of the most recently fetched RainViewer radar frame; `null` until first overlay activation |
 | `window._importStartMarker` | `maplibregl.Marker \| null` | Start (`S`) endpoint marker on the 2D map; set by `placeImportMarkers()` after a file import |
 | `window._importEndMarker` | `maplibregl.Marker \| null` | End (`E`) endpoint marker on the 2D map; set by `placeImportMarkers()` after a file import |
 | `window._importStartMarker3d` | `maplibregl.Marker \| null` | Start (`S`) endpoint marker on the 3D map; set by `placeImportMarkers()` after a file import |
@@ -939,7 +1025,7 @@ A set of three floating **zoom and re-center buttons** is overlaid in the **top-
 ```
 ┌─────────── MAP WRAPPER ─────────────────┐
 │  ┌───┐ ┌───┐ ┌───┐                      │
-│  │ − │ │ ⊕ │ │ + │    (map content)     │
+│  │ − │ │ ⊕│ │ + │    (map content)     │
 │  └───┘ └───┘ └───┘                      │
 └─────────────────────────────────────────┘
 ```
@@ -965,11 +1051,11 @@ Trip Master provides a **fullscreen map mode** that expands the map to fill the 
 A floating **`⛶` button** is permanently overlaid in the **top-right corner** of the map panel, to the right of the 3D toggle:
 
 ```
-┌─────────── MAP WRAPPER ─────────────────────────┐
-│              ┌───────┐ ┌───────┐ ┌───────┐      │
-│  (map)       │   ▲   │ │  3D   │ │   ⛶   │      │
-│              └───────┘ └───────┘ └───────┘      │
-└─────────────────────────────────────────────────┘
+┌─────────────────────── MAP WRAPPER ───────────────────┐
+│              ┌───────┐ ┌───────┐ ┌───────┐ ┌───────┐  │
+│  (map)       │   ▲   │ │  3D   │ │   🌧  │ │   ⛶   │  │
+│              └───────┘ └───────┘ └───────┘ └───────┘  │
+└───────────────────────────────────────────────────────┘
 ```
 
 When active, the button is highlighted in `--accent-purple` (`#b39ddb`).
@@ -1011,11 +1097,11 @@ Trip Master supports a **Heading-Up** orientation mode that rotates the active m
 A floating **`▲` / `N` button** is permanently overlaid in the **top-right corner of the map panel**, to the left of the 3D toggle:
 
 ```
-┌─────────── MAP WRAPPER ────────────────┐
-│                     ┌───────┐ ┌───────┐│
-│   (map content)     │   ▲   │ │  3D   ││
-│                     └───────┘ └───────┘│
-└────────────────────────────────────────┘
+┌─────────────────────── MAP WRAPPER ───────────────────┐
+│              ┌───────┐ ┌───────┐ ┌───────┐ ┌───────┐  │
+│  (map)       │   ▲   │ │  3D   │ │   🌧  │ │   ⛶   │  │
+│              └───────┘ └───────┘ └───────┘ └───────┘  │
+└───────────────────────────────────────────────────────┘
 ```
 
 | Label | State | Clicking activates |
@@ -1066,7 +1152,7 @@ Trip Master includes two `ResizeObserver`-based scripts that automatically adapt
 
 ### 🗺️ Map Overlay Button Auto-Hide
 
-When the `.map-wrapper` element's height collapses below **50 px** (e.g., in very narrow viewports or when the browser collapses the map section), all four map overlay controls — the `3D` toggle button, the `▲` heading button, the zoom button group, and the fullscreen button — are automatically hidden:
+When the `.map-wrapper` element's height collapses below **50 px** (e.g., in very narrow viewports or when the browser collapses the map section), all five map overlay controls — the `3D` toggle button, the `▲` heading button, the zoom button group, the `🌧` weather overlay button, and the fullscreen button — are automatically hidden:
 
 ```javascript
 function updateMapBtnVisibility(height) {
@@ -1075,6 +1161,7 @@ function updateMapBtnVisibility(height) {
     heading.style.display = hidden ? 'none' : '';
     zoomGroup.style.display = hidden ? 'none' : '';
     fullscreen.style.display = hidden ? 'none' : '';
+    weather.style.display = hidden ? 'none' : '';
 }
 ```
 
