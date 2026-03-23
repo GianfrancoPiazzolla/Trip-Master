@@ -704,11 +704,12 @@
         .profile-item-actions { display: flex; gap: 6px; }
         .profile-action-btn {
             border: 1px solid var(--border-color); background: var(--card-bg);
-            color: var(--text-color); border-radius: 6px; padding: 4px 10px;
-            font-size: 0.75rem; font-family: 'JetBrains Mono', monospace;
-            font-weight: 700; cursor: pointer; transition: all 0.18s ease;
+            color: var(--text-color); border-radius: 6px; padding: 0;
+            width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: all 0.18s ease; flex-shrink: 0;
         }
-        .profile-action-btn:hover { background: var(--border-color); }
+        .profile-action-btn svg { display: block; }
+        .profile-action-btn:hover { background: var(--border-color); transform: translateY(-1px); }
         .profile-action-btn.load { color: var(--secondary); border-color: rgba(41,182,246,0.4); }
         .profile-action-btn.load:hover { background: rgba(41,182,246,0.1); }
         .profile-action-btn.del { color: var(--danger); border-color: rgba(255,23,68,0.4); }
@@ -1128,9 +1129,15 @@
                     </span>
                 </div>
                 <div class="profile-item-actions">
-                    <button class="profile-action-btn load" onclick="loadProfile('${escapeHtml(name)}')">Load</button>
-                    <button class="profile-action-btn overwrite" onclick="overwriteProfile('${escapeHtml(name)}')">Overwrite</button>
-                    <button class="profile-action-btn del" onclick="deleteProfile('${escapeHtml(name)}')">Delete</button>
+                    <button class="profile-action-btn load" onclick="loadProfile('${escapeHtml(name)}')" title="Load">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><polyline points="12 5 19 12 12 19"/></svg>
+                    </button>
+                    <button class="profile-action-btn overwrite" onclick="overwriteProfile('${escapeHtml(name)}')" title="Overwrite">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+                    </button>
+                    <button class="profile-action-btn del" onclick="deleteProfile('${escapeHtml(name)}')" title="Delete">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                    </button>
                 </div>
             </div>`;
         }).join('');
