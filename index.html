@@ -1706,20 +1706,20 @@
             const data = await res.json();
             const frames = data.radar && data.radar.past;
             if (frames && frames.length > 0) {
-                return frames[frames.length - 1].time;
+                return frames[frames.length - 1];
             }
         } catch(e) {}
         return null;
     }
 
-    function addWeatherOverlayToMap(targetMap, timestamp) {
-        if (!targetMap || !timestamp) return;
-        if (targetMap.getSource('rainviewer-source')) return;
+    function addWeatherOverlayToMap(targetMap, radarFrame) {
+        if (!targetMap || !radarFrame) return;
+        if (targetMap.getLayer('rainviewer-layer')) targetMap.removeLayer('rainviewer-layer');
+        if (targetMap.getSource('rainviewer-source')) targetMap.removeSource('rainviewer-source');
+        const tileUrl = 'https://tilecache.rainviewer.com' + radarFrame.path + '/256/{z}/{x}/{y}/4/1_1.png';
         targetMap.addSource('rainviewer-source', {
             type: 'raster',
-            tiles: [
-                'https://tilecache.rainviewer.com/v2/radar/' + timestamp + '/256/{z}/{x}/{y}/2/1_1.png'
-            ],
+            tiles: [tileUrl],
             tileSize: 256,
             minzoom: 0,
             maxzoom: 7,
@@ -1746,9 +1746,7 @@
         isWeatherOverlayOn = !isWeatherOverlayOn;
         if (isWeatherOverlayOn) {
             btn.classList.add('active');
-            if (!weatherOverlayTimestamp) {
-                weatherOverlayTimestamp = await fetchRainViewerTimestamp();
-            }
+            weatherOverlayTimestamp = await fetchRainViewerTimestamp();
             const activeMap = is3DMode ? map3d : map;
             if (activeMap && activeMap.isStyleLoaded()) {
                 addWeatherOverlayToMap(activeMap, weatherOverlayTimestamp);
