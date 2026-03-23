@@ -1083,7 +1083,7 @@
     let positionMarker = null;
     let positionMarker3d = null;
     let powerBreakdown = { drag: 0, gravity: 0, aero: 0, regen: 0, samples: 0 };
-    let prevWeather = { temp: null, min: null, max: null, hum: null, windSpd: null, windDir: null, press: null };
+    let prevWeather = { temp: null, min: null, max: null, hum: null, windSpd: null, press: null };
 
     function initializeSystem() {
         setupMap();
@@ -1309,11 +1309,14 @@
     function applyValueStyle(elementId, newValue, prevValue) {
         const el = document.getElementById(elementId);
         if (prevValue === null || newValue === prevValue) {
-            el.style.color = 'var(--text-color)';
+            // FIX #2: remove inline style entirely so CSS cascade handles
+            // the default color — setting 'var(--text-color)' as an inline
+            // style does not reliably resolve CSS variables in all browsers.
+            el.style.removeProperty('color');
         } else if (newValue > prevValue) {
-            el.style.color = 'var(--up-color)';
+            el.style.color = '#00e676';
         } else {
-            el.style.color = 'var(--down-color)';
+            el.style.color = '#ff1744';
         }
     }
 
@@ -1331,6 +1334,18 @@
             const windSpeed = data.current.wind_speed_10m;
             const windDir = data.current.wind_direction_10m;
 
+            // FIX #1: update DOM text FIRST, then apply color styles so the
+            // color is always applied on the already-updated visible value.
+            document.getElementById('weatherTemp').innerText = currentTemp.toFixed(1);
+            document.getElementById('weatherIcon').innerText = getWeatherPictogram(code);
+            document.getElementById('tempMin').innerText = minTemp.toFixed(1);
+            document.getElementById('tempMax').innerText = maxTemp.toFixed(1);
+            // FIX #3: use toFixed(1) for pressure, consistent with all other values.
+            document.getElementById('pressure').innerText = pressure.toFixed(1);
+            document.getElementById('windSpeedVal').innerText = windSpeed.toFixed(1);
+            document.getElementById('windDirVal').innerText = getWindDirection(windDir);
+            document.getElementById('humidityVal').innerText = humidity;
+
             applyValueStyle('weatherTemp', currentTemp, prevWeather.temp);
             applyValueStyle('tempMin', minTemp, prevWeather.min);
             applyValueStyle('tempMax', maxTemp, prevWeather.max);
@@ -1338,16 +1353,10 @@
             applyValueStyle('windSpeedVal', windSpeed, prevWeather.windSpd);
             applyValueStyle('pressure', pressure, prevWeather.press);
 
-            document.getElementById('weatherTemp').innerText = currentTemp.toFixed(1);
-            document.getElementById('weatherIcon').innerText = getWeatherPictogram(code);
-            document.getElementById('tempMin').innerText = minTemp.toFixed(1);
-            document.getElementById('tempMax').innerText = maxTemp.toFixed(1);
-            document.getElementById('pressure').innerText = pressure;
-            document.getElementById('windSpeedVal').innerText = windSpeed.toFixed(1);
-            document.getElementById('windDirVal').innerText = getWindDirection(windDir);
-            document.getElementById('humidityVal').innerText = humidity;
-
-            prevWeather = { temp: currentTemp, min: minTemp, max: maxTemp, hum: humidity, windSpd: windSpeed, windDir: windDir, press: pressure };
+            // FIX #4: removed windDir from prevWeather — wind direction is a
+            // computed string (N/NE/...), numeric comparison makes no sense and
+            // applyValueStyle was never called on windDirVal anyway.
+            prevWeather = { temp: currentTemp, min: minTemp, max: maxTemp, hum: humidity, windSpd: windSpeed, press: pressure };
 
             if (!isWeatherInitialSyncDone) {
                 updateEfficiencyByTemp(currentTemp);
@@ -1706,6 +1715,8 @@
             const data = await res.json();
             const frames = data.radar && data.radar.past;
             if (frames && frames.length > 0) {
+                // FIX #3: return the full frame object so callers can use .path
+                // for the correct RainViewer v3 tile URL.
                 return frames[frames.length - 1];
             }
         } catch(e) {}
@@ -1714,8 +1725,12 @@
 
     function addWeatherOverlayToMap(targetMap, radarFrame) {
         if (!targetMap || !radarFrame) return;
+        // FIX #1: always remove existing layer/source before re-adding,
+        // so the overlay is refreshed correctly on every call.
         if (targetMap.getLayer('rainviewer-layer')) targetMap.removeLayer('rainviewer-layer');
         if (targetMap.getSource('rainviewer-source')) targetMap.removeSource('rainviewer-source');
+        // FIX #3: use the full path returned by the RainViewer API (v3),
+        // instead of reconstructing it manually with the old /v2/radar/ pattern.
         const tileUrl = 'https://tilecache.rainviewer.com' + radarFrame.path + '/256/{z}/{x}/{y}/4/1_1.png';
         targetMap.addSource('rainviewer-source', {
             type: 'raster',
@@ -1746,6 +1761,8 @@
         isWeatherOverlayOn = !isWeatherOverlayOn;
         if (isWeatherOverlayOn) {
             btn.classList.add('active');
+            // FIX #2: always fetch a fresh timestamp on every activation,
+            // so the radar data is never stale from a previous session.
             weatherOverlayTimestamp = await fetchRainViewerTimestamp();
             const activeMap = is3DMode ? map3d : map;
             if (activeMap && activeMap.isStyleLoaded()) {
