@@ -52,11 +52,11 @@
         }
 
         [data-theme="dark"] #map {
-            filter: brightness(0.55);
+            filter: brightness(0.7);
         }
 
         [data-theme="dark"] #map3d {
-            filter: brightness(0.55);
+            filter: brightness(0.7);
         }
 
         * { box-sizing: border-box; }
@@ -201,7 +201,7 @@
             padding: 10px 14px;
             box-shadow: var(--card-shadow);
             display: flex;
-            align-items: center;
+            align-items: stretch;
             gap: 16px;
             flex-shrink: 0;
             position: relative;
@@ -214,16 +214,19 @@
             width: 3px;
             background: linear-gradient(180deg, var(--primary), var(--secondary));
         }
-        .range-section { display: flex; flex-direction: column; align-items: center; flex: 1; }
+        .range-section { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; }
         .range-label { font-size: 0.6rem; color: var(--label-color); text-transform: uppercase; letter-spacing: 1px; font-family: 'JetBrains Mono', monospace; font-weight: 600; }
         .range-value { font-size: 1.1rem; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
 
         /* SOC Battery Visual */
         .battery-widget {
-            display: flex; align-items: center; gap: 8px; flex: 2;
+            display: flex; align-items: center; gap: 0px; flex: 2;
+            align-self: stretch;
         }
         .battery-body {
-            flex: 1; height: 22px; background: var(--input-bg);
+            flex: 1;
+            height: 100%;
+            background: var(--input-bg);
             border: 2px solid var(--border-color); border-radius: 4px;
             position: relative; overflow: hidden;
         }
@@ -249,7 +252,58 @@
             position: absolute; top: 0; left: 0; right: 0; bottom: 0;
             background: linear-gradient(180deg, rgba(255,255,255,0.3) 0%, transparent 60%);
         }
-        .battery-soc-label { font-size: 0.85rem; font-weight: 700; font-family: 'JetBrains Mono', monospace; min-width: 38px; text-align: right; }
+        .battery-soc-label {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 0.85rem; font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            color: #000;
+            text-shadow: 0 0 4px rgba(255,255,255,0.8);
+            z-index: 1;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+
+        .battery-range-group {
+            display: flex;
+            align-items: stretch;
+            gap: 16px;
+            flex: 3;
+        }
+        .battery-range-group .battery-widget {
+            flex: 3;
+        }
+
+        .range-card.battery-stacked {
+            flex-wrap: wrap;
+        }
+        .range-card.battery-stacked .battery-range-group {
+            flex: 1 1 100%;
+            flex-direction: column;
+            align-items: stretch;
+            gap: 8px;
+        }
+        .range-card.battery-stacked .battery-range-group .battery-widget {
+            flex: none;
+            height: 18px;
+            align-items: center;
+        }
+        .range-card.battery-stacked .battery-range-group .battery-widget .battery-body {
+            height: 100%;
+        }
+        .range-card.battery-stacked .battery-range-group .battery-widget .battery-body::after {
+            display: none;
+        }
+        .range-card.battery-stacked .battery-range-group .battery-widget .battery-soc-label {
+            font-size: 0.75rem;
+        }
+        .range-card.battery-stacked .battery-range-group .range-section {
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+            flex: none;
+        }
 
         /* === MAIN DISPLAY === */
         .main-display { display: flex; gap: 10px; flex: 1; min-height: 0; }
@@ -266,7 +320,7 @@
             z-index: 5;
         }
         .map3d-toggle-btn {
-            position: absolute; top: 10px; right: 10px; z-index: 10;
+            position: absolute; top: 10px; right: 58px; z-index: 10;
             background: var(--card-bg);
             border: 1px solid var(--border-color);
             color: var(--text-color);
@@ -279,6 +333,77 @@
         }
         .map3d-toggle-btn:hover { background: var(--border-color); transform: translateY(-1px); }
         .map3d-toggle-btn.active { background: var(--secondary); color: #000; border-color: var(--secondary); box-shadow: 0 2px 8px rgba(41,182,246,0.4); }
+        .map-fullscreen-btn {
+            position: absolute; top: 10px; right: 10px; z-index: 10;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            border-radius: 8px; padding: 5px 10px;
+            cursor: pointer; font-size: 0.75rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700; letter-spacing: 0.5px;
+            transition: all 0.2s ease;
+            box-shadow: var(--card-shadow);
+        }
+        .map-fullscreen-btn:hover { background: var(--border-color); transform: translateY(-1px); }
+        .map-fullscreen-btn.active { background: var(--accent-purple); color: #000; border-color: var(--accent-purple); box-shadow: 0 2px 8px rgba(179,157,219,0.4); }
+
+        body.map-fullscreen .header { display: none; }
+        body.map-fullscreen .container > .config-grid,
+        body.map-fullscreen .container > .range-card,
+        body.map-fullscreen .container > .grid-stats,
+        body.map-fullscreen .container > .controls { display: none; }
+        body.map-fullscreen .main-display { flex: 1; min-height: 0; }
+        body.map-fullscreen .charts-panel { display: none; }
+        body.map-fullscreen .map-wrapper { flex: 1; width: 100%; height: 100%; border-radius: 0; }
+        body.map-fullscreen .map-wrapper #map { border-radius: 0; }
+        body.map-fullscreen #map3d { border-radius: 0; }
+        body.map-fullscreen .container { padding: 0; gap: 0; }
+        body.map-fullscreen {
+            overflow: hidden;
+            height: 100vh;
+            height: 100dvh;
+        }
+        body.map-fullscreen .container {
+            height: 100%;
+            min-height: 0;
+            overflow: hidden;
+        }
+        body.map-fullscreen .main-display {
+            height: 100%;
+            min-height: 0;
+        }
+        .map-heading-btn {
+            position: absolute; top: 10px; right: 110px; z-index: 10;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            border-radius: 8px; padding: 5px 10px;
+            cursor: pointer; font-size: 0.75rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700; letter-spacing: 0.5px;
+            transition: all 0.2s ease;
+            box-shadow: var(--card-shadow);
+        }
+        .map-heading-btn:hover { background: var(--border-color); transform: translateY(-1px); }
+        .map-heading-btn.active { background: var(--primary); color: #000; border-color: var(--primary); box-shadow: 0 2px 8px rgba(0,230,118,0.4); }
+        .map-zoom-group {
+            position: absolute; top: 10px; left: 10px; z-index: 10;
+            display: flex; flex-direction: row; gap: 4px;
+        }
+        .map-zoom-btn {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            border-radius: 8px; padding: 5px 10px;
+            cursor: pointer; font-size: 0.75rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700; letter-spacing: 0.5px;
+            transition: all 0.2s ease;
+            box-shadow: var(--card-shadow);
+            line-height: 1;
+        }
+        .map-zoom-btn:hover { background: var(--border-color); transform: translateY(-1px); }
 
         /* === CHARTS PANEL === */
         .charts-panel {
@@ -513,7 +638,50 @@
             .grid-stats { grid-template-columns: repeat(2, 1fr); }
             .config-grid { grid-template-columns: 1fr; }
             .range-card { flex-wrap: wrap; }
+
+            body.map-fullscreen {
+                overflow: hidden !important;
+                height: 100vh !important;
+                height: 100dvh !important;
+            }
+            body.map-fullscreen .container {
+                height: 100% !important;
+                overflow: hidden !important;
+            }
+            body.map-fullscreen .main-display {
+                display: flex !important;
+                height: 100% !important;
+                min-height: 0 !important;
+            }
+            body.map-fullscreen .map-wrapper {
+                height: 100% !important;
+                margin-bottom: 0 !important;
+            }
         }
+
+        /* === STEPPER BUTTONS === */
+        .stepper-wrap {
+            display: flex; align-items: center; gap: 4px;
+        }
+        .stepper-wrap input[type="number"] {
+            flex: 1;
+        }
+        .stepper-btn {
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            border-radius: 6px;
+            width: 28px; height: 28px;
+            font-size: 1rem; font-weight: 700;
+            cursor: pointer; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.15s ease;
+            font-family: 'JetBrains Mono', monospace;
+            line-height: 1;
+            padding: 0;
+        }
+        .stepper-btn:hover { background: var(--border-color); transform: translateY(-1px); }
+        .stepper-btn:active { transform: translateY(0); }
 
         /* === PROFILES MODAL === */
         .profiles-list { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; max-height: 280px; overflow-y: auto; }
@@ -545,6 +713,8 @@
         .profile-action-btn.load:hover { background: rgba(41,182,246,0.1); }
         .profile-action-btn.del { color: var(--danger); border-color: rgba(255,23,68,0.4); }
         .profile-action-btn.del:hover { background: rgba(255,23,68,0.1); }
+        .profile-action-btn.overwrite { color: var(--warning); border-color: rgba(255,215,64,0.4); }
+        .profile-action-btn.overwrite:hover { background: rgba(255,215,64,0.1); }
         .profile-save-row {
             display: flow; gap: 8px; margin-top: 14px; align-items: center;
             padding-top: 14px; border-top: 1px solid var(--border-color);
@@ -593,7 +763,7 @@
         <h2>👤 EV Profiles</h2>
         <div id="profilesList" class="profiles-list"></div>
         <div class="profile-save-row">
-            <input type="text" id="profileNameInput" class="profile-name-input" placeholder="Profile name" maxlength="40">
+            <input type="text" id="profileNameInput" class="profile-name-input" placeholder="New profile name" maxlength="40">
             <button class="profile-save-btn" onclick="saveProfile()">💾 Save</button>
         </div>
     </div>
@@ -622,6 +792,11 @@
         <div id="summaryContent">
             <p style="color:var(--label-color); font-style:italic;">No trip data yet. Start a trip to see the summary.</p>
         </div>
+        <div style="display:flex; gap:10px; margin-top:16px; padding-top:14px; border-top:1px solid var(--border-color);">
+            <button onclick="exportTrip()" style="flex:1; border:none; padding:10px; border-radius:8px; font-size:0.82rem; font-weight:800; cursor:pointer; text-transform:uppercase; font-family:'Syne',sans-serif; letter-spacing:1.5px; background:linear-gradient(135deg,var(--secondary),#0288d1); color:#000; transition:all 0.18s ease;" onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform=''">⬇ Export Trip</button>
+            <button onclick="document.getElementById('importTripInput').click()" style="flex:1; border:none; padding:10px; border-radius:8px; font-size:0.82rem; font-weight:800; cursor:pointer; text-transform:uppercase; font-family:'Syne',sans-serif; letter-spacing:1.5px; background:linear-gradient(135deg,var(--primary),#00c853); color:#000; transition:all 0.18s ease;" onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform=''">⬆ Import Trip</button>
+        </div>
+        <input type="file" id="importTripInput" accept=".json" style="display:none;" onchange="importTrip(event)">
     </div>
 </div>
 
@@ -664,25 +839,35 @@
     <div class="range-card">
         <div class="range-section">
             <span class="range-label">Battery (kWh)</span>
-            <input type="number" id="batteryCapacity" value="100" step="5" style="width:120px; font-size:13px !important; padding: 6px 8px; text-align:center;">
+            <div class="stepper-wrap" style="width:140px;">
+                <button class="stepper-btn" onclick="stepValue('batteryCapacity', -1)">−</button>
+                <input type="number" id="batteryCapacity" value="100" step="1" style="font-size:13px !important; padding: 6px 8px; text-align:center;">
+                <button class="stepper-btn" onclick="stepValue('batteryCapacity', 1)">+</button>
+            </div>
         </div>
         <div class="range-section">
             <span class="range-label">Current SoC (%)</span>
-            <input type="number" id="socInput" value="100" min="0" max="100" step="1" style="width:120px; font-size:13px !important; padding:6px 8px; text-align:center;" oninput="updateBattery()">
-        </div>
-        <div class="battery-widget" style="flex:3;">
-            <div class="battery-body">
-                <div class="battery-fill" id="batteryFill" style="width:80%"></div>
+            <div class="stepper-wrap" style="width:140px;">
+                <button class="stepper-btn" onclick="stepValue('socInput', -1); updateBattery()">−</button>
+                <input type="number" id="socInput" value="100" min="0" max="100" step="1" style="font-size:13px !important; padding:6px 8px; text-align:center;" oninput="updateBattery()">
+                <button class="stepper-btn" onclick="stepValue('socInput', 1); updateBattery()">+</button>
             </div>
-            <span class="battery-soc-label" id="socLabel">100%</span>
         </div>
-        <div class="range-section">
-            <span class="range-label">Nominal Range</span>
-            <span class="range-value" id="estRange" style="color: var(--primary);">-- Km</span>
-        </div>
-        <div class="range-section">
-            <span class="range-label">Remaining Range</span>
-            <span class="range-value" id="remainRange" style="color: var(--secondary);">-- Km</span>
+        <div class="battery-range-group">
+            <div class="battery-widget">
+                <div class="battery-body">
+                    <div class="battery-fill" id="batteryFill" style="width:80%;"></div>
+                    <span class="battery-soc-label" id="socLabel">100%</span>
+                </div>
+            </div>
+            <div class="range-section">
+                <span class="range-label">Nominal Range</span>
+                <span class="range-value" id="estRange" style="color: var(--primary);">-- Km</span>
+            </div>
+            <div class="range-section">
+                <span class="range-label">Remaining Range</span>
+                <span class="range-value" id="remainRange" style="color: var(--secondary);">-- Km</span>
+            </div>
         </div>
     </div>
 
@@ -703,7 +888,14 @@
         <div class="map-wrapper">
             <div id="map"></div>
             <div id="map3d"></div>
+            <div class="map-zoom-group" id="mapZoomGroup">
+                <button class="map-zoom-btn" onclick="mapZoomOut()" title="Zoom Out">−</button>
+                <button class="map-zoom-btn" onclick="mapCenterOnGPS()" title="Center on current GPS position">⊕</button>
+                <button class="map-zoom-btn" onclick="mapZoomIn()" title="Zoom In">+</button>
+            </div>
+            <button class="map-heading-btn" id="btnHeadingToggle" onclick="toggleHeadingMode()" title="Toggle North Up / Heading Up">▲</button>
             <button class="map3d-toggle-btn" id="btn3DToggle" onclick="toggle3DMap()" title="Toggle 3D Map">3D</button>
+            <button class="map-fullscreen-btn" id="btnFullscreen" onclick="toggleMapFullscreen()" title="Toggle Fullscreen Map">⛶</button>
         </div>
 
         <div class="charts-panel">
@@ -722,7 +914,7 @@
             <!-- CONSUMPTION VS SPEED SCATTER -->
             <div class="chart-container">
                 <div class="chart-header">
-                    <span class="chart-title">Consumption vs Distance</span>
+                    <span class="chart-title">Consumption Profile</span>
                     <span class="chart-badge cons">Wh/Km</span>
                 </div>
                 <div class="chart-canvas-area">
@@ -867,11 +1059,11 @@
     let initialSoc = 100;
     let map3d = null, map3dSource = null, is3DMode = false;
     let map3dCoords = [];
-
-    // Per-segment power breakdown accumulator
+    let isHeadingUp = false;
+    let lastHeading = 0;
+    let positionMarker = null;
+    let positionMarker3d = null;
     let powerBreakdown = { drag: 0, gravity: 0, aero: 0, regen: 0, samples: 0 };
-
-    // Previous weather values for comparison
     let prevWeather = { temp: null, min: null, max: null, hum: null, windSpd: null, windDir: null, press: null };
 
     function initializeSystem() {
@@ -924,17 +1116,20 @@
 
         container.innerHTML = keys.map(name => {
             const p = profiles[name];
+            const modeLabel = p.is3DMode ? '3D' : '2D';
+            const headingLabel = p.isHeadingUp ? '▲' : 'N';
             return `
             <div class="profile-item">
                 <div class="profile-item-info">
                     <span class="profile-item-name">${escapeHtml(name)}</span>
                     <span class="profile-item-details">
-                        Weight: <b>${p.vehicleWeight}</b> Kg</br>Battery: <b>${p.batteryKwh}</b> kWh</br>GPS: <b>${p.gpsPolling}</b> s</br>Theme: <b>${p.theme === 'dark' ? '🌙 Dark' : '☀️ Light'}</b>
+                        Weight: <b>${p.vehicleWeight}</b> Kg</br>Battery: <b>${p.batteryKwh}</b> kWh</br>GPS: <b>${p.gpsPolling}</b> s</br>Map: <b>${modeLabel}</b> / <b>${headingLabel}</b></br>Theme: <b>${p.theme === 'dark' ? '🌙 Dark' : '☀️ Light'}</b>
                     </span>
                 </div>
                 <div class="profile-item-actions">
                     <button class="profile-action-btn load" onclick="loadProfile('${escapeHtml(name)}')">Load</button>
-                    <button class="profile-action-btn del" onclick="deleteProfile('${escapeHtml(name)}')">✕</button>
+                    <button class="profile-action-btn overwrite" onclick="overwriteProfile('${escapeHtml(name)}')">Overwrite</button>
+                    <button class="profile-action-btn del" onclick="deleteProfile('${escapeHtml(name)}')">Delete</button>
                 </div>
             </div>`;
         }).join('');
@@ -950,7 +1145,14 @@
         const batteryKwh = document.getElementById('batteryCapacity').value;
 
         const profiles = getProfiles();
-        profiles[name] = { vehicleWeight: weight, gpsPolling: gpsPolling, batteryKwh: batteryKwh, theme: currentTheme };
+        profiles[name] = {
+            vehicleWeight: weight,
+            gpsPolling: gpsPolling,
+            batteryKwh: batteryKwh,
+            theme: currentTheme,
+            is3DMode: is3DMode,
+            isHeadingUp: isHeadingUp
+        };
         saveProfiles(profiles);
 
         nameInput.value = '';
@@ -975,7 +1177,14 @@
         });
         document.getElementById('gpsPolling').value = p.gpsPolling;
 
-        // Restore theme preference if saved
+        if (typeof p.is3DMode === 'boolean' && p.is3DMode !== is3DMode) {
+            toggle3DMap();
+        }
+
+        if (typeof p.isHeadingUp === 'boolean' && p.isHeadingUp !== isHeadingUp) {
+            toggleHeadingMode();
+        }
+
         if (p.theme && p.theme !== currentTheme) {
             toggleTheme();
         }
@@ -990,8 +1199,35 @@
         renderProfilesList();
     }
 
+    function overwriteProfile(name) {
+        const weight = document.getElementById('vehicleWeight').value;
+        const gpsPolling = document.getElementById('gpsPolling').value;
+        const batteryKwh = document.getElementById('batteryCapacity').value;
+
+        const profiles = getProfiles();
+        profiles[name] = {
+            vehicleWeight: weight,
+            gpsPolling: gpsPolling,
+            batteryKwh: batteryKwh,
+            theme: currentTheme,
+            is3DMode: is3DMode,
+            isHeadingUp: isHeadingUp
+        };
+        saveProfiles(profiles);
+        renderProfilesList();
+    }
+
     function escapeHtml(str) {
         return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    }
+
+    function stepValue(inputId, delta) {
+        const input = document.getElementById(inputId);
+        const min = input.min !== '' ? parseFloat(input.min) : -Infinity;
+        const max = input.max !== '' ? parseFloat(input.max) : Infinity;
+        let val = (parseFloat(input.value) || 0) + delta;
+        val = Math.min(max, Math.max(min, val));
+        input.value = val;
     }
 
     function setupSegmentedControl() {
@@ -1032,8 +1268,6 @@
             const remaining = Math.max(0, parseFloat(estRange) - usedKm);
             document.getElementById('remainRange').innerText = remaining.toFixed(0) + ' Km';
         } else {
-            // Use default 180 Wh/Km as baseline
-//            const estRange = (availableWh / 180).toFixed(0);
             const estRange = '--';
             document.getElementById('estRange').innerText = estRange + ' Km';
             document.getElementById('remainRange').innerText = '-- Km';
@@ -1204,9 +1438,63 @@
         }
     }
 
+    function createTripEndpointMarker(label, bgColor) {
+        const el = document.createElement('div');
+        el.style.cssText = [
+            'width:22px', 'height:22px', 'border-radius:50%',
+            'background:' + bgColor,
+            'border:2px solid #ffffff',
+            'box-shadow:0 0 0 2px rgba(0,0,0,0.25), 0 2px 6px rgba(0,0,0,0.4)',
+            'display:flex', 'align-items:center', 'justify-content:center',
+            'font-family:\'Syne\', sans-serif', 'font-size:11px', 'font-weight:800',
+            'color:#ffffff', 'pointer-events:none', 'z-index:20'
+        ].join(';');
+        el.textContent = label;
+        return el;
+    }
+
+    function placeImportMarkers(coords) {
+        const first = coords[0];
+        const last = coords[coords.length - 1];
+
+        if (window._importStartMarker) { window._importStartMarker.remove(); window._importStartMarker = null; }
+        if (window._importEndMarker) { window._importEndMarker.remove(); window._importEndMarker = null; }
+        if (window._importStartMarker3d) { window._importStartMarker3d.remove(); window._importStartMarker3d = null; }
+        if (window._importEndMarker3d) { window._importEndMarker3d.remove(); window._importEndMarker3d = null; }
+
+        if (map) {
+            window._importStartMarker = new maplibregl.Marker({ element: createTripEndpointMarker('S', '#00b248'), anchor: 'center' })
+                .setLngLat([first[0], first[1]])
+                .addTo(map);
+            window._importEndMarker = new maplibregl.Marker({ element: createTripEndpointMarker('E', '#e21017'), anchor: 'center' })
+                .setLngLat([last[0], last[1]])
+                .addTo(map);
+        }
+
+        if (map3d) {
+            window._importStartMarker3d = new maplibregl.Marker({ element: createTripEndpointMarker('S', '#00b248'), anchor: 'center' })
+                .setLngLat([first[0], first[1]])
+                .addTo(map3d);
+            window._importEndMarker3d = new maplibregl.Marker({ element: createTripEndpointMarker('E', '#e21017'), anchor: 'center' })
+                .setLngLat([last[0], last[1]])
+                .addTo(map3d);
+        }
+    }
+
+    function createBlueMarkerElement() {
+        const el = document.createElement('div');
+        el.style.cssText = [
+            'width:14px', 'height:14px', 'border-radius:50%',
+            'background:radial-gradient(circle at 35% 35%, #64b5f6, #1565c0)',
+            'border:2px solid #ffffff',
+            'box-shadow:0 0 0 2px rgba(41,182,246,0.5), 0 2px 6px rgba(0,0,0,0.35)',
+            'pointer-events:none'
+        ].join(';');
+        return el;
+    }
+
     function setupMap() {
         const lightStyle = 'https://tiles.openfreemap.org/styles/liberty';
-        const darkStyle  = 'https://tiles.openfreemap.org/styles/dark';
 
         map = new maplibregl.Map({
             container: 'map',
@@ -1231,6 +1519,10 @@
                 layout: { 'line-join': 'round', 'line-cap': 'round' },
                 paint: { 'line-color': '#e21017', 'line-width': 5, 'line-opacity': 0.9 }
             });
+
+            positionMarker = new maplibregl.Marker({ element: createBlueMarkerElement(), anchor: 'center' })
+                .setLngLat([12.5113, 41.8919])
+                .addTo(map);
         });
 
         if (navigator.geolocation) {
@@ -1238,6 +1530,8 @@
                 const { latitude, longitude } = pos.coords;
                 map.setCenter([longitude, latitude]);
                 map.setZoom(15);
+
+                if (positionMarker) positionMarker.setLngLat([longitude, latitude]);
                 fetchWeather(latitude, longitude);
             }, () => {}, { enableHighAccuracy: true });
         }
@@ -1252,7 +1546,7 @@
             center: [lng, lat],
             zoom: 15,
             pitch: 60,
-            bearing: -20,
+            bearing: 0,
             antialias: true
         });
 
@@ -1270,17 +1564,20 @@
                 layout: { 'line-join': 'round', 'line-cap': 'round' },
                 paint: { 'line-color': '#e21017', 'line-width': 5, 'line-opacity': 0.9 }
             });
+
+            const center = map3d.getCenter();
+            positionMarker3d = new maplibregl.Marker({ element: createBlueMarkerElement(), anchor: 'center' })
+                .setLngLat([center.lng, center.lat])
+                .addTo(map3d);
         });
     }
 
-    function toggle3DMap() {
-        const btn = document.getElementById('btn3DToggle');
+    function toggle3DMap() {        const btn = document.getElementById('btn3DToggle');
         const map3dEl = document.getElementById('map3d');
         const mapEl = document.getElementById('map');
         const center = map.getCenter();
 
         if (!is3DMode) {
-            // Switch to 3D
             is3DMode = true;
             btn.textContent = '2D';
             btn.classList.add('active');
@@ -1296,13 +1593,49 @@
                 }
             }
         } else {
-            // Switch back to 2D
             is3DMode = false;
             btn.textContent = '3D';
             btn.classList.remove('active');
             map3dEl.style.display = 'none';
             mapEl.style.display = 'block';
             map.resize();
+        }
+    }
+
+    function mapZoomIn() {
+        const activeMap = is3DMode ? map3d : map;
+        if (activeMap) activeMap.easeTo({ zoom: activeMap.getZoom() + 1, duration: 250 });
+    }
+
+    function mapZoomOut() {
+        const activeMap = is3DMode ? map3d : map;
+        if (activeMap) activeMap.easeTo({ zoom: activeMap.getZoom() - 1, duration: 250 });
+    }
+
+    function mapCenterOnGPS() {
+        if (!navigator.geolocation) return;
+        navigator.geolocation.getCurrentPosition(function(pos) {
+            const { latitude, longitude } = pos.coords;
+            const activeMap = is3DMode ? map3d : map;
+            if (activeMap) activeMap.easeTo({ center: [longitude, latitude], duration: 400 });
+        }, function() {}, { enableHighAccuracy: true });
+    }
+
+    function toggleHeadingMode() {
+        const btn = document.getElementById('btnHeadingToggle');
+        isHeadingUp = !isHeadingUp;
+        if (isHeadingUp) {
+            btn.textContent = 'N';
+            btn.classList.add('active');
+
+            const activeMap = is3DMode ? map3d : map;
+            if (activeMap) activeMap.easeTo({ bearing: lastHeading, duration: 400 });
+        } else {
+            btn.textContent = '▲';
+            btn.classList.remove('active');
+
+            const activeMap = is3DMode ? map3d : map;
+            if (activeMap) activeMap.easeTo({ bearing: 0, duration: 400 });
         }
     }
 
@@ -1557,13 +1890,26 @@
                 if (pathLine) {
                     pathLine.setData({ type: 'Feature', geometry: { type: 'LineString', coordinates: map3dCoords } });
                 }
-                map.panTo([longitude, latitude]);
+
+                // Compute heading from previous to current point
+                if (map3dCoords.length >= 2) {
+                    const prev = map3dCoords[map3dCoords.length - 2];
+                    const dLon = longitude - prev[0];
+                    const dLat = latitude - prev[1];
+                    lastHeading = (Math.atan2(dLon, dLat) * 180 / Math.PI + 360) % 360;
+                }
+
+                const mapBearing = isHeadingUp ? lastHeading : 0;
+                map.easeTo({ center: [longitude, latitude], bearing: mapBearing, duration: 300 });
+
+                if (positionMarker) positionMarker.setLngLat([longitude, latitude]);
 
                 if (map3d && map3dSource) {
                     map3dSource.setData({ type: 'Feature', geometry: { type: 'LineString', coordinates: map3dCoords } });
                 }
                 if (is3DMode && map3d) {
-                    map3d.panTo([longitude, latitude]);
+                    map3d.easeTo({ center: [longitude, latitude], bearing: mapBearing, duration: 300 });
+                    if (positionMarker3d) positionMarker3d.setLngLat([longitude, latitude]);
                 }
                 updateCharts(totalDistance, currentAlt, instantCons, lastSpeedKmh);
                 updatePowerBreakdown(step, deltaAlt, lastSpeedKmh);
@@ -1632,8 +1978,6 @@
         altChart.data.datasets[0].data.push({ x: distKm, y: alt });
         consChart.data.datasets[0].data.push({ x: distKm, y: cons });
         speedChart.data.datasets[0].data.push({ x: distKm, y: parseFloat(speedKmh.toFixed(1)) });
-
-        // Update horizontal bar chart: two separate bars per row label
         energyChart.data.datasets[0].data = [totalConsumedWh, totalRegenWh];
 
         [altChart, consChart, speedChart, energyChart].forEach(c => c.update('none'));
@@ -1678,6 +2022,94 @@
         document.getElementById('gravVal').innerText = Math.round(gravW) + ' W';
         document.getElementById('windVal').innerText = Math.round(aeroW) + ' W';
         document.getElementById('regenBarVal').innerText = Math.round(regenInstantW) + ' W';
+    }
+
+    function exportTrip() {
+        if (map3dCoords.length < 2) {
+            alert('No GPS coordinates available to export.');
+            return;
+        }
+        const data = JSON.stringify(map3dCoords, null, 2);
+        const blob = new Blob([data], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        const now = new Date();
+        const ts = now.getFullYear().toString() +
+            String(now.getMonth() + 1).padStart(2, '0') +
+            String(now.getDate()).padStart(2, '0') + '_' +
+            String(now.getHours()).padStart(2, '0') +
+            String(now.getMinutes()).padStart(2, '0');
+        a.download = 'trip_coordinates_' + ts + '.json';
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    function importTrip(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const coords = JSON.parse(e.target.result);
+                if (!Array.isArray(coords) || coords.length < 2 || !Array.isArray(coords[0]) || coords[0].length < 2) {
+                    alert('Invalid trip file format.');
+                    return;
+                }
+                map3dCoords = coords;
+
+                if (pathLine) {
+                    pathLine.setData({ type: 'Feature', geometry: { type: 'LineString', coordinates: map3dCoords } });
+                }
+                if (map3dSource) {
+                    map3dSource.setData({ type: 'Feature', geometry: { type: 'LineString', coordinates: map3dCoords } });
+                }
+
+                const first = map3dCoords[0];
+                const last = map3dCoords[map3dCoords.length - 1];
+                const activeMap = is3DMode ? map3d : map;
+                if (activeMap) {
+                    activeMap.fitBounds(
+                        map3dCoords.reduce(function(bounds, c) {
+                            return [
+                                [Math.min(bounds[0][0], c[0]), Math.min(bounds[0][1], c[1])],
+                                [Math.max(bounds[1][0], c[0]), Math.max(bounds[1][1], c[1])]
+                            ];
+                        }, [[first[0], first[1]], [first[0], first[1]]]),
+                        { padding: 40, duration: 600 }
+                    );
+                }
+
+                placeImportMarkers(map3dCoords);
+
+                document.getElementById('summaryModal').style.display = 'none';
+            } catch(err) {
+                alert('Failed to parse trip file: ' + err.message);
+            }
+        };
+        reader.readAsText(file);
+        event.target.value = '';
+    }
+
+
+
+    function toggleMapFullscreen() {
+        isMapFullscreen = !isMapFullscreen;
+        const btn = document.getElementById('btnFullscreen');
+        if (isMapFullscreen) {
+            document.body.classList.add('map-fullscreen');
+            btn.classList.add('active');
+            btn.title = 'Exit Fullscreen';
+        } else {
+            document.body.classList.remove('map-fullscreen');
+            btn.classList.remove('active');
+            btn.title = 'Toggle Fullscreen Map';
+        }
+
+        setTimeout(function() {
+            if (map) map.resize();
+            if (map3d) map3d.resize();
+        }, 50);
     }
 
     function showSummary() {
@@ -1750,6 +2182,54 @@
     }
 </script>
 <script>
+    // Hide map overlay buttons when the map wrapper height drops below 50px
+    (function() {
+        function updateMapBtnVisibility(height) {
+            var toggle = document.querySelector('.map3d-toggle-btn');
+            var heading = document.querySelector('.map-heading-btn');
+            var zoomGroup = document.querySelector('.map-zoom-group');
+            var fullscreen = document.querySelector('.map-fullscreen-btn');
+            var hidden = height < 50;
+            if (toggle) toggle.style.display = hidden ? 'none' : '';
+            if (heading) heading.style.display = hidden ? 'none' : '';
+            if (zoomGroup) zoomGroup.style.display = hidden ? 'none' : '';
+            if (fullscreen) fullscreen.style.display = hidden ? 'none' : '';
+        }
+        window.addEventListener('DOMContentLoaded', function() {
+            var wrapper = document.querySelector('.map-wrapper');
+            if (!wrapper) return;
+            updateMapBtnVisibility(wrapper.offsetHeight);
+            var ro = new ResizeObserver(function(entries) {
+                for (var i = 0; i < entries.length; i++) {
+                    updateMapBtnVisibility(entries[i].contentRect.height);
+                }
+            });
+            ro.observe(wrapper);
+        });
+    })();
+</script>
+<script>
+    (function() {
+        window.addEventListener('DOMContentLoaded', function() {
+            var batteryGroup = document.querySelector('.battery-range-group');
+            var rangeCard = document.querySelector('.range-card');
+            if (!batteryGroup || !rangeCard) return;
+            function updateBatteryLayout() {
+                var width = batteryGroup.offsetWidth;
+                if (width < 200) {
+                    rangeCard.classList.add('battery-stacked');
+                } else {
+                    rangeCard.classList.remove('battery-stacked');
+                }
+            }
+            updateBatteryLayout();
+            var ro = new ResizeObserver(function() {
+                updateBatteryLayout();
+            });
+            ro.observe(rangeCard);
+        });
+    })();
+
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', function() {
             navigator.serviceWorker.register('/sw.js').then(function(registration) {
