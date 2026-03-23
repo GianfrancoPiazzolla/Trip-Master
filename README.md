@@ -11,7 +11,7 @@
 [![PWA](https://img.shields.io/badge/PWA-5A0FC8?style=for-the-badge&logo=pwa&logoColor=white)](https://web.dev/progressive-web-apps/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 
-> A **single-file, offline-capable Progressive Web App** that turns any smartphone or browser into a professional-grade electric vehicle trip computer — tracking GPS position, computing physics-based energy consumption in real time, visualizing live charts, and displaying live weather data.
+> A **single-file Progressive Web App** that turns any smartphone or browser into a professional-grade electric vehicle trip computer — tracking GPS position, computing physics-based energy consumption in real time, visualizing live charts, and displaying live weather data.
 
 ---
 
@@ -40,9 +40,15 @@
 13. [Stat Cards Reference](#-stat-cards-reference)
 14. [Trip Summary Modal](#-trip-summary--efficiency-scoring)
 15. [Map Modes: 2D & 3D](#️-map-modes-2d--3d)
-16. [Dependencies](#-dependencies)
-17. [Getting Started](#-getting-started)
-18. [Mathematical Reference](#-mathematical-reference)
+16. [GPS Position Marker](#-gps-position-marker)
+17. [Start & End Markers](#-start--end-markers)
+18. [Map Zoom Controls](#-map-zoom-controls)
+19. [Map Fullscreen Mode](#️-map-fullscreen-mode)
+20. [Heading Mode](#-heading-mode)
+21. [Responsive Layout Adaptations](#-responsive-layout-adaptations)
+22. [Dependencies](#-dependencies)
+23. [Getting Started](#-getting-started)
+24. [Mathematical Reference](#-mathematical-reference)
 
 ---
 
@@ -66,6 +72,11 @@ The app runs entirely client-side. There is no server, no database, and no build
 | 🗺️ **2D Route Map** | MapLibre GL flat top-down view with live route polyline on OpenFreeMap vector tiles |
 | 🌐 **3D Perspective Map** | MapLibre GL 3D tilted-perspective view with identical route data and WebGL rendering |
 | 🔄 **2D / 3D Map Toggle** | One-click button to switch between flat 2D view and immersive 3D view |
+| 🧭 **Heading / North-Up Toggle** | One-click button to switch the active map between heading-up (travel direction) and north-up orientation |
+| 🖥️ **Map Fullscreen Mode** | One-click button to expand the map to the full viewport, hiding all UI panels |
+| 🔍 **Map Zoom Controls** | Floating `−` / `⊕` / `+` buttons to zoom out, re-center on GPS, or zoom in on the active map |
+| 📍 **Live GPS Position Marker** | Custom blue dot marker tracking real-time position on both 2D and 3D maps |
+| 🟢 **Start & End Markers** | Green `S` and red `E` circular markers placed automatically at the first and last coordinate of any imported trip file |
 | 📊 **4 Live Charts** | Elevation profile, consumption vs. distance, speed profile, energy balance |
 | 🌡️ **Live Weather Panel** | Auto-fetches Open-Meteo for temperature, humidity, wind, and pressure |
 | 🌙 **Dark / Light Theme** | Full dual-theme UI with smooth CSS variable transitions |
@@ -217,7 +228,7 @@ All charts are rendered via **Chart.js v4** with `animation: false` for zero-lat
 - **Tension:** 0.4 (smooth cubic Bézier interpolation)
 - **Point radius:** 0 (no dots, continuous trace)
 
-### ⚡ Consumption vs Distance
+### ⚡ Consumption Profile
 
 - **Type:** Line chart
 - **X-axis:** Distance [Km]
@@ -379,8 +390,10 @@ A **segmented control** with five options:
 
 ### 🔋 Battery Capacity & SOC
 
-- **Battery kWh:** Numeric field — total usable pack energy [kWh]
-- **SOC %:** Numeric input (0–100) linked to the visual battery bar via `updateBattery()` → `computeRangeEstimate()`. The SOC percentage and the battery bar are **dynamically updated in real time** at every GPS fix by `updateBatterySoC()`: the function computes the net energy drawn (`totalConsumedWh − totalRegenWh`), derives the new SOC from the initial charge level set at trip start (`initialSoc`), writes the result back to `#socInput`, and calls `updateBattery()` to refresh both the bar fill width and the color-coded state, keeping the visual indicator always consistent with the actual energy consumption.
+- **Battery kWh:** Numeric field with `−` / `+` stepper buttons — total usable pack energy [kWh]. The stepper calls `stepValue('batteryCapacity', ±1)` to increment or decrement by 1 kWh while respecting the field's `min`/`max` bounds.
+- **SOC %:** Numeric input (0–100) with `−` / `+` stepper buttons. Each stepper call invokes `stepValue('socInput', ±1)` followed immediately by `updateBattery()` to keep the visual battery bar, the percentage label, and the range estimate in sync. The SOC percentage and the battery bar are **dynamically updated in real time** at every GPS fix by `updateBatterySoC()`: the function computes the net energy drawn (`totalConsumedWh − totalRegenWh`), derives the new SOC from the initial charge level set at trip start (`initialSoc`), writes the result back to `#socInput`, and calls `updateBattery()` to refresh both the bar fill width and the color-coded state, keeping the visual indicator always consistent with the actual energy consumption.
+
+The `stepValue(inputId, delta)` helper respects the `min` and `max` attributes of the target input and clamps the result before writing it back, preventing out-of-range values.
 
 ---
 
@@ -394,16 +407,20 @@ Profiles are serialized as a JSON object where each key is the user-defined prof
 
 ```json
 {
-  "My Tesla Model 3": {
-    "vehicleWeight": 1850,
+  "My Tesla Model S": {
+    "vehicleWeight": 2200,
     "gpsPolling": 5,
-    "batteryKwh": 75,
+    "batteryKwh": 100,
+    "is3DMode": true,
+    "isHeadingUp": true,
     "theme": "dark"
   },
-  "Light City Run": {
-    "vehicleWeight": 1600,
+  "My Tesla Model X": {
+    "vehicleWeight": 2400,
     "gpsPolling": 10,
-    "batteryKwh": 60,
+    "batteryKwh": 100,
+    "is3DMode": false,
+    "isHeadingUp": false,
     "theme": "light"
   }
 }
@@ -411,13 +428,15 @@ Profiles are serialized as a JSON object where each key is the user-defined prof
 
 ### 💾 Saved Parameters
 
-Each profile snapshot captures exactly four configuration fields:
+Each profile snapshot captures six configuration fields:
 
 | Field | Source Element ID | Description |
 |---|---|---|
 | `vehicleWeight` | `vehicleWeight` | Vehicle + occupant mass [Kg] |
 | `gpsPolling` | `gpsPolling` | GPS polling interval [s] |
 | `batteryKwh` | `batteryCapacity` | Total usable battery capacity [kWh] |
+| `is3DMode` | `is3DMode` | Whether the 3D map view was active (`true` / `false`) |
+| `isHeadingUp` | `isHeadingUp` | Whether heading-up orientation was active (`true` / `false`) |
 | `theme` | `currentTheme` | Active UI theme (`"light"` or `"dark"`) |
 
 > 💡 **Note:** Temperature efficiency and headwind speed are intentionally excluded — they represent real-time environmental conditions rather than vehicle-specific parameters.
@@ -431,9 +450,11 @@ Each profile snapshot captures exactly four configuration fields:
 | `openProfilesModal()` | Renders the profiles list and shows the profiles modal |
 | `closeProfilesModal()` | Hides the profiles modal |
 | `renderProfilesList()` | Iterates all saved profiles and injects them as `profile-item` cards into the modal; shows an empty-state message when no profiles exist |
-| `saveProfile()` | Reads the profile name input and the three config fields, merges them into the profiles object, and persists via `saveProfiles()` |
-| `loadProfile(name)` | Restores `vehicleWeight` and `batteryCapacity` fields, updates the `batteryKwh` display via `updateBattery()`, syncs the GPS polling segmented control by toggling the matching `.active` segment, and restores the saved Light/Dark theme preference by calling `toggleTheme()` if the stored `theme` value differs from the current one |
+| `saveProfile()` | Reads the profile name input and all six config fields, merges them into the profiles object, and persists via `saveProfiles()` |
+| `loadProfile(name)` | Restores `vehicleWeight` and `batteryCapacity` fields, updates the `batteryKwh` display via `updateBattery()`, syncs the GPS polling segmented control by toggling the matching `.active` segment, and restores the saved Light/Dark theme preference by calling `toggleTheme()` if the stored `theme` value differs from the current one. Additionally restores `is3DMode` (calls `toggle3DMap()` if different) and `isHeadingUp` (calls `toggleHeadingMode()` if different) |
+| `overwriteProfile(name)` | Overwrites an existing profile with the current configuration values without renaming; updates the profiles list in place |
 | `deleteProfile(name)` | Removes the named key from the profiles object and refreshes the list |
+| `escapeHtml(str)` | Sanitizes a string for safe HTML injection by replacing `&`, `<`, `>`, `"`, and `'` with their corresponding HTML entities; used internally by `renderProfilesList()` |
 
 ### 🔄 Load Behavior
 
@@ -442,15 +463,17 @@ When a profile is loaded via `loadProfile()`, the UI is updated atomically:
 1. `vehicleWeight` input value is set directly.
 2. `batteryCapacity` input value is set, then `updateBattery()` is called to refresh the SOC bar and recompute the range estimate.
 3. The GPS polling segmented control iterates all `.segment` buttons in `#gpsPollingGroup`, removes the `active` class from all of them, and re-applies it to the button whose `data-value` attribute matches the stored `gpsPolling` value. The hidden `#gpsPolling` input is also updated to keep it in sync.
-4. If the profile contains a `theme` value that differs from the current `currentTheme`, `toggleTheme()` is called to switch the UI to the saved Light/Dark mode.
-5. The modal is closed automatically.
+4. If the profile contains an `is3DMode` boolean that differs from the current state, `toggle3DMap()` is called to switch the map view accordingly.
+5. If the profile contains an `isHeadingUp` boolean that differs from the current state, `toggleHeadingMode()` is called to restore the heading orientation.
+6. If the profile contains a `theme` value that differs from the current `currentTheme`, `toggleTheme()` is called to switch the UI to the saved Light/Dark mode.
+7. The modal is closed automatically.
 
 ### 🖥️ UI Entry Point
 
 The profiles modal is accessible from the **👤 button** in the application header. The modal contains:
 
-- A scrollable list of saved profile cards, each showing the profile name and a compact summary (`Weight · GPS · Battery · Theme`), along with **Load** and **✕ (Delete)** action buttons.
-- A text input field (max 40 characters) and a **💾 Save Current** button to persist the active configuration under a new name.
+- A scrollable list of saved profile cards, each showing the profile name and a compact summary (`Weight · Battery · GPS · Map mode / Heading mode · Theme`), along with **Load**, **Overwrite**, and **Delete** action buttons.
+- A text input field (max 40 characters) and a **💾 Save** button to persist the active configuration under a new name.
 
 ---
 
@@ -478,7 +501,7 @@ Themes are implemented entirely via **CSS custom properties** on the `<body>` el
 
 The MapLibre GL map style is switched per theme at initialization time (see [Map Modes](#️-map-modes-2d--3d)):
 - ☀️ **Light:** `liberty` style — vivid, high-contrast vector cartography
-- 🌙 **Dark:** `dark` style — low-contrast, moody dark vector cartography
+- 🌙 **Dark:** `liberty` style — 70% brightness, moody dark vector cartography
 
 ### 🖋️ Typography
 
@@ -508,12 +531,12 @@ The MapLibre GL map style is switched per theme at initialization time (see [Map
 ├──────────────── STAT CARDS (8 cols) ───────────────────┤
 │ Dist │ Avg Spd │ Cons │ Regen │ Alt │ Grade │ Pwr │ ⏱ │
 ├──────────────── RANGE ESTIMATOR ───────────────────────┤
-│  [kWh] [SOC%] [═══Battery Bar═══] [Range] [Remaining]  │
+│  [kWh ±] [SOC% ±] [═══ Battery Bar ═══] [Range] [Rem.] │
 ├────────────── MAP ──────┬───── CHARTS PANEL ───────────┤
 │                         │  Elevation Profile           │
 │  MapLibre GL 2D / 3D    │  Consumption vs Distance     │
 │  Route Map              │  Speed Profile               │
-│  [3D ↔ 2D toggle btn]   │  Energy Balance              │
+│ [−][⊕][+]   [▲][3D][⛶] │  Energy Balance              │
 │                         │  Power Breakdown             │
 │                         │  Weather Panel               │
 ├─────────────────────── CONTROLS ───────────────────────┤
@@ -604,6 +627,178 @@ The average consumption $\bar{C}$ (Wh/Km) triggers one of three badges:
 | $150 \leq \bar{C} < 220\ \text{Wh/Km}$ | 👍 **Good Efficiency** |
 | $\bar{C} \geq 220\ \text{Wh/Km}$ | ⚡ **High Consumption** |
 
+### 📤 Export / Import Trip Coordinates
+
+The Trip Summary modal includes two action buttons that allow saving and restoring the GPS route of any recorded trip. Both buttons are always visible at the bottom of the modal panel, regardless of whether a trip is currently active.
+
+```
+┌───────────────── TRIP SUMMARY MODAL ─────────────────────┐
+│  📋 Trip Summary                                    [×] │
+│  ─────────────────────────────────────────────────────── │
+│  [summary fields and efficiency badge]                   │
+│  ─────────────────────────────────────────────────────── │
+│   [ ⬇ Export Trip ]          [ ⬆ Import Trip ]           │
+└──────────────────────────────────────────────────────────┘
+```
+
+---
+
+#### ⬇ Export Trip Coordinates
+
+The **⬇ Export Trip** button calls `exportTrip()` and serializes the full route to a downloadable `.json` file. It is only functional when at least **2 GPS coordinates** have been recorded in the current session (`map3dCoords.length ≥ 2`).
+
+##### 📄 Output File Format
+
+The exported file is a plain JSON array of `[longitude, latitude]` pairs — one entry per recorded GPS fix — matching the GeoJSON coordinate array convention:
+
+```json
+[
+  [12.4923, 41.8902],
+  [12.4931, 41.8915],
+  [12.4944, 41.8927],
+  ...
+]
+```
+
+Each element is a two-element number array: `[longitude, latitude]`, in decimal degrees (WGS 84).
+
+##### 🏷️ Filename Convention
+
+The file is automatically named with a timestamp derived from the current local time at the moment of export:
+
+```
+trip_coordinates_YYYYMMDD_HHmm.json
+```
+
+For example: `trip_coordinates_20250318_1435.json`.
+
+##### ⚙️ Implementation Details
+
+| Property | Value |
+|---|---|
+| Function | `exportTrip()` |
+| Trigger | `onclick` on the **⬇ Export Trip** button in `#summaryModal` |
+| Guard condition | Aborts with an alert if `map3dCoords.length < 2` |
+| Serialization | `JSON.stringify(map3dCoords, null, 2)` — pretty-printed, 2-space indent |
+| MIME type | `application/json` |
+| Delivery | Programmatic anchor click with `URL.createObjectURL()` / `URL.revokeObjectURL()` |
+| Source data | `map3dCoords` — the shared `[lng, lat][]` coordinate buffer used by both map instances |
+
+---
+
+#### ⬆ Import Trip Coordinates
+
+The **⬆ Import Trip** button triggers a hidden `<input type="file">` element (`#importTripInput`) that accepts `.json` files. Once the user selects a file, `importTrip(event)` parses and loads it into the map.
+
+##### 📋 Expected File Format
+
+The imported file must be a valid JSON array of `[longitude, latitude]` pairs, identical to the format produced by the export function:
+
+```json
+[
+  [longitude_1, latitude_1],
+  [longitude_2, latitude_2],
+  ...
+]
+```
+
+Validation rules enforced at import time:
+
+- The parsed value must be a JSON **array** (`Array.isArray(coords) === true`).
+- The array must contain **at least 2 elements**.
+- Each element must itself be an **array with at least 2 numeric values** (longitude, latitude).
+
+If any condition is not met, an alert is shown (`'Invalid trip file format.'`) and the import is aborted without modifying any existing route data.
+
+##### 🗺️ Map Behavior After Import
+
+Once a valid file is loaded, the following actions occur automatically:
+
+1. `map3dCoords` is replaced with the parsed coordinate array.
+2. If the 2D route source (`pathLine`) is initialized, it is updated via `pathLine.setData()` to render the imported route immediately.
+3. If the 3D route source (`map3dSource`) is initialized, it is updated via `map3dSource.setData()` with the same data.
+4. The active map instance (`map` in 2D mode, `map3d` in 3D mode) calls `fitBounds()` with a **40 px padding** and a **600 ms animated transition**, zooming and centering the viewport to frame the entire imported route.
+5. The Trip Summary modal is **automatically closed** (`display: 'none'`).
+
+##### ⚙️ Implementation Details
+
+| Property | Value |
+|---|---|
+| Function | `importTrip(event)` |
+| Trigger | `onchange` on `#importTripInput` (hidden file input); activated by `onclick` on the **⬆ Import Trip** button |
+| Accepted file types | `.json` (enforced via `accept=".json"` on the file input) |
+| Reading method | `FileReader.readAsText()` |
+| Parsing | `JSON.parse(e.target.result)` wrapped in a `try/catch`; parse errors surface as an alert with the error message |
+| Map update — 2D | `pathLine.setData({ type: 'Feature', geometry: { type: 'LineString', coordinates: map3dCoords } })` |
+| Map update — 3D | `map3dSource.setData({ type: 'Feature', geometry: { type: 'LineString', coordinates: map3dCoords } })` |
+| Viewport fit | `activeMap.fitBounds([...], { padding: 40, duration: 600 })` — bounding box computed by reducing over all imported coordinates |
+| Post-import | `#summaryModal` is hidden automatically |
+
+> 💡 **Note:** Importing a trip replaces the current `map3dCoords` buffer entirely. Any previously recorded GPS track from an active or completed session is overwritten. The energy, speed, altitude, and consumption accumulators are **not** recalculated from the imported coordinates — they retain their current values.
+
+---
+
+## 📍 Start & End Markers
+
+Whenever a trip file is successfully imported via the **⬆ Import Trip** button, Trip Master automatically places two circular endpoint markers on the map to visually identify the beginning and the end of the imported route.
+
+### 🎨 Marker Appearance
+
+Both markers are created by `createTripEndpointMarker(label, bgColor)`, which builds a styled `<div>` element rendered directly by MapLibre GL JS as a custom HTML marker:
+
+```
+  ┌──────────┐           ┌──────────┐
+  │  🟢  S  │           │  🔴  E   │
+  └──────────┘           └──────────┘
+  Start of route         End of route
+```
+
+### 📌 Marker Placement
+
+The markers are placed by `placeImportMarkers(coords)`, which receives the full imported coordinate array and derives the two anchor positions:
+
+```javascript
+const first = coords[0];               // [longitude, latitude] of the first point
+const last  = coords[coords.length - 1]; // [longitude, latitude] of the last point
+```
+
+The **Start marker** (`S`) is positioned at `first`; the **End marker** (`E`) is positioned at `last`. Both are added to **both map instances** (2D and 3D) so they are always visible regardless of which map mode is currently active.
+
+### 🔄 Lifecycle & Cleanup
+
+Each of the four marker references (`_importStartMarker`, `_importEndMarker`, `_importStartMarker3d`, `_importEndMarker3d`) is stored on the global `window` object. Before placing new markers, `placeImportMarkers()` removes any previously existing markers:
+
+```javascript
+if (window._importStartMarker)   { window._importStartMarker.remove();   window._importStartMarker   = null; }
+if (window._importEndMarker)     { window._importEndMarker.remove();     window._importEndMarker     = null; }
+if (window._importStartMarker3d) { window._importStartMarker3d.remove(); window._importStartMarker3d = null; }
+if (window._importEndMarker3d)   { window._importEndMarker3d.remove();   window._importEndMarker3d   = null; }
+```
+
+This guarantees that re-importing a new file always produces exactly one pair of endpoint markers, replacing the previous pair without accumulation.
+
+### ⚙️ Implementation Details
+
+| Property | Value |
+|---|---|
+| Factory function | `createTripEndpointMarker(label, bgColor)` — returns a styled `HTMLDivElement` |
+| Placement function | `placeImportMarkers(coords)` — called at the end of `importTrip()` after a successful parse |
+| Trigger | Automatically called on every successful `.json` file import; never called during live GPS tracking |
+| 2D marker class | `maplibregl.Marker({ element: ..., anchor: 'center' }).setLngLat([lng, lat]).addTo(map)` |
+| 3D marker class | `maplibregl.Marker({ element: ..., anchor: 'center' }).setLngLat([lng, lat]).addTo(map3d)` |
+| Guards | Markers are only added if the respective map instance (`map` / `map3d`) is already initialized and non-null |
+
+### 📦 State Variables
+
+| Variable | Type | Description |
+|---|---|---|
+| `window._importStartMarker` | `maplibregl.Marker \| null` | Start marker on the 2D map; `null` when no trip has been imported |
+| `window._importEndMarker` | `maplibregl.Marker \| null` | End marker on the 2D map; `null` when no trip has been imported |
+| `window._importStartMarker3d` | `maplibregl.Marker \| null` | Start marker on the 3D map; `null` when no trip has been imported |
+| `window._importEndMarker3d` | `maplibregl.Marker \| null` | End marker on the 3D map; `null` when no trip has been imported |
+
+> 💡 **Note:** Start and End markers are placed exclusively after a file import. They are **not** drawn during a live GPS recording session, and they are **not** cleared when a new live trip is started — they persist on the map until the next file import replaces them.
+
 ---
 
 ## 🗺️ Map Modes: 2D & 3D
@@ -636,7 +831,7 @@ The default map mode uses **MapLibre GL JS v4.7.1** rendering a flat, top-down v
 | 🏗️ Engine | MapLibre GL JS `4.7.1` |
 | 🌍 Tile provider | OpenFreeMap |
 | ☀️ Light style | `https://tiles.openfreemap.org/styles/liberty` |
-| 🌙 Dark style | `https://tiles.openfreemap.org/styles/dark` |
+| 🌙 Dark style | `https://tiles.openfreemap.org/styles/liberty` |
 | 📐 Camera pitch | `0°` (flat top-down view) |
 | 🧭 Camera bearing | `0°` (north-up) |
 | ✨ Antialiasing | `true` |
@@ -659,9 +854,9 @@ The 3D mode reuses **MapLibre GL JS v4.7.1** with a pitched, tilted camera that 
 | 🏗️ Engine | MapLibre GL JS `4.7.1` |
 | 🌍 Tile provider | OpenFreeMap |
 | ☀️ Light style | `https://tiles.openfreemap.org/styles/liberty` |
-| 🌙 Dark style | `https://tiles.openfreemap.org/styles/dark` |
+| 🌙 Dark style | `https://tiles.openfreemap.org/styles/liberty` |
 | 📐 Camera pitch | `60°` (tilted perspective) |
-| 🧭 Camera bearing | `-20°` (slightly rotated north) |
+| 🧭 Camera bearing | `0°` (heading-up) |
 | ✨ Antialiasing | `true` (smooth WebGL rendering) |
 | 🛣️ Route layer type | `line` (GeoJSON `LineString`) — source ID `trip-path` |
 | 🎨 Route color | `#e21017` |
@@ -709,7 +904,7 @@ Both the 2D and 3D MapLibre instances select their vector tile style based on th
 | 🌙 Theme | 🗺️ MapLibre Style | 🏷️ Description |
 |---|---|---|
 | ☀️ Light | `https://tiles.openfreemap.org/styles/liberty` | Bright, detailed vector cartography |
-| 🌙 Dark | `https://tiles.openfreemap.org/styles/dark` | Low-contrast, dark vector cartography |
+| 🌙 Dark | `https://tiles.openfreemap.org/styles/liberty` | 70% brightness, detailed vector cartography |
 
 > 💡 **Tip:** If you switch themes **after** a map instance has already been initialized, the map style is updated live via `map.setStyle()` / `map3d.setStyle()` and the route GeoJSON layer is re-injected automatically via the `styledata` event listener. No manual toggle is required.
 
@@ -725,6 +920,182 @@ Both the 2D and 3D MapLibre instances select their vector tile style based on th
 | `map3dSource` | `GeoJSONSource \| null` | Reference to the `trip-path` GeoJSON source for live 3D route updates |
 | `is3DMode` | `boolean` | `true` while the 3D view is active |
 | `map3dCoords` | `[number, number][]` | Shared coordinate buffer (`[lng, lat]` pairs) consumed by both map instances |
+| `isHeadingUp` | `boolean` | `true` while heading-up orientation is active; `false` when north-up is active |
+| `lastHeading` | `number` | Most recently computed travel bearing in degrees [0–360), derived from the last two GPS coordinates |
+| `positionMarker` | `maplibregl.Marker \| null` | Live GPS position marker on the 2D map; initialized at page load |
+| `positionMarker3d` | `maplibregl.Marker \| null` | Live GPS position marker on the 3D map; initialized on first 3D activation |
+| `isMapFullscreen` | `boolean` | `true` while the map fullscreen mode is active; `false` in normal layout |
+| `window._importStartMarker` | `maplibregl.Marker \| null` | Start (`S`) endpoint marker on the 2D map; set by `placeImportMarkers()` after a file import |
+| `window._importEndMarker` | `maplibregl.Marker \| null` | End (`E`) endpoint marker on the 2D map; set by `placeImportMarkers()` after a file import |
+| `window._importStartMarker3d` | `maplibregl.Marker \| null` | Start (`S`) endpoint marker on the 3D map; set by `placeImportMarkers()` after a file import |
+| `window._importEndMarker3d` | `maplibregl.Marker \| null` | End (`E`) endpoint marker on the 3D map; set by `placeImportMarkers()` after a file import |
+
+---
+
+## 🔍 Map Zoom Controls
+
+A set of three floating **zoom and re-center buttons** is overlaid in the **top-left corner** of the map panel:
+
+```
+┌─────────── MAP WRAPPER ─────────────────┐
+│  ┌───┐ ┌───┐ ┌───┐                      │
+│  │ − │ │ ⊕ │ │ + │    (map content)     │
+│  └───┘ └───┘ └───┘                      │
+└─────────────────────────────────────────┘
+```
+
+| Button | Function | Description |
+|---|---|---|
+| `−` | `mapZoomOut()` | Decreases zoom level by 1 on the active map instance |
+| `⊕` | `mapCenterOnGPS()` | Re-centers the active map on the current GPS position |
+| `+` | `mapZoomIn()` | Increases zoom level by 1 on the active map instance |
+
+All three functions resolve the currently active map as `const activeMap = is3DMode ? map3d : map` and call `activeMap.easeTo()` with a `duration: 250 ms` (zoom) or `400 ms` (center) smooth transition. `mapCenterOnGPS()` fires a fresh `navigator.geolocation.getCurrentPosition()` request with `enableHighAccuracy: true` before recentering.
+
+The zoom group container (`#mapZoomGroup`) is automatically hidden when the map wrapper height drops below 50 px (see [Map Overlay Button Auto-Hide](#-responsive-layout-adaptations)).
+
+---
+
+## 🖥️ Map Fullscreen Mode
+
+Trip Master provides a **fullscreen map mode** that expands the map to fill the entire viewport, hiding all UI panels and controls except the map overlay buttons.
+
+### 🔘 Toggle Button
+
+A floating **`⛶` button** is permanently overlaid in the **top-right corner** of the map panel, to the right of the 3D toggle:
+
+```
+┌─────────── MAP WRAPPER ─────────────────────────┐
+│              ┌───────┐ ┌───────┐ ┌───────┐      │
+│  (map)       │   ▲   │ │  3D   │ │   ⛶   │      │
+│              └───────┘ └───────┘ └───────┘      │
+└─────────────────────────────────────────────────┘
+```
+
+When active, the button is highlighted in `--accent-purple` (`#b39ddb`).
+
+### ⚙️ Toggle Logic — `toggleMapFullscreen()`
+
+| Direction | Actions |
+|---|---|
+| **Normal → Fullscreen** | Sets `isMapFullscreen = true` · Adds `map-fullscreen` CSS class to `<body>` · Activates button styling · Calls `map.resize()` and `map3d.resize()` after a 50 ms delay to let the DOM reflow |
+| **Fullscreen → Normal** | Sets `isMapFullscreen = false` · Removes `map-fullscreen` CSS class from `<body>` · Deactivates button styling · Triggers the same resize calls |
+
+### 🎨 Fullscreen CSS Class Effects
+
+When `body.map-fullscreen` is active, the following elements are hidden via CSS:
+
+- `.header` (app title bar and header buttons)
+- `.config-grid` (vehicle configuration row)
+- `.range-card` (battery / range estimator)
+- `.grid-stats` (8 stat cards)
+- `.controls` (Start / Stop buttons)
+- `.charts-panel` (all charts and weather panel)
+
+The map wrapper and its content expand to fill the remaining available space with `border-radius: 0` to eliminate rounded corners at viewport edges.
+
+### 📦 State Variable
+
+| Variable | Type | Description |
+|---|---|---|
+| `isMapFullscreen` | `boolean` | `true` while fullscreen mode is active; `false` in normal layout |
+
+---
+
+## 🧭 Heading Mode
+
+Trip Master supports a **Heading-Up** orientation mode that rotates the active map so that the current travel direction always points upward — mirroring the feel of a traditional car navigation display.
+
+### 🔘 Toggle Button
+
+A floating **`▲` / `N` button** is permanently overlaid in the **top-right corner of the map panel**, to the left of the 3D toggle:
+
+```
+┌─────────── MAP WRAPPER ────────────────┐
+│                     ┌───────┐ ┌───────┐│
+│   (map content)     │   ▲   │ │  3D   ││
+│                     └───────┘ └───────┘│
+└────────────────────────────────────────┘
+```
+
+| Label | State | Clicking activates |
+|---|---|---|
+| `▲` | North-up is active | Heading-up mode |
+| `N` (highlighted in `--primary` green) | Heading-up is active | North-up mode |
+
+### ⚙️ Toggle Logic — `toggleHeadingMode()`
+
+```javascript
+function toggleHeadingMode()
+```
+
+| Direction | Actions |
+|---|---|
+| **North-Up → Heading-Up** | Sets `isHeadingUp = true` · Changes button label to `N` · Adds `.active` CSS class · Applies `lastHeading` as the bearing of the currently active map instance via `activeMap.easeTo({ bearing: lastHeading, duration: 400 })` |
+| **Heading-Up → North-Up** | Sets `isHeadingUp = false` · Changes button label to `▲` · Removes `.active` CSS class · Resets the map bearing to `0` via `activeMap.easeTo({ bearing: 0, duration: 400 })` |
+
+The correct active map is resolved as: `const activeMap = is3DMode ? map3d : map`.
+
+### 📐 Heading Computation
+
+At every valid GPS step inside `updateLocation()`, the travel bearing is recomputed from the last two entries in `map3dCoords`:
+
+```javascript
+const dLon = longitude - prev[0];
+const dLat = latitude - prev[1];
+lastHeading = (Math.atan2(dLon, dLat) * 180 / Math.PI + 360) % 360;
+```
+
+The resulting `lastHeading` (degrees, 0 = North, clockwise) is then passed to `map.easeTo()` / `map3d.easeTo()` as the `bearing` property when heading-up mode is active:
+
+```javascript
+const mapBearing = isHeadingUp ? lastHeading : 0;
+map.easeTo({ center: [longitude, latitude], bearing: mapBearing, duration: 300 });
+if (is3DMode && map3d) {
+    map3d.easeTo({ center: [longitude, latitude], bearing: mapBearing, duration: 300 });
+}
+```
+
+When heading-up mode is **off**, both maps always use `bearing: 0` (north-up), regardless of the vehicle's actual travel direction.
+
+---
+
+## 📐 Responsive Layout Adaptations
+
+Trip Master includes two `ResizeObserver`-based scripts that automatically adapt the UI layout to available screen space without requiring a page reload.
+
+### 🗺️ Map Overlay Button Auto-Hide
+
+When the `.map-wrapper` element's height collapses below **50 px** (e.g., in very narrow viewports or when the browser collapses the map section), all four map overlay controls — the `3D` toggle button, the `▲` heading button, the zoom button group, and the fullscreen button — are automatically hidden:
+
+```javascript
+function updateMapBtnVisibility(height) {
+    var hidden = height < 50;
+    toggle.style.display = hidden ? 'none' : '';
+    heading.style.display = hidden ? 'none' : '';
+    zoomGroup.style.display = hidden ? 'none' : '';
+    fullscreen.style.display = hidden ? 'none' : '';
+}
+```
+
+A `ResizeObserver` is attached to `.map-wrapper` on `DOMContentLoaded` and fires `updateMapBtnVisibility` on every height change, ensuring no overlay controls are rendered on an unusably small map area.
+
+### 🔋 Battery Range Group Stacking
+
+When the `.battery-range-group` container's width drops below **200 px**, a `.battery-stacked` CSS class is added to `.range-card`. This triggers a CSS layout switch where the battery bar and the two range sections stack vertically instead of rendering side by side, preserving readability on narrow screens:
+
+```javascript
+function updateBatteryLayout() {
+    var width = batteryGroup.offsetWidth;
+    if (width < 200) {
+        rangeCard.classList.add('battery-stacked');
+    } else {
+        rangeCard.classList.remove('battery-stacked');
+    }
+}
+```
+
+A `ResizeObserver` on `.range-card` re-evaluates the layout breakpoint on every resize, making the battery widget fluid across all viewport sizes.
 
 ---
 
@@ -738,7 +1109,7 @@ All dependencies are loaded from CDN — no `npm install` required.
 | 📊 Chart.js | `latest` | All real-time charts | jsDelivr |
 | 📌 chartjs-plugin-annotation | `3.0.1` | Zero-baseline line on charts | jsDelivr |
 | 🌦️ Open-Meteo API | — | Live weather data | Free REST API |
-| 🌍 OpenFreeMap Tiles | — | Vector map styles (`liberty` / `dark`) for both 2D and 3D | OpenFreeMap CDN |
+| 🌍 OpenFreeMap Tiles | — | Vector map styles (`liberty`) for both 2D and 3D | OpenFreeMap CDN |
 | 🔤 Google Fonts (Syne) | — | UI typography | Google CDN |
 | 🔤 Google Fonts (JetBrains Mono) | — | Numeric readouts | Google CDN |
 
