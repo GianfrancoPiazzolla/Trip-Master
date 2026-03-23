@@ -320,7 +320,7 @@
             z-index: 5;
         }
         .map3d-toggle-btn {
-            position: absolute; top: 10px; right: 58px; z-index: 10;
+            position: absolute; top: 10px; right: 110px; z-index: 10;
             background: var(--card-bg);
             border: 1px solid var(--border-color);
             color: var(--text-color);
@@ -332,7 +332,7 @@
             box-shadow: var(--card-shadow);
         }
         .map3d-toggle-btn:hover { background: var(--border-color); transform: translateY(-1px); }
-        .map3d-toggle-btn.active { background: var(--secondary); color: #000; border-color: var(--secondary); box-shadow: 0 2px 8px rgba(41,182,246,0.4); }
+        .map3d-toggle-btn.active { background: var(--warning); color: #000; border-color: var(--warning); box-shadow: 0 2px 8px rgba(41,182,246,0.4); }
         .map-fullscreen-btn {
             position: absolute; top: 10px; right: 10px; z-index: 10;
             background: var(--card-bg);
@@ -347,6 +347,20 @@
         }
         .map-fullscreen-btn:hover { background: var(--border-color); transform: translateY(-1px); }
         .map-fullscreen-btn.active { background: var(--accent-purple); color: #000; border-color: var(--accent-purple); box-shadow: 0 2px 8px rgba(179,157,219,0.4); }
+        .map-weather-btn {
+            position: absolute; top: 10px; right: 58px; z-index: 10;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            border-radius: 8px; padding: 5px 10px;
+            cursor: pointer; font-size: 0.75rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700; letter-spacing: 0.5px;
+            transition: all 0.2s ease;
+            box-shadow: var(--card-shadow);
+        }
+        .map-weather-btn:hover { background: var(--border-color); transform: translateY(-1px); }
+        .map-weather-btn.active { background: var(--secondary); color: #000; border-color: var(--secondary); box-shadow: 0 2px 8px rgba(41,182,246,0.4); }
 
         body.map-fullscreen .header { display: none; }
         body.map-fullscreen .container > .config-grid,
@@ -374,7 +388,7 @@
             min-height: 0;
         }
         .map-heading-btn {
-            position: absolute; top: 10px; right: 110px; z-index: 10;
+            position: absolute; top: 10px; right: 162px; z-index: 10;
             background: var(--card-bg);
             border: 1px solid var(--border-color);
             color: var(--text-color);
@@ -896,6 +910,7 @@
             </div>
             <button class="map-heading-btn" id="btnHeadingToggle" onclick="toggleHeadingMode()" title="Toggle North Up / Heading Up">▲</button>
             <button class="map3d-toggle-btn" id="btn3DToggle" onclick="toggle3DMap()" title="Toggle 3D Map">3D</button>
+            <button class="map-weather-btn" id="btnWeatherOverlay" onclick="toggleWeatherOverlay()" title="Toggle Weather Overlay">🌧</button>
             <button class="map-fullscreen-btn" id="btnFullscreen" onclick="toggleMapFullscreen()" title="Toggle Fullscreen Map">⛶</button>
         </div>
 
@@ -1063,6 +1078,8 @@
     let map3dCoords = [];
     let isHeadingUp = false;
     let lastHeading = 0;
+    let isWeatherOverlayOn = false;
+    let weatherOverlayTimestamp = null;
     let positionMarker = null;
     let positionMarker3d = null;
     let powerBreakdown = { drag: 0, gravity: 0, aero: 0, regen: 0, samples: 0 };
@@ -1120,12 +1137,13 @@
             const p = profiles[name];
             const modeLabel = p.is3DMode ? '3D' : '2D';
             const headingLabel = p.isHeadingUp ? '▲' : 'N';
+            const weatherOverlayLabel = p.isWeatherOverlayOn ? 'On' : 'Off';
             return `
             <div class="profile-item">
                 <div class="profile-item-info">
                     <span class="profile-item-name">${escapeHtml(name)}</span>
                     <span class="profile-item-details">
-                        Weight: <b>${p.vehicleWeight}</b> Kg</br>Battery: <b>${p.batteryKwh}</b> kWh</br>GPS: <b>${p.gpsPolling}</b> s</br>Map: <b>${modeLabel}</b> / <b>${headingLabel}</b></br>Theme: <b>${p.theme === 'dark' ? '🌙 Dark' : '☀️ Light'}</b>
+                        Weight: <b>${p.vehicleWeight}</b> Kg</br>Battery: <b>${p.batteryKwh}</b> kWh</br>GPS: <b>${p.gpsPolling}</b> s</br>Map: <b>${modeLabel}</b> / <b>${headingLabel}</b></br>Weather: <b>${weatherOverlayLabel}</b></br>Theme: <b>${p.theme === 'dark' ? '🌙 Dark' : '☀️ Light'}</b>
                     </span>
                 </div>
                 <div class="profile-item-actions">
@@ -1159,7 +1177,8 @@
             batteryKwh: batteryKwh,
             theme: currentTheme,
             is3DMode: is3DMode,
-            isHeadingUp: isHeadingUp
+            isHeadingUp: isHeadingUp,
+            isWeatherOverlayOn: isWeatherOverlayOn
         };
         saveProfiles(profiles);
 
@@ -1197,6 +1216,10 @@
             toggleTheme();
         }
 
+        if (typeof p.isWeatherOverlayOn === 'boolean' && p.isWeatherOverlayOn !== isWeatherOverlayOn) {
+            toggleWeatherOverlay();
+        }
+
         closeProfilesModal();
     }
 
@@ -1219,7 +1242,8 @@
             batteryKwh: batteryKwh,
             theme: currentTheme,
             is3DMode: is3DMode,
-            isHeadingUp: isHeadingUp
+            isHeadingUp: isHeadingUp,
+            isWeatherOverlayOn: isWeatherOverlayOn
         };
         saveProfiles(profiles);
         renderProfilesList();
@@ -1418,6 +1442,9 @@
                     });
                 }
             }
+            if (isWeatherOverlayOn && weatherOverlayTimestamp && !is3DMode) {
+                addWeatherOverlayToMap(map, weatherOverlayTimestamp);
+            }
         });
 
         // Update 3D map style if already initialized
@@ -1441,6 +1468,9 @@
                             paint: { 'line-color': '#e21017', 'line-width': 5, 'line-opacity': 0.9 }
                         });
                     }
+                }
+                if (isWeatherOverlayOn && weatherOverlayTimestamp && is3DMode) {
+                    addWeatherOverlayToMap(map3d, weatherOverlayTimestamp);
                 }
             });
         }
@@ -1594,12 +1624,27 @@
 
             if (!map3d) {
                 setup3DMap(center.lat, center.lng);
+                if (isWeatherOverlayOn && weatherOverlayTimestamp) {
+                    const applyAfterLoad = function() {
+                        addWeatherOverlayToMap(map3d, weatherOverlayTimestamp);
+                        map3d.off('load', applyAfterLoad);
+                    };
+                    if (map3d) map3d.on('load', applyAfterLoad);
+                }
             } else {
                 map3d.setCenter([center.lng, center.lat]);
                 if (map3dSource) {
                     map3dSource.setData({ type: 'Feature', geometry: { type: 'LineString', coordinates: map3dCoords } });
                 }
+                if (isWeatherOverlayOn && weatherOverlayTimestamp) {
+                    if (map3d.isStyleLoaded()) {
+                        addWeatherOverlayToMap(map3d, weatherOverlayTimestamp);
+                    } else {
+                        map3d.once('styledata', function() { addWeatherOverlayToMap(map3d, weatherOverlayTimestamp); });
+                    }
+                }
             }
+            removeWeatherOverlayFromMap(map);
         } else {
             is3DMode = false;
             btn.textContent = '3D';
@@ -1607,6 +1652,14 @@
             map3dEl.style.display = 'none';
             mapEl.style.display = 'block';
             map.resize();
+            removeWeatherOverlayFromMap(map3d);
+            if (isWeatherOverlayOn && weatherOverlayTimestamp) {
+                if (map.isStyleLoaded()) {
+                    addWeatherOverlayToMap(map, weatherOverlayTimestamp);
+                } else {
+                    map.once('styledata', function() { addWeatherOverlayToMap(map, weatherOverlayTimestamp); });
+                }
+            }
         }
     }
 
@@ -1644,6 +1697,70 @@
 
             const activeMap = is3DMode ? map3d : map;
             if (activeMap) activeMap.easeTo({ bearing: 0, duration: 400 });
+        }
+    }
+
+    async function fetchRainViewerTimestamp() {
+        try {
+            const res = await fetch('https://api.rainviewer.com/public/weather-maps.json');
+            const data = await res.json();
+            const frames = data.radar && data.radar.past;
+            if (frames && frames.length > 0) {
+                return frames[frames.length - 1].time;
+            }
+        } catch(e) {}
+        return null;
+    }
+
+    function addWeatherOverlayToMap(targetMap, timestamp) {
+        if (!targetMap || !timestamp) return;
+        if (targetMap.getSource('rainviewer-source')) return;
+        targetMap.addSource('rainviewer-source', {
+            type: 'raster',
+            tiles: [
+                'https://tilecache.rainviewer.com/v2/radar/' + timestamp + '/256/{z}/{x}/{y}/2/1_1.png'
+            ],
+            tileSize: 256,
+            minzoom: 0,
+            maxzoom: 7,
+            attribution: 'RainViewer'
+        });
+        targetMap.addLayer({
+            id: 'rainviewer-layer',
+            type: 'raster',
+            source: 'rainviewer-source',
+            minzoom: 0,
+            maxzoom: 22,
+            paint: { 'raster-opacity': 0.6 }
+        });
+    }
+
+    function removeWeatherOverlayFromMap(targetMap) {
+        if (!targetMap) return;
+        if (targetMap.getLayer('rainviewer-layer')) targetMap.removeLayer('rainviewer-layer');
+        if (targetMap.getSource('rainviewer-source')) targetMap.removeSource('rainviewer-source');
+    }
+
+    async function toggleWeatherOverlay() {
+        const btn = document.getElementById('btnWeatherOverlay');
+        isWeatherOverlayOn = !isWeatherOverlayOn;
+        if (isWeatherOverlayOn) {
+            btn.classList.add('active');
+            if (!weatherOverlayTimestamp) {
+                weatherOverlayTimestamp = await fetchRainViewerTimestamp();
+            }
+            const activeMap = is3DMode ? map3d : map;
+            if (activeMap && activeMap.isStyleLoaded()) {
+                addWeatherOverlayToMap(activeMap, weatherOverlayTimestamp);
+            } else if (activeMap) {
+                activeMap.once('styledata', function() {
+                    addWeatherOverlayToMap(activeMap, weatherOverlayTimestamp);
+                });
+            }
+        } else {
+            btn.classList.remove('active');
+            removeWeatherOverlayFromMap(map);
+            removeWeatherOverlayFromMap(map3d);
         }
     }
 
@@ -2197,11 +2314,13 @@
             var heading = document.querySelector('.map-heading-btn');
             var zoomGroup = document.querySelector('.map-zoom-group');
             var fullscreen = document.querySelector('.map-fullscreen-btn');
+            var weather = document.querySelector('.map-weather-btn');
             var hidden = height < 50;
             if (toggle) toggle.style.display = hidden ? 'none' : '';
             if (heading) heading.style.display = hidden ? 'none' : '';
             if (zoomGroup) zoomGroup.style.display = hidden ? 'none' : '';
             if (fullscreen) fullscreen.style.display = hidden ? 'none' : '';
+            if (weather) weather.style.display = hidden ? 'none' : '';
         }
         window.addEventListener('DOMContentLoaded', function() {
             var wrapper = document.querySelector('.map-wrapper');
