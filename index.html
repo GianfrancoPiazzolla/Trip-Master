@@ -1542,11 +1542,14 @@
 
     function setupMap() {
         const lightStyle = 'https://tiles.openfreemap.org/styles/liberty';
+        // Fallback coordinates (Rome) — used only if geolocation is denied or unavailable
+        const ROME_LNG = 12.5113;
+        const ROME_LAT = 41.8919;
 
         map = new maplibregl.Map({
             container: 'map',
             style: lightStyle,
-            center: [12.5113, 41.8919],
+            center: [ROME_LNG, ROME_LAT],
             zoom: 13,
             pitch: 0,
             bearing: 0,
@@ -1567,21 +1570,35 @@
                 paint: { 'line-color': '#e21017', 'line-width': 5, 'line-opacity': 0.9 }
             });
 
-            positionMarker = new maplibregl.Marker({ element: createBlueMarkerElement(), anchor: 'center' })
-                .setLngLat([12.5113, 41.8919])
-                .addTo(map);
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                        // Geolocation granted: center map and place marker on actual device position
+                        const { latitude, longitude } = pos.coords;
+                        map.setCenter([longitude, latitude]);
+                        map.setZoom(15);
+                        positionMarker = new maplibregl.Marker({ element: createBlueMarkerElement(), anchor: 'center' })
+                            .setLngLat([longitude, latitude])
+                            .addTo(map);
+                        fetchWeather(latitude, longitude);
+                    },
+                    () => {
+                        // Geolocation denied or unavailable: fall back to Rome
+                        positionMarker = new maplibregl.Marker({ element: createBlueMarkerElement(), anchor: 'center' })
+                            .setLngLat([ROME_LNG, ROME_LAT])
+                            .addTo(map);
+                        fetchWeather(ROME_LAT, ROME_LNG);
+                    },
+                    { enableHighAccuracy: true }
+                );
+            } else {
+                // Geolocation API not supported: fall back to Rome
+                positionMarker = new maplibregl.Marker({ element: createBlueMarkerElement(), anchor: 'center' })
+                    .setLngLat([ROME_LNG, ROME_LAT])
+                    .addTo(map);
+                fetchWeather(ROME_LAT, ROME_LNG);
+            }
         });
-
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition((pos) => {
-                const { latitude, longitude } = pos.coords;
-                map.setCenter([longitude, latitude]);
-                map.setZoom(15);
-
-                if (positionMarker) positionMarker.setLngLat([longitude, latitude]);
-                fetchWeather(latitude, longitude);
-            }, () => {}, { enableHighAccuracy: true });
-        }
     }
 
     function setup3DMap(lat, lng) {
