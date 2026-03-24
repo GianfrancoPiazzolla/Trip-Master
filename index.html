@@ -320,7 +320,7 @@
             z-index: 5;
         }
         .map3d-toggle-btn {
-            position: absolute; top: 10px; right: 110px; z-index: 10;
+            position: absolute; top: 10px; right: 130px; z-index: 10;
             background: var(--card-bg);
             border: 1px solid var(--border-color);
             color: var(--text-color);
@@ -348,7 +348,7 @@
         .map-fullscreen-btn:hover { background: var(--border-color); transform: translateY(-1px); }
         .map-fullscreen-btn.active { background: var(--accent-purple); color: #000; border-color: var(--accent-purple); box-shadow: 0 2px 8px rgba(179,157,219,0.4); }
         .map-weather-btn {
-            position: absolute; top: 10px; right: 58px; z-index: 10;
+            position: absolute; top: 10px; right: 50px; z-index: 10;
             background: var(--card-bg);
             border: 1px solid var(--border-color);
             color: var(--text-color);
@@ -361,6 +361,69 @@
         }
         .map-weather-btn:hover { background: var(--border-color); transform: translateY(-1px); }
         .map-weather-btn.active { background: var(--secondary); color: #000; border-color: var(--secondary); box-shadow: 0 2px 8px rgba(41,182,246,0.4); }
+
+        .map-poi-btn {
+            position: absolute; top: 10px; right: 90px; z-index: 10;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            border-radius: 8px; padding: 5px 10px;
+            cursor: pointer; font-size: 0.75rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700; letter-spacing: 0.5px;
+            transition: all 0.2s ease;
+            box-shadow: var(--card-shadow);
+        }
+        .map-poi-btn:hover { background: var(--border-color); transform: translateY(-1px); }
+        .map-poi-btn.active { background: #ff9100; color: #000; border-color: #ff9100; box-shadow: 0 2px 8px rgba(255,145,0,0.4); }
+
+        /* POI Panel */
+        .poi-panel {
+            position: absolute; top: 46px; right: 10px; z-index: 10;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px; padding: 6px 8px;
+            box-shadow: var(--card-shadow);
+            display: none;
+            flex-direction: column; gap: 3px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.62rem; font-weight: 600;
+            min-width: 172px;
+        }
+        .poi-panel.visible { display: flex; }
+        .poi-panel-title {
+            font-size: 0.58rem; text-transform: uppercase; letter-spacing: 1px;
+            color: var(--label-color); padding-bottom: 4px;
+            border-bottom: 1px solid var(--border-color); margin-bottom: 2px;
+        }
+        .poi-panel-item {
+            display: flex; align-items: center; gap: 7px;
+            padding: 4px 5px; border-radius: 6px;
+            cursor: pointer; transition: background 0.15s ease;
+            user-select: none;
+        }
+        .poi-panel-item:hover { background: var(--input-bg); }
+        .poi-panel-item.active { background: var(--input-bg); }
+        .poi-panel-emoji { font-size: 0.95rem; line-height: 1; width: 18px; text-align: center; }
+        .poi-panel-label { flex: 1; color: var(--text-color); }
+        .poi-panel-check {
+            width: 14px; height: 14px; border-radius: 3px;
+            border: 2px solid var(--border-color);
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; transition: all 0.15s ease;
+            font-size: 0.6rem; color: #000; font-weight: 900;
+        }
+        .poi-panel-item.active .poi-panel-check {
+            border-color: transparent;
+        }
+        .poi-panel-item[data-poi="road_closure"].active .poi-panel-check { background: #ff6f00; }
+        .poi-panel-item[data-poi="mobile_patrol"].active .poi-panel-check { background: #1565c0; }
+        .poi-panel-item[data-poi="speed_camera"].active .poi-panel-check { background: #c62828; }
+        .poi-panel-item[data-poi="ev_charging"].active .poi-panel-check { background: #2e7d32; }
+        .poi-panel-loading {
+            font-size: 0.58rem; color: var(--label-color); text-align: center;
+            padding: 3px 0; letter-spacing: 0.5px;
+        }
 
         body.map-fullscreen .header { display: none; }
         body.map-fullscreen .container > .config-grid,
@@ -388,7 +451,7 @@
             min-height: 0;
         }
         .map-heading-btn {
-            position: absolute; top: 10px; right: 162px; z-index: 10;
+            position: absolute; top: 10px; right: 170px; z-index: 10;
             background: var(--card-bg);
             border: 1px solid var(--border-color);
             color: var(--text-color);
@@ -905,13 +968,38 @@
             <div id="map3d"></div>
             <div class="map-zoom-group" id="mapZoomGroup">
                 <button class="map-zoom-btn" onclick="mapZoomOut()" title="Zoom Out">−</button>
-                <button class="map-zoom-btn" onclick="mapCenterOnGPS()" title="Center on current GPS position">⊕</button>
+                <button class="map-zoom-btn" onclick="mapCenterOnGPS()" title="Center on current GPS position">🎯</button>
                 <button class="map-zoom-btn" onclick="mapZoomIn()" title="Zoom In">+</button>
             </div>
-            <button class="map-heading-btn" id="btnHeadingToggle" onclick="toggleHeadingMode()" title="Toggle North Up / Heading Up">▲</button>
-            <button class="map3d-toggle-btn" id="btn3DToggle" onclick="toggle3DMap()" title="Toggle 3D Map">3D</button>
-            <button class="map-weather-btn" id="btnWeatherOverlay" onclick="toggleWeatherOverlay()" title="Toggle Weather Overlay">🌧</button>
-            <button class="map-fullscreen-btn" id="btnFullscreen" onclick="toggleMapFullscreen()" title="Toggle Fullscreen Map">⛶</button>
+            <button class="map-heading-btn" id="btnHeadingToggle" onclick="toggleHeadingMode()" title="Toggle North Up / Heading Up">🔺</button>
+            <button class="map3d-toggle-btn" id="btn3DToggle" onclick="toggle3DMap()" title="Toggle 2D/3D Map">🛣️</button>
+            <button class="map-weather-btn" id="btnWeatherOverlay" onclick="toggleWeatherOverlay()" title="Toggle Weather Overlay">⛈️</button>
+            <button class="map-poi-btn" id="btnPoiOverlay" onclick="togglePoiOverlay()" title="Toggle Points of Interest">📌</button>
+            <div class="poi-panel" id="poiPanel">
+                <div class="poi-panel-title">POI Layers</div>
+                <div class="poi-panel-item" data-poi="road_closure" onclick="togglePoiType('road_closure')">
+                    <span class="poi-panel-emoji">🚧</span>
+                    <span class="poi-panel-label">Road Closures</span>
+                    <span class="poi-panel-check"></span>
+                </div>
+                <div class="poi-panel-item" data-poi="mobile_patrol" onclick="togglePoiType('mobile_patrol')">
+                    <span class="poi-panel-emoji">🚔</span>
+                    <span class="poi-panel-label">Mobile Patrols</span>
+                    <span class="poi-panel-check"></span>
+                </div>
+                <div class="poi-panel-item" data-poi="speed_camera" onclick="togglePoiType('speed_camera')">
+                    <span class="poi-panel-emoji">📷</span>
+                    <span class="poi-panel-label">Speed Cameras</span>
+                    <span class="poi-panel-check"></span>
+                </div>
+                <div class="poi-panel-item" data-poi="ev_charging" onclick="togglePoiType('ev_charging')">
+                    <span class="poi-panel-emoji">⚡</span>
+                    <span class="poi-panel-label">EV Charging</span>
+                    <span class="poi-panel-check"></span>
+                </div>
+                <div class="poi-panel-loading" id="poiLoadingLabel" style="display:none;">Fetching data…</div>
+            </div>
+            <button class="map-fullscreen-btn" id="btnFullscreen" onclick="toggleMapFullscreen()" title="Toggle Fullscreen Map">🖥️</button>
         </div>
 
         <div class="charts-panel">
@@ -1135,8 +1223,8 @@
 
         container.innerHTML = keys.map(name => {
             const p = profiles[name];
-            const modeLabel = p.is3DMode ? '3D' : '2D';
-            const headingLabel = p.isHeadingUp ? '▲' : 'N';
+            const modeLabel = p.is3DMode ? '🛣️' : '🗺️';
+            const headingLabel = p.isHeadingUp ? '🔺' : '🧭';
             const weatherOverlayLabel = p.isWeatherOverlayOn ? 'On' : 'Off';
             return `
             <div class="profile-item">
@@ -1636,14 +1724,15 @@
         });
     }
 
-    function toggle3DMap() {        const btn = document.getElementById('btn3DToggle');
+    function toggle3DMap() {
+        const btn = document.getElementById('btn3DToggle');
         const map3dEl = document.getElementById('map3d');
         const mapEl = document.getElementById('map');
         const center = map.getCenter();
 
         if (!is3DMode) {
             is3DMode = true;
-            btn.textContent = '2D';
+            btn.textContent = '🗺️';
             btn.classList.add('active');
             mapEl.style.display = 'none';
             map3dEl.style.display = 'block';
@@ -1673,7 +1762,7 @@
             removeWeatherOverlayFromMap(map);
         } else {
             is3DMode = false;
-            btn.textContent = '3D';
+            btn.textContent = '🛣️';
             btn.classList.remove('active');
             map3dEl.style.display = 'none';
             mapEl.style.display = 'block';
@@ -1712,13 +1801,13 @@
         const btn = document.getElementById('btnHeadingToggle');
         isHeadingUp = !isHeadingUp;
         if (isHeadingUp) {
-            btn.textContent = 'N';
+            btn.textContent = '🧭';
             btn.classList.add('active');
 
             const activeMap = is3DMode ? map3d : map;
             if (activeMap) activeMap.easeTo({ bearing: lastHeading, duration: 400 });
         } else {
-            btn.textContent = '▲';
+            btn.textContent = '🔺';
             btn.classList.remove('active');
 
             const activeMap = is3DMode ? map3d : map;
@@ -2073,6 +2162,44 @@
                 computeRangeEstimate();
                 updateBatterySoC();
 
+                // Refresh POI overlay when the vehicle has moved far enough from the last fetch point
+                if (isPoiOverlayOn && !isPoiLoading) {
+                    var distFromLastPoi = lastPoiRefreshPoint
+                        ? computeDistance(lastPoiRefreshPoint.lat, lastPoiRefreshPoint.lon, latitude, longitude)
+                        : POI_REFRESH_DISTANCE_M;
+                    if (distFromLastPoi >= POI_REFRESH_DISTANCE_M) {
+                        lastPoiRefreshPoint = { lat: latitude, lon: longitude };
+                        (async function() {
+                            var refMap = (is3DMode && map3d && map3d.isStyleLoaded()) ? map3d : map;
+                            if (!refMap || !refMap.isStyleLoaded()) return;
+                            setPoiLoading(true, false);
+                            var rateLimitHit = false;
+                            try {
+                                removeAllPoiMarkers(map);
+                                removeAllPoiMarkers(map3d);
+                                for (var i = 0; i < POI_TYPES.length; i++) {
+                                    var poi = POI_TYPES[i];
+                                    if (!poiTypeEnabled[poi.id]) continue;
+                                    try {
+                                        var points = await fetchPointsForPoi(poi, refMap);
+                                        placePoiMarkersOnMap(map, poi, points);
+                                        if (map3d) placePoiMarkersOnMap(map3d, poi, points);
+                                    } catch(e) {
+                                        if (e.isRateLimit) { rateLimitHit = true; break; }
+                                    }
+                                }
+                            } finally {
+                                if (rateLimitHit) {
+                                    setPoiLoading(true, true);
+                                    setTimeout(function() { setPoiLoading(false); }, 3000);
+                                } else {
+                                    setPoiLoading(false);
+                                }
+                            }
+                        })();
+                    }
+                }
+
                 if (Math.floor(totalDistance / 2000) > Math.floor((totalDistance - step) / 2000)) {
                     fetchWeather(latitude, longitude);
                 }
@@ -2250,6 +2377,318 @@
 
 
 
+    /* ===== POI OVERLAY (Road Closures, Mobile Patrols, Speed Cameras, EV Charging) ===== */
+    let isPoiOverlayOn = false;
+    let isPoiLoading = false; // prevents concurrent/overlapping fetch calls
+    let lastPoiRefreshPoint = null; // {lat, lon} of last successful POI refresh
+    const POI_REFRESH_DISTANCE_M = 500; // minimum vehicle displacement (m) to trigger a POI refresh
+
+    // Marker storage: plain objects keyed by poiId, one per map instance
+    const poiMarkersMap2d = {};
+    const poiMarkersMap3d = {};
+
+    const poiTypeEnabled = {
+        road_closure: false,
+        mobile_patrol: false,
+        speed_camera: false,
+        ev_charging: false
+    };
+
+    const POI_TYPES = [
+        {
+            id: 'road_closure',
+            label: 'Road Closure',
+            emoji: '🚧',
+            color: '#ff6f00',
+            source: 'osm',
+            overpassQuery: function(bbox) {
+                return '[out:json][timeout:25];(' +
+                    'node["barrier"="block"](' + bbox + ');' +
+                    'node["barrier"="jersey_barrier"](' + bbox + ');' +
+                    'node["highway"="construction"](' + bbox + ');' +
+                    'way["highway"="construction"](' + bbox + ');' +
+                    'way["construction"~"."](' + bbox + ');' +
+                    ');out center qt;';
+            }
+        },
+        {
+            id: 'mobile_patrol',
+            label: 'Mobile Patrol',
+            emoji: '🚔',
+            color: '#1565c0',
+            source: 'waze'
+        },
+        {
+            id: 'speed_camera',
+            label: 'Speed Camera',
+            emoji: '📷',
+            color: '#c62828',
+            source: 'osm',
+            overpassQuery: function(bbox) {
+                return '[out:json][timeout:25];(' +
+                    'node["highway"="speed_camera"](' + bbox + ');' +
+                    'node["enforcement"="maxspeed"](' + bbox + ');' +
+                    'node["man_made"="speed_camera"](' + bbox + ');' +
+                    ');out center qt;';
+            }
+        },
+        {
+            id: 'ev_charging',
+            label: 'EV Charging',
+            emoji: '⚡',
+            color: '#2e7d32',
+            source: 'osm',
+            overpassQuery: function(bbox) {
+                return '[out:json][timeout:25];(' +
+                    'node["amenity"="charging_station"](' + bbox + ');' +
+                    'way["amenity"="charging_station"](' + bbox + ');' +
+                    ');out center qt;';
+            }
+        }
+    ];
+
+    function getPoiStore(targetMap) {
+        if (!targetMap) return null;
+        return (targetMap === map) ? poiMarkersMap2d : poiMarkersMap3d;
+    }
+
+    function createPoiMarkerElement(emoji, color) {
+        var el = document.createElement('div');
+        el.style.cssText = [
+            'width:28px', 'height:28px', 'border-radius:50%',
+            'background:' + color,
+            'border:2px solid #ffffff',
+            'box-shadow:0 0 0 2px rgba(0,0,0,0.2),0 2px 8px rgba(0,0,0,0.4)',
+            'display:flex', 'align-items:center', 'justify-content:center',
+            'font-size:14px', 'line-height:1',
+            'cursor:pointer', 'z-index:15'
+        ].join(';');
+        el.textContent = emoji;
+        return el;
+    }
+
+    async function fetchOsmPoi(poi, bbox) {
+        var query = poi.overpassQuery(bbox);
+        try {
+            var res = await fetch('https://overpass-api.de/api/interpreter', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: 'data=' + encodeURIComponent(query)
+            });
+            if (res.status === 429) { var e = new Error('rate_limited'); e.isRateLimit = true; throw e; }
+            if (!res.ok) throw new Error('Overpass HTTP ' + res.status);
+            var data = await res.json();
+            return (data.elements || []).map(function(el) {
+                return {
+                    lat: el.lat !== undefined ? el.lat : (el.center ? el.center.lat : null),
+                    lon: el.lon !== undefined ? el.lon : (el.center ? el.center.lon : null),
+                    name: (el.tags && (el.tags.name || el.tags['name:en'] || el.tags.description)) || null
+                };
+            }).filter(function(p) { return p.lat !== null && p.lon !== null; });
+        } catch(e) {
+            if (e.isRateLimit) throw e;
+            console.warn('OSM POI fetch failed for ' + poi.id + ':', e);
+            return [];
+        }
+    }
+
+    async function fetchWazeMobilePatrols(bounds) {
+        var top    = bounds.getNorth().toFixed(5);
+        var bottom = bounds.getSouth().toFixed(5);
+        var left   = bounds.getWest().toFixed(5);
+        var right  = bounds.getEast().toFixed(5);
+        // Waze blocks direct browser requests (CORS). Route through corsproxy.io (free, no key).
+        var wazeUrl = 'https://www.waze.com/live-map/api/georss?top=' + top +
+                      '&bottom=' + bottom + '&left=' + left + '&right=' + right +
+                      '&env=row&types=alerts';
+        var proxied = 'https://corsproxy.io/?' + encodeURIComponent(wazeUrl);
+        try {
+            var res = await fetch(proxied);
+            if (res.status === 429) { var e = new Error('rate_limited'); e.isRateLimit = true; throw e; }
+            if (!res.ok) throw new Error('Waze proxy HTTP ' + res.status);
+            var data = await res.json();
+            var alerts = data.alerts || [];
+            return alerts
+                .filter(function(a) {
+                    return a.type === 'POLICE' || (a.subtype && a.subtype.indexOf('POLICE') === 0);
+                })
+                .map(function(a) {
+                    return {
+                        lat: a.location ? a.location.y : null,
+                        lon: a.location ? a.location.x : null,
+                        name: a.subtype
+                            ? a.subtype.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, function(c) { return c.toUpperCase(); })
+                            : 'Mobile Patrol'
+                    };
+                })
+                .filter(function(p) { return p.lat !== null && p.lon !== null; });
+        } catch(e) {
+            if (e.isRateLimit) throw e;
+            console.warn('Waze mobile patrol fetch failed:', e);
+            return [];
+        }
+    }
+
+    async function fetchPointsForPoi(poi, refMap) {
+        var bounds = refMap.getBounds();
+        if (poi.source === 'waze') {
+            return await fetchWazeMobilePatrols(bounds);
+        }
+        var bbox = [
+            bounds.getSouth().toFixed(5),
+            bounds.getWest().toFixed(5),
+            bounds.getNorth().toFixed(5),
+            bounds.getEast().toFixed(5)
+        ].join(',');
+        return await fetchOsmPoi(poi, bbox);
+    }
+
+    function placePoiMarkersOnMap(targetMap, poi, points) {
+        if (!targetMap) return;
+        // If the map style is not yet loaded, defer placement until the 'load' event fires
+        if (!targetMap.isStyleLoaded()) {
+            targetMap.once('load', function() {
+                // Only place markers if the POI overlay is still active when the map finishes loading
+                if (isPoiOverlayOn && poiTypeEnabled[poi.id]) {
+                    placePoiMarkersOnMap(targetMap, poi, points);
+                }
+            });
+            return;
+        }
+        var store = getPoiStore(targetMap);
+        if (!store) return;
+        if (!store[poi.id]) store[poi.id] = [];
+        points.forEach(function(p) {
+            var markerEl = createPoiMarkerElement(poi.emoji, poi.color);
+            var popupHtml =
+                '<div style="font-family:\'JetBrains Mono\',monospace;font-size:0.75rem;' +
+                'font-weight:700;color:#0d0d12;padding:4px 6px;line-height:1.5;">' +
+                poi.emoji + ' ' + poi.label +
+                (p.name ? '<br><span style="font-weight:400;color:#444;">' + p.name + '</span>' : '') +
+                '</div>';
+            var popup = new maplibregl.Popup({ offset: 16, closeButton: true, closeOnClick: false })
+                .setHTML(popupHtml);
+            var marker = new maplibregl.Marker({ element: markerEl, anchor: 'center' })
+                .setLngLat([p.lon, p.lat])
+                .setPopup(popup)
+                .addTo(targetMap);
+            store[poi.id].push(marker);
+        });
+    }
+
+    function removePoiMarkersForType(targetMap, poiId) {
+        var store = getPoiStore(targetMap);
+        if (!store || !store[poiId]) return;
+        store[poiId].forEach(function(m) { m.remove(); });
+        store[poiId] = [];
+    }
+
+    function removeAllPoiMarkers(targetMap) {
+        if (!targetMap) return;
+        POI_TYPES.forEach(function(poi) { removePoiMarkersForType(targetMap, poi.id); });
+    }
+
+    function setPoiLoading(on, rateLimit) {
+        isPoiLoading = on;
+        var el = document.getElementById('poiLoadingLabel');
+        if (el) {
+            if (on) {
+                el.textContent = rateLimit ? '⛔ Server fetching delay!' : '⌛ Fetching data…';
+                el.style.display = 'block';
+            } else {
+                el.style.display = 'none';
+            }
+        }
+        // Disable/re-enable the button to give visual feedback and prevent double-click
+        var btn = document.getElementById('btnPoiOverlay');
+        if (btn) btn.disabled = on;
+    }
+
+    async function togglePoiType(poiId) {
+        if (!isPoiOverlayOn || isPoiLoading) return;
+
+        poiTypeEnabled[poiId] = !poiTypeEnabled[poiId];
+        var item = document.querySelector('.poi-panel-item[data-poi="' + poiId + '"]');
+        if (item) item.classList.toggle('active', poiTypeEnabled[poiId]);
+
+        if (poiTypeEnabled[poiId]) {
+            var poi = POI_TYPES.find(function(p) { return p.id === poiId; });
+            if (!poi) return;
+            setPoiLoading(true, false);
+            var rateLimitHit = false;
+            try {
+                // Use whichever map is visible as the reference for bounds
+                var refMap = (is3DMode && map3d && map3d.isStyleLoaded()) ? map3d : map;
+                var points = await fetchPointsForPoi(poi, refMap);
+                // Place on both maps so switching 2D/3D always shows markers
+                placePoiMarkersOnMap(map, poi, points);
+                if (map3d) placePoiMarkersOnMap(map3d, poi, points);
+            } catch(e) {
+                if (e.isRateLimit) rateLimitHit = true;
+            } finally {
+                if (rateLimitHit) {
+                    setPoiLoading(true, true);
+                    setTimeout(function() { setPoiLoading(false); }, 3000);
+                } else {
+                    setPoiLoading(false);
+                }
+            }
+        } else {
+            removePoiMarkersForType(map, poiId);
+            removePoiMarkersForType(map3d, poiId);
+        }
+    }
+
+    async function togglePoiOverlay() {
+        if (isPoiLoading) return; // block while fetching
+
+        var btn = document.getElementById('btnPoiOverlay');
+        var panel = document.getElementById('poiPanel');
+        isPoiOverlayOn = !isPoiOverlayOn;
+
+        if (isPoiOverlayOn) {
+            btn.classList.add('active');
+            panel.classList.add('visible');
+
+            // Use whichever map is currently visible/loaded as the reference for bounds
+            var refMap = (is3DMode && map3d && map3d.isStyleLoaded()) ? map3d : map;
+            if (!refMap || !refMap.isStyleLoaded()) return;
+
+            setPoiLoading(true, false);
+            var rateLimitHit = false;
+            try {
+                for (var i = 0; i < POI_TYPES.length; i++) {
+                    var poi = POI_TYPES[i];
+                    if (!poiTypeEnabled[poi.id]) continue;
+                    try {
+                        var points = await fetchPointsForPoi(poi, refMap);
+                        placePoiMarkersOnMap(map, poi, points);
+                        if (map3d) placePoiMarkersOnMap(map3d, poi, points);
+                    } catch(e) {
+                        if (e.isRateLimit) { rateLimitHit = true; break; }
+                    }
+                }
+                if (!rateLimitHit) {
+                    var center = refMap.getCenter();
+                    lastPoiRefreshPoint = { lat: center.lat, lon: center.lng };
+                }
+            } finally {
+                if (rateLimitHit) {
+                    setPoiLoading(true, true);
+                    setTimeout(function() { setPoiLoading(false); }, 3000);
+                } else {
+                    setPoiLoading(false);
+                }
+            }
+        } else {
+            btn.classList.remove('active');
+            panel.classList.remove('visible');
+            removeAllPoiMarkers(map);
+            removeAllPoiMarkers(map3d);
+            lastPoiRefreshPoint = null;
+        }
+    }
+
     function toggleMapFullscreen() {
         isMapFullscreen = !isMapFullscreen;
         const btn = document.getElementById('btnFullscreen');
@@ -2347,12 +2786,16 @@
             var zoomGroup = document.querySelector('.map-zoom-group');
             var fullscreen = document.querySelector('.map-fullscreen-btn');
             var weather = document.querySelector('.map-weather-btn');
+            var poi = document.querySelector('.map-poi-btn');
+            var poiLegend = document.querySelector('.poi-panel');
             var hidden = height < 50;
             if (toggle) toggle.style.display = hidden ? 'none' : '';
             if (heading) heading.style.display = hidden ? 'none' : '';
             if (zoomGroup) zoomGroup.style.display = hidden ? 'none' : '';
             if (fullscreen) fullscreen.style.display = hidden ? 'none' : '';
             if (weather) weather.style.display = hidden ? 'none' : '';
+            if (poi) poi.style.display = hidden ? 'none' : '';
+            if (poiLegend && hidden) poiLegend.classList.remove('visible');
         }
         window.addEventListener('DOMContentLoaded', function() {
             var wrapper = document.querySelector('.map-wrapper');
