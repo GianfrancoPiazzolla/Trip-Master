@@ -39,10 +39,11 @@
 18. [Map Zoom Controls](#-map-zoom-controls)
 19. [Map Fullscreen Mode](#️-map-fullscreen-mode)
 20. [Heading Mode](#-heading-mode)
-21. [Responsive Layout Adaptations](#-responsive-layout-adaptations)
-22. [Dependencies](#-dependencies)
-23. [Getting Started](#-getting-started)
-24. [Mathematical Reference](#-mathematical-reference)
+21. [POI Overlay](#-poi-overlay)
+22. [Responsive Layout Adaptations](#-responsive-layout-adaptations)
+23. [Dependencies](#-dependencies)
+24. [Getting Started](#-getting-started)
+25. [Mathematical Reference](#-mathematical-reference)
 
 ---
 
@@ -74,6 +75,7 @@ The app runs entirely client-side. There is no server, no database, and no build
 | 📊 **4 Live Charts** | Elevation profile, consumption vs. distance, speed profile, energy balance |
 | 🌡️ **Live Weather Panel** | Auto-fetches Open-Meteo for temperature, humidity, wind, and pressure |
 | 🌧️ **Weather Radar Overlay** | One-click RainViewer precipitation radar projected on both 2D and 3D maps |
+| 📌 **POI Overlay** | One-click overlay showing Road Closures, Mobile Patrols, Speed Cameras, and EV Charging stations on both 2D and 3D maps, sourced from OpenStreetMap Overpass API and Waze Live Map |
 | 🌙 **Dark / Light Theme** | Full dual-theme UI with smooth CSS variable transitions |
 | 📱 **PWA / Installable** | Service Worker + Web Manifest for offline use and home-screen install |
 | 🔒 **Wake Lock** | Prevents device screen from sleeping during active tracking |
@@ -353,14 +355,14 @@ Trip Master can project a **live precipitation radar layer** directly onto both 
 
 #### 🔘 Toggle Button
 
-A floating **`🌧` button** is permanently overlaid in the **top-right area of the map panel**, between the Heading toggle and the 3D toggle:
+A floating **`⛈️` button** is permanently overlaid in the **top-right area of the map panel**, between the 🛣️ 3D toggle and the 📌 POI overlay button:
 
 ```
-┌──────────────── MAP WRAPPER ─────────────────────────────────┐
-│    ┌───┐  ┌───┐  ┌───┐      ┌───────┐ ┌───────┐ ┌───┐ ┌───┐  │
-│    │ − │  │ ⊕ │ │ − │      │   ▲   │ │  3D   │ │ 🌧 ││ ⛶ │  │
-│    └───┘  └───┘  └───┘      └───────┘ └───────┘ └───┘ └───┘  │
-└──────────────────────────────────────────────────────────────┘
+┌─────────────────────────── MAP WRAPPER ────────────────────────────────┐
+│    ┌───┐  ┌───┐  ┌───┐      ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐    │
+│    │ − │  │🎯 │ │ + │      │  🔺 │ │  🛣️ │ │ 📌 │ │ ⛈️  │ │ 🖥️ │    │
+│    └───┘  └───┘  └───┘      └─────┘ └─────┘ └─────┘ └─────┘ └─────┘    │
+└────────────────────────────────────────────────────────────────────────┘
 ```
 
 #### 🌐 RainViewer API — Timestamp Fetch
@@ -617,7 +619,7 @@ The MapLibre GL map style is switched per theme at initialization time (see [Map
 ├──────────────── RANGE ESTIMATOR ───────────────────────┤
 │  [kWh ±] [SOC% ±] [═══ Battery Bar ═══] [Range] [Rem.] │
 ├───────────── MAP ──────────┬───── CHARTS PANEL ────────┤
-│ [−][⊕][+]  [▲][3D][🌧][⛶] │  Elevation Profile        │
+│ [−][🎯][+]  [🔺][🛣️][⛈️][📌][🖥️] │ Elevation Profile│
 │                            │  Consumption vs Distance  │
 │                            │  Speed Profile            │
 │          Route Map         │  Energy Balance           │
@@ -717,7 +719,7 @@ The Trip Summary modal includes two action buttons that allow saving and restori
 
 ```
 ┌───────────────── TRIP SUMMARY MODAL ─────────────────────┐
-│  📋 Trip Summary                                    [×] │
+│  📋 Trip Summary                                     [×] │
 │  ─────────────────────────────────────────────────────── │
 │  [summary fields and efficiency badge]                   │
 │  ─────────────────────────────────────────────────────── │
@@ -832,7 +834,7 @@ Both markers are created by `createTripEndpointMarker(label, bgColor)`, which bu
 
 ```
   ┌──────────┐           ┌──────────┐
-  │  🟢  S  │           │  🔴  E   │
+  │  🟢  S   │          │  🔴  E   │
   └──────────┘           └──────────┘
   Start of route         End of route
 ```
@@ -1011,6 +1013,12 @@ Both the 2D and 3D MapLibre instances select their vector tile style based on th
 | `isMapFullscreen` | `boolean` | `true` while the map fullscreen mode is active; `false` in normal layout |
 | `isWeatherOverlayOn` | `boolean` | `true` while the RainViewer precipitation radar overlay is active; `false` when hidden |
 | `weatherOverlayTimestamp` | `number \| null` | UNIX timestamp of the most recently fetched RainViewer radar frame; `null` until first overlay activation |
+| `isPoiOverlayOn` | `boolean` | `true` while the POI overlay is active; `false` when hidden |
+| `isPoiLoading` | `boolean` | `true` during an active POI data fetch; prevents concurrent requests |
+| `lastPoiRefreshPoint` | `{ lat, lon } \| null` | GPS anchor of the last POI refresh; `null` until first overlay activation |
+| `poiMarkersMap2d` | `Object` | Per-type marker arrays for the 2D map, keyed by `poiId` |
+| `poiMarkersMap3d` | `Object` | Per-type marker arrays for the 3D map, keyed by `poiId` |
+| `poiTypeEnabled` | `Object` | Per-type boolean flags tracking which POI layers are toggled on by the user |
 | `window._importStartMarker` | `maplibregl.Marker \| null` | Start (`S`) endpoint marker on the 2D map; set by `placeImportMarkers()` after a file import |
 | `window._importEndMarker` | `maplibregl.Marker \| null` | End (`E`) endpoint marker on the 2D map; set by `placeImportMarkers()` after a file import |
 | `window._importStartMarker3d` | `maplibregl.Marker \| null` | Start (`S`) endpoint marker on the 3D map; set by `placeImportMarkers()` after a file import |
@@ -1025,7 +1033,7 @@ A set of three floating **zoom and re-center buttons** is overlaid in the **top-
 ```
 ┌─────────── MAP WRAPPER ─────────────────┐
 │  ┌───┐ ┌───┐ ┌───┐                      │
-│  │ − │ │ ⊕│ │ + │    (map content)     │
+│  │ − │ │🎯 │ │ + │    (map content)    │
 │  └───┘ └───┘ └───┘                      │
 └─────────────────────────────────────────┘
 ```
@@ -1033,7 +1041,7 @@ A set of three floating **zoom and re-center buttons** is overlaid in the **top-
 | Button | Function | Description |
 |---|---|---|
 | `−` | `mapZoomOut()` | Decreases zoom level by 1 on the active map instance |
-| `⊕` | `mapCenterOnGPS()` | Re-centers the active map on the current GPS position |
+| `🎯` | `mapCenterOnGPS()` | Re-centers the active map on the current GPS position |
 | `+` | `mapZoomIn()` | Increases zoom level by 1 on the active map instance |
 
 All three functions resolve the currently active map as `const activeMap = is3DMode ? map3d : map` and call `activeMap.easeTo()` with a `duration: 250 ms` (zoom) or `400 ms` (center) smooth transition. `mapCenterOnGPS()` fires a fresh `navigator.geolocation.getCurrentPosition()` request with `enableHighAccuracy: true` before recentering.
@@ -1048,14 +1056,14 @@ Trip Master provides a **fullscreen map mode** that expands the map to fill the 
 
 ### 🔘 Toggle Button
 
-A floating **`⛶` button** is permanently overlaid in the **top-right corner** of the map panel, to the right of the 3D toggle:
+A floating **`🖥️` button** is permanently overlaid in the **top-right corner** of the map panel, to the right of the POI overlay button:
 
 ```
-┌─────────────────────── MAP WRAPPER ───────────────────┐
-│              ┌───────┐ ┌───────┐ ┌───────┐ ┌───────┐  │
-│  (map)       │   ▲   │ │  3D   │ │   🌧  │ │   ⛶   │  │
-│              └───────┘ └───────┘ └───────┘ └───────┘  │
-└───────────────────────────────────────────────────────┘
+┌─────────────────────────── MAP WRAPPER ────────────────────────────────┐
+│    ┌───┐  ┌───┐  ┌───┐      ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐    │
+│    │ − │  │🎯 │ │ + │      │  🔺 │ │  🛣️ │ │ 📌 │ │ ⛈️  │ │ 🖥️ │    │
+│    └───┘  └───┘  └───┘      └─────┘ └─────┘ └─────┘ └─────┘ └─────┘    │
+└────────────────────────────────────────────────────────────────────────┘
 ```
 
 When active, the button is highlighted in `--accent-purple` (`#b39ddb`).
@@ -1094,20 +1102,20 @@ Trip Master supports a **Heading-Up** orientation mode that rotates the active m
 
 ### 🔘 Toggle Button
 
-A floating **`▲` / `N` button** is permanently overlaid in the **top-right corner of the map panel**, to the left of the 3D toggle:
+A floating **`🔺` / `🧭` button** is permanently overlaid in the **top-right corner of the map panel**, to the left of the 3D toggle:
 
 ```
-┌─────────────────────── MAP WRAPPER ───────────────────┐
-│              ┌───────┐ ┌───────┐ ┌───────┐ ┌───────┐  │
-│  (map)       │   ▲   │ │  3D   │ │   🌧  │ │   ⛶   │  │
-│              └───────┘ └───────┘ └───────┘ └───────┘  │
-└───────────────────────────────────────────────────────┘
+┌─────────────────────────── MAP WRAPPER ────────────────────────────────┐
+│    ┌───┐  ┌───┐  ┌───┐      ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐    │
+│    │ − │  │🎯 │ │ + │      │  🔺 │ │  🛣️ │ │ 📌 │ │ ⛈️  │ │ 🖥️ │    │
+│    └───┘  └───┘  └───┘      └─────┘ └─────┘ └─────┘ └─────┘ └─────┘    │
+└────────────────────────────────────────────────────────────────────────┘
 ```
 
 | Label | State | Clicking activates |
 |---|---|---|
-| `▲` | North-up is active | Heading-up mode |
-| `N` (highlighted in `--primary` green) | Heading-up is active | North-up mode |
+| `🔺` | North-up is active | Heading-up mode |
+| `🧭` (highlighted in `--primary` green) | Heading-up is active | North-up mode |
 
 ### ⚙️ Toggle Logic — `toggleHeadingMode()`
 
@@ -1146,13 +1154,198 @@ When heading-up mode is **off**, both maps always use `bearing: 0` (north-up), r
 
 ---
 
+## 📌 POI Overlay
+
+Trip Master provides a **Points of Interest (POI) Overlay** that places live, category-filtered markers on both the 2D and 3D maps. Data is sourced in real time from the **OpenStreetMap Overpass API** and the **Waze Live Map API** (via a CORS proxy), with no API key required for either source.
+
+### 🔘 Toggle Button
+
+A floating **`📌` button** is permanently overlaid in the **top-right area of the map panel**, between the Weather Overlay button and the Fullscreen button:
+
+```
+┌─────────────────────────── MAP WRAPPER ────────────────────────────────┐
+│    ┌───┐  ┌───┐  ┌───┐      ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐    │
+│    │ − │  │🎯 │ │ + │      │  🔺 │ │  🛣️ │ │ 📌 │ │ ⛈️  │ │ 🖥️ │    │
+│    └───┘  └───┘  └───┘      └─────┘ └─────┘ └─────┘ └─────┘ └─────┘    │
+└────────────────────────────────────────────────────────────────────────┘
+```
+
+When active, the button is highlighted in `#ff9100` (orange).
+
+Clicking `📌` also **opens or closes the POI Panel** — a compact dropdown immediately below the button — that lists all four available POI layer types with individual toggles.
+
+### 🗂️ POI Panel
+
+The POI Panel (`#poiPanel`) slides into view whenever the overlay is active. It contains:
+
+- A **title row** (`POI Layers`)
+- One **row per POI type**, each showing the emoji icon, a label, and a colored checkbox indicator
+- A **loading label** (`#poiLoadingLabel`) that appears during fetch operations
+
+```
+┌─────────────────────────────┐
+│  POI Layers                 │
+│  🚧  Road Closures    [ ]   │
+│  🚔  Mobile Patrols   [ ]   │
+│  📷  Speed Cameras    [ ]   │
+│  ⚡  EV Charging      [ ]   │
+│  ⌛ Fetching data…          │  ← visible only during fetch
+└─────────────────────────────┘
+```
+
+Each row is individually clickable to toggle that POI layer on or off via `togglePoiType(poiId)`.
+
+### 🏷️ POI Types
+
+Four POI layer types are defined in the `POI_TYPES` constant array:
+
+| ID | 🏷️ Label | Emoji | 🎨 Color | 🌐 Source | Notes |
+|---|---|---|---|---|---|
+| `road_closure` | Road Closure | 🚧 | `#ff6f00` | OSM Overpass | Barriers, jersey barriers, highway=construction, active construction ways |
+| `mobile_patrol` | Mobile Patrol | 🚔 | `#1565c0` | Waze Live Map | Filters `POLICE`-type alerts from the Waze georss alerts feed |
+| `speed_camera` | Speed Camera | 📷 | `#c62828` | OSM Overpass | `highway=speed_camera`, `enforcement=maxspeed`, `man_made=speed_camera` |
+| `ev_charging` | EV Charging | ⚡ | `#2e7d32` | OSM Overpass | `amenity=charging_station` nodes and ways |
+
+### 🌐 Data Sources & API Endpoints
+
+#### 🗺️ OpenStreetMap — Overpass API
+
+Road Closures, Speed Cameras, and EV Charging stations are fetched from the public Overpass API:
+
+```
+POST https://overpass-api.de/api/interpreter
+Content-Type: application/x-www-form-urlencoded
+
+data=<OverpassQL query>
+```
+
+The bounding box for each query is derived from `refMap.getBounds()` and formatted as `south,west,north,east` in decimal degrees (5 decimal places).
+
+**Road Closures query pattern:**
+
+```
+[out:json][timeout:25];(
+  node["barrier"="block"](bbox);
+  node["barrier"="jersey_barrier"](bbox);
+  node["highway"="construction"](bbox);
+  way["highway"="construction"](bbox);
+  way["construction"~"."](bbox);
+);out center qt;
+```
+
+**Speed Cameras query pattern:**
+
+```
+[out:json][timeout:25];(
+  node["highway"="speed_camera"](bbox);
+  node["enforcement"="maxspeed"](bbox);
+  node["man_made"="speed_camera"](bbox);
+);out center qt;
+```
+
+**EV Charging query pattern:**
+
+```
+[out:json][timeout:25];(
+  node["amenity"="charging_station"](bbox);
+  way["amenity"="charging_station"](bbox);
+);out center qt;
+```
+
+For `way` elements, the coordinates are extracted from `el.center.lat` / `el.center.lon` (Overpass `out center` directive). For nodes, `el.lat` / `el.lon` are used directly.
+
+#### 🚔 Waze Live Map — Mobile Patrols
+
+Mobile patrol data is fetched from the Waze georss feed, proxied through **corsproxy.io** to bypass the Waze CORS policy:
+
+```
+GET https://corsproxy.io/?<encoded Waze URL>
+
+Waze URL: https://www.waze.com/live-map/api/georss
+  ?top={north}&bottom={south}&left={west}&right={east}
+  &env=row&types=alerts
+```
+
+The response is filtered to retain only alerts where `type === 'POLICE'` or `subtype` starts with `'POLICE'`. Each retained alert is mapped to `{ lat, lon, name }` using `a.location.y` / `a.location.x`.
+
+### ⚙️ Core Functions
+
+| 🔧 Function | 📋 Description |
+|---|---|
+| `togglePoiOverlay()` | Async. Toggles the overlay on/off. **On**: shows the panel, fetches all enabled POI types, stores the refresh anchor point. **Off**: hides the panel, removes all markers from both maps, resets `lastPoiRefreshPoint` to `null`. Blocked while `isPoiLoading` is `true`. |
+| `togglePoiType(poiId)` | Async. Toggles an individual POI layer. If enabling, fetches points for that type and places markers on both maps. If disabling, removes markers for that type from both maps. No-ops if `isPoiOverlayOn` is `false` or `isPoiLoading` is `true`. |
+| `fetchPointsForPoi(poi, refMap)` | Async router: calls `fetchWazeMobilePatrols()` for `source='waze'` types, or `fetchOsmPoi()` for `source='osm'` types. Returns a `{ lat, lon, name }[]` array. |
+| `fetchOsmPoi(poi, bbox)` | Async. POSTs the POI's Overpass QL query. Throws with `e.isRateLimit = true` on HTTP 429; returns `[]` on other errors. |
+| `fetchWazeMobilePatrols(bounds)` | Async. Fetches the Waze georss endpoint via corsproxy.io, filters police alerts, returns `{ lat, lon, name }[]`. Throws on rate limit (HTTP 429). |
+| `placePoiMarkersOnMap(targetMap, poi, points)` | Places a `maplibregl.Marker` for each point on `targetMap`. Defers via `targetMap.once('load', …)` if the map style is not yet loaded. Each marker includes a popup with the POI type label and optional name. |
+| `removePoiMarkersForType(targetMap, poiId)` | Removes and clears all markers for a specific POI type from `targetMap`. |
+| `removeAllPoiMarkers(targetMap)` | Iterates `POI_TYPES` and calls `removePoiMarkersForType` for every type on `targetMap`. |
+| `createPoiMarkerElement(emoji, color)` | Creates and returns a styled 28×28 px circular `HTMLDivElement` with the POI emoji, colored background, white border, and drop shadow. |
+| `getPoiStore(targetMap)` | Returns `poiMarkersMap2d` or `poiMarkersMap3d` based on which map instance is passed. |
+| `setPoiLoading(on, rateLimit)` | Shows/hides `#poiLoadingLabel`. When `rateLimit` is `true`, displays `⛔ Server fetching delay!` instead of `⌛ Fetching data…`. Also disables/re-enables `#btnPoiOverlay` to prevent double-clicks during a fetch. |
+
+### 🔄 Automatic POI Refresh While Driving
+
+When the POI overlay is active and a trip is in progress, the overlay automatically refreshes as the vehicle moves. At each GPS fix inside `updateLocation()`, the system evaluates whether the vehicle has moved far enough from the last fetch anchor:
+
+```
+if (isPoiOverlayOn && !isPoiLoading) {
+    distFromLastPoi = haversine(lastPoiRefreshPoint, currentPosition)
+    if (distFromLastPoi >= POI_REFRESH_DISTANCE_M) {
+        → update lastPoiRefreshPoint
+        → removeAllPoiMarkers (both maps)
+        → fetchPointsForPoi for each enabled type
+        → placePoiMarkersOnMap on both maps
+    }
+}
+```
+
+| 🔧 Constant | 📋 Value | 📖 Description |
+|---|---|---|
+| `POI_REFRESH_DISTANCE_M` | `500` m | Minimum vehicle displacement from the last fetch anchor to trigger a new POI fetch |
+
+### 🏷️ Marker Popup Format
+
+Each placed marker includes a MapLibre GL popup rendered from inline HTML:
+
+```
+┌──────────────────────────────────┐
+│  🚧 Road Closure                 │
+│  Via Appia Nuova (optional name) │  ← only shown if the OSM element has a name tag
+└──────────────────────────────────┘
+```
+
+Popups use `JetBrains Mono` monospace font, open on marker click, and are closeable via a close button.
+
+### ⚠️ Rate Limit Handling
+
+Both `fetchOsmPoi` and `fetchWazeMobilePatrols` detect HTTP 429 responses and throw an error with `e.isRateLimit = true`. The calling layer (`togglePoiOverlay`, `togglePoiType`, and the GPS-driven refresh loop) catches this flag and:
+
+1. Calls `setPoiLoading(true, true)` → displays `⛔ Server fetching delay!`
+2. Schedules `setPoiLoading(false)` after a **3-second timeout** before resuming normal operation
+
+### 📦 State Variables
+
+| 🔤 Variable | 📋 Type | 📖 Description |
+|---|---|---|
+| `isPoiOverlayOn` | `boolean` | `true` while the POI overlay is active; `false` when hidden |
+| `isPoiLoading` | `boolean` | `true` during an active fetch; prevents concurrent or overlapping requests |
+| `lastPoiRefreshPoint` | `{ lat, lon } \| null` | GPS coordinates of the last successful POI fetch anchor; `null` until the first overlay activation |
+| `poiMarkersMap2d` | `Object` | Keyed by `poiId`; each value is an array of `maplibregl.Marker` instances on the 2D map |
+| `poiMarkersMap3d` | `Object` | Keyed by `poiId`; each value is an array of `maplibregl.Marker` instances on the 3D map |
+| `poiTypeEnabled` | `Object` | Keyed by `poiId`; `true` if that POI layer is currently toggled on by the user |
+| `POI_TYPES` | `Array` | Immutable array of four POI descriptor objects (`id`, `label`, `emoji`, `color`, `source`, `overpassQuery`) |
+| `POI_REFRESH_DISTANCE_M` | `number` | `500` — minimum displacement in metres between automatic POI refresh triggers |
+
+---
+
 ## 📐 Responsive Layout Adaptations
 
 Trip Master includes two `ResizeObserver`-based scripts that automatically adapt the UI layout to available screen space without requiring a page reload.
 
 ### 🗺️ Map Overlay Button Auto-Hide
 
-When the `.map-wrapper` element's height collapses below **50 px** (e.g., in very narrow viewports or when the browser collapses the map section), all five map overlay controls — the `3D` toggle button, the `▲` heading button, the zoom button group, the `🌧` weather overlay button, and the fullscreen button — are automatically hidden:
+When the `.map-wrapper` element's height collapses below **50 px** (e.g., in very narrow viewports or when the browser collapses the map section), all six map overlay controls — the 🛣️ `3D` toggle button, the 🔺 heading button, the zoom button group, the ⛈️ weather overlay button, the 📌 POI overlay button, and the 🖥️ fullscreen button — are automatically hidden:
 
 ```javascript
 function updateMapBtnVisibility(height) {
@@ -1162,6 +1355,7 @@ function updateMapBtnVisibility(height) {
     zoomGroup.style.display = hidden ? 'none' : '';
     fullscreen.style.display = hidden ? 'none' : '';
     weather.style.display = hidden ? 'none' : '';
+    poi.style.display = hidden ? 'none' : '';
 }
 ```
 
@@ -1199,8 +1393,6 @@ All dependencies are loaded from CDN — no `npm install` required.
 | 🌍 OpenFreeMap Tiles | — | Vector map styles (`liberty`) for both 2D and 3D | OpenFreeMap CDN |
 | 🔤 Google Fonts (Syne) | — | UI typography | Google CDN |
 | 🔤 Google Fonts (JetBrains Mono) | — | Numeric readouts | Google CDN |
-
-> 🚫 **No Leaflet.js.** The entire mapping stack — both flat 2D and perspective 3D — is handled by a single MapLibre GL JS instance per view, with no secondary mapping library.
 
 ---
 
