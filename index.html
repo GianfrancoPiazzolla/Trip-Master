@@ -1178,6 +1178,7 @@
         setupCharts();
         setupSegmentedControl();
         updateBattery();
+        loadPoiPrefs();
 
         window.onclick = function(event) {
             if (event.target == document.getElementById('infoModal')) toggleModal(false);
@@ -1192,6 +1193,7 @@
 
     /* ===== USER PROFILES ===== */
     const PROFILES_KEY = 'tripmaster_profiles';
+    const POI_PREFS_KEY = 'tripmaster_poi_prefs';
 
     function getProfiles() {
         try { return JSON.parse(localStorage.getItem(PROFILES_KEY)) || {}; }
@@ -1200,6 +1202,28 @@
 
     function saveProfiles(profiles) {
         localStorage.setItem(PROFILES_KEY, JSON.stringify(profiles));
+    }
+
+    function getPoiPrefs() {
+        try { return JSON.parse(localStorage.getItem(POI_PREFS_KEY)) || {}; }
+        catch(e) { return {}; }
+    }
+
+    function savePoiPrefs() {
+        localStorage.setItem(POI_PREFS_KEY, JSON.stringify(poiTypeEnabled));
+    }
+
+    function loadPoiPrefs() {
+        var prefs = getPoiPrefs();
+        Object.keys(poiTypeEnabled).forEach(function(key) {
+            if (typeof prefs[key] === 'boolean') {
+                poiTypeEnabled[key] = prefs[key];
+            }
+        });
+        Object.keys(poiTypeEnabled).forEach(function(key) {
+            var item = document.querySelector('.poi-panel-item[data-poi="' + key + '"]');
+            if (item) item.classList.toggle('active', poiTypeEnabled[key]);
+        });
     }
 
     function openProfilesModal() {
@@ -1226,12 +1250,21 @@
             const modeLabel = p.is3DMode ? '🛣️' : '🗺️';
             const headingLabel = p.isHeadingUp ? '🔺' : '🧭';
             const weatherOverlayLabel = p.isWeatherOverlayOn ? 'On' : 'Off';
+            const poiLabels = p.poiTypeEnabled
+                ? Object.entries(p.poiTypeEnabled).filter(([,v]) => v).map(([k]) => {
+                    const t = POI_TYPES.find(pt => pt.id === k);
+                    return t ? (t.emoji + ' ' + t.label) : k;
+                })
+                : [];
+            const poiLines = poiLabels.length > 0
+                ? poiLabels.map(l => '<br>POI: <b>' + l + '</b>').join('')
+                : '<br>POI: <b>None</b>';
             return `
             <div class="profile-item">
                 <div class="profile-item-info">
                     <span class="profile-item-name">${escapeHtml(name)}</span>
                     <span class="profile-item-details">
-                        Weight: <b>${p.vehicleWeight}</b> Kg</br>Battery: <b>${p.batteryKwh}</b> kWh</br>GPS: <b>${p.gpsPolling}</b> s</br>Map: <b>${modeLabel}</b> / <b>${headingLabel}</b></br>Weather: <b>${weatherOverlayLabel}</b></br>Theme: <b>${p.theme === 'dark' ? '🌙 Dark' : '☀️ Light'}</b>
+                        Weight: <b>${p.vehicleWeight}</b> Kg</br>Battery: <b>${p.batteryKwh}</b> kWh</br>GPS: <b>${p.gpsPolling}</b> s</br>Map: <b>${modeLabel}</b> / <b>${headingLabel}</b></br>Weather: <b>${weatherOverlayLabel}</b>${poiLines}</br>Theme: <b>${p.theme === 'dark' ? '🌙 Dark' : '☀️ Light'}</b>
                     </span>
                 </div>
                 <div class="profile-item-actions">
@@ -1266,7 +1299,8 @@
             theme: currentTheme,
             is3DMode: is3DMode,
             isHeadingUp: isHeadingUp,
-            isWeatherOverlayOn: isWeatherOverlayOn
+            isWeatherOverlayOn: isWeatherOverlayOn,
+            poiTypeEnabled: Object.assign({}, poiTypeEnabled)
         };
         saveProfiles(profiles);
 
@@ -1308,6 +1342,19 @@
             toggleWeatherOverlay();
         }
 
+        if (p.poiTypeEnabled && typeof p.poiTypeEnabled === 'object') {
+            Object.keys(poiTypeEnabled).forEach(function(key) {
+                if (typeof p.poiTypeEnabled[key] === 'boolean') {
+                    poiTypeEnabled[key] = p.poiTypeEnabled[key];
+                }
+            });
+            Object.keys(poiTypeEnabled).forEach(function(key) {
+                var item = document.querySelector('.poi-panel-item[data-poi="' + key + '"]');
+                if (item) item.classList.toggle('active', poiTypeEnabled[key]);
+            });
+            savePoiPrefs();
+        }
+
         closeProfilesModal();
     }
 
@@ -1331,7 +1378,8 @@
             theme: currentTheme,
             is3DMode: is3DMode,
             isHeadingUp: isHeadingUp,
-            isWeatherOverlayOn: isWeatherOverlayOn
+            isWeatherOverlayOn: isWeatherOverlayOn,
+            poiTypeEnabled: Object.assign({}, poiTypeEnabled)
         };
         saveProfiles(profiles);
         renderProfilesList();
@@ -1423,7 +1471,6 @@
             document.getElementById('weatherIcon').innerText = getWeatherPictogram(code);
             document.getElementById('tempMin').innerText = minTemp.toFixed(1);
             document.getElementById('tempMax').innerText = maxTemp.toFixed(1);
-            // FIX #3: use toFixed(1) for pressure, consistent with all other values.
             document.getElementById('pressure').innerText = pressure.toFixed(1);
             document.getElementById('windSpeedVal').innerText = windSpeed.toFixed(1);
             document.getElementById('windDirVal').innerText = getWindDirection(windDir);
@@ -2102,7 +2149,6 @@
                 const elapsed = (Date.now() - startTime) / 3600000;
                 const avgSpeed = (totalDistance / 1000) / elapsed;
 
-                // Compute speed: use GPS speed if available, else derive from distance/time
                 const intervalMs = parseInt(document.getElementById('gpsPolling').value) * 1000;
                 const segSpeedMs = speed || (step / (intervalMs / 1000));
                 lastSpeedKmh = segSpeedMs * 3.6;
@@ -2569,7 +2615,7 @@
         var el = document.getElementById('poiLoadingLabel');
         if (el) {
             if (on) {
-                el.textContent = rateLimit ? '⛔ Server fetching delay!' : '⌛ Fetching data…';
+                el.textContent = rateLimit ? '⛔ POI fetching delayed!' : '⌛ Fetching POI data…';
                 el.style.display = 'block';
             } else {
                 el.style.display = 'none';
@@ -2585,6 +2631,7 @@
         poiTypeEnabled[poiId] = !poiTypeEnabled[poiId];
         var item = document.querySelector('.poi-panel-item[data-poi="' + poiId + '"]');
         if (item) item.classList.toggle('active', poiTypeEnabled[poiId]);
+        savePoiPrefs();
 
         if (poiTypeEnabled[poiId]) {
             var poi = POI_TYPES.find(function(p) { return p.id === poiId; });
@@ -2613,7 +2660,7 @@
     }
 
     async function togglePoiOverlay() {
-        if (isPoiLoading) return; // block while fetching
+        if (isPoiLoading) return;
 
         var btn = document.getElementById('btnPoiOverlay');
         var panel = document.getElementById('poiPanel');
