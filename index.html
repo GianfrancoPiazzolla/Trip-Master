@@ -1397,9 +1397,6 @@
     function applyValueStyle(elementId, newValue, prevValue) {
         const el = document.getElementById(elementId);
         if (prevValue === null || newValue === prevValue) {
-            // FIX #2: remove inline style entirely so CSS cascade handles
-            // the default color — setting 'var(--text-color)' as an inline
-            // style does not reliably resolve CSS variables in all browsers.
             el.style.removeProperty('color');
         } else if (newValue > prevValue) {
             el.style.color = '#00e676';
@@ -1422,8 +1419,6 @@
             const windSpeed = data.current.wind_speed_10m;
             const windDir = data.current.wind_direction_10m;
 
-            // FIX #1: update DOM text FIRST, then apply color styles so the
-            // color is always applied on the already-updated visible value.
             document.getElementById('weatherTemp').innerText = currentTemp.toFixed(1);
             document.getElementById('weatherIcon').innerText = getWeatherPictogram(code);
             document.getElementById('tempMin').innerText = minTemp.toFixed(1);
@@ -1441,9 +1436,6 @@
             applyValueStyle('windSpeedVal', windSpeed, prevWeather.windSpd);
             applyValueStyle('pressure', pressure, prevWeather.press);
 
-            // FIX #4: removed windDir from prevWeather — wind direction is a
-            // computed string (N/NE/...), numeric comparison makes no sense and
-            // applyValueStyle was never called on windDirVal anyway.
             prevWeather = { temp: currentTemp, min: minTemp, max: maxTemp, hum: humidity, windSpd: windSpeed, press: pressure };
 
             if (!isWeatherInitialSyncDone) {
@@ -1630,7 +1622,6 @@
 
     function setupMap() {
         const lightStyle = 'https://tiles.openfreemap.org/styles/liberty';
-        // Fallback coordinates (Rome) — used only if geolocation is denied or unavailable
         const ROME_LNG = 12.5113;
         const ROME_LAT = 41.8919;
 
@@ -1661,7 +1652,6 @@
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
                     (pos) => {
-                        // Geolocation granted: center map and place marker on actual device position
                         const { latitude, longitude } = pos.coords;
                         map.setCenter([longitude, latitude]);
                         map.setZoom(15);
@@ -1671,7 +1661,6 @@
                         fetchWeather(latitude, longitude);
                     },
                     () => {
-                        // Geolocation denied or unavailable: fall back to Rome
                         positionMarker = new maplibregl.Marker({ element: createBlueMarkerElement(), anchor: 'center' })
                             .setLngLat([ROME_LNG, ROME_LAT])
                             .addTo(map);
@@ -1680,7 +1669,6 @@
                     { enableHighAccuracy: true }
                 );
             } else {
-                // Geolocation API not supported: fall back to Rome
                 positionMarker = new maplibregl.Marker({ element: createBlueMarkerElement(), anchor: 'center' })
                     .setLngLat([ROME_LNG, ROME_LAT])
                     .addTo(map);
@@ -1821,8 +1809,6 @@
             const data = await res.json();
             const frames = data.radar && data.radar.past;
             if (frames && frames.length > 0) {
-                // FIX #3: return the full frame object so callers can use .path
-                // for the correct RainViewer v3 tile URL.
                 return frames[frames.length - 1];
             }
         } catch(e) {}
@@ -1831,12 +1817,8 @@
 
     function addWeatherOverlayToMap(targetMap, radarFrame) {
         if (!targetMap || !radarFrame) return;
-        // FIX #1: always remove existing layer/source before re-adding,
-        // so the overlay is refreshed correctly on every call.
         if (targetMap.getLayer('rainviewer-layer')) targetMap.removeLayer('rainviewer-layer');
         if (targetMap.getSource('rainviewer-source')) targetMap.removeSource('rainviewer-source');
-        // FIX #3: use the full path returned by the RainViewer API (v3),
-        // instead of reconstructing it manually with the old /v2/radar/ pattern.
         const tileUrl = 'https://tilecache.rainviewer.com' + radarFrame.path + '/256/{z}/{x}/{y}/4/1_1.png';
         targetMap.addSource('rainviewer-source', {
             type: 'raster',
@@ -1867,8 +1849,6 @@
         isWeatherOverlayOn = !isWeatherOverlayOn;
         if (isWeatherOverlayOn) {
             btn.classList.add('active');
-            // FIX #2: always fetch a fresh timestamp on every activation,
-            // so the radar data is never stale from a previous session.
             weatherOverlayTimestamp = await fetchRainViewerTimestamp();
             const activeMap = is3DMode ? map3d : map;
             if (activeMap && activeMap.isStyleLoaded()) {
@@ -2162,13 +2142,11 @@
                 computeRangeEstimate();
                 updateBatterySoC();
 
-                // Refresh POI overlay when the vehicle has moved far enough from the last fetch point
                 if (isPoiOverlayOn && !isPoiLoading) {
                     var distFromLastPoi = lastPoiRefreshPoint
                         ? computeDistance(lastPoiRefreshPoint.lat, lastPoiRefreshPoint.lon, latitude, longitude)
                         : POI_REFRESH_DISTANCE_M;
                     if (distFromLastPoi >= POI_REFRESH_DISTANCE_M) {
-                        lastPoiRefreshPoint = { lat: latitude, lon: longitude };
                         (async function() {
                             var refMap = (is3DMode && map3d && map3d.isStyleLoaded()) ? map3d : map;
                             if (!refMap || !refMap.isStyleLoaded()) return;
@@ -2187,6 +2165,9 @@
                                     } catch(e) {
                                         if (e.isRateLimit) { rateLimitHit = true; break; }
                                     }
+                                }
+                                if (!rateLimitHit) {
+                                    lastPoiRefreshPoint = { lat: latitude, lon: longitude };
                                 }
                             } finally {
                                 if (rateLimitHit) {
@@ -2375,15 +2356,12 @@
         event.target.value = '';
     }
 
-
-
     /* ===== POI OVERLAY (Road Closures, Mobile Patrols, Speed Cameras, EV Charging) ===== */
     let isPoiOverlayOn = false;
-    let isPoiLoading = false; // prevents concurrent/overlapping fetch calls
-    let lastPoiRefreshPoint = null; // {lat, lon} of last successful POI refresh
-    const POI_REFRESH_DISTANCE_M = 500; // minimum vehicle displacement (m) to trigger a POI refresh
+    let isPoiLoading = false;
+    let lastPoiRefreshPoint = null;
 
-    // Marker storage: plain objects keyed by poiId, one per map instance
+    const POI_REFRESH_DISTANCE_M = 500;
     const poiMarkersMap2d = {};
     const poiMarkersMap3d = {};
 
@@ -2545,10 +2523,8 @@
 
     function placePoiMarkersOnMap(targetMap, poi, points) {
         if (!targetMap) return;
-        // If the map style is not yet loaded, defer placement until the 'load' event fires
         if (!targetMap.isStyleLoaded()) {
             targetMap.once('load', function() {
-                // Only place markers if the POI overlay is still active when the map finishes loading
                 if (isPoiOverlayOn && poiTypeEnabled[poi.id]) {
                     placePoiMarkersOnMap(targetMap, poi, points);
                 }
@@ -2599,7 +2575,6 @@
                 el.style.display = 'none';
             }
         }
-        // Disable/re-enable the button to give visual feedback and prevent double-click
         var btn = document.getElementById('btnPoiOverlay');
         if (btn) btn.disabled = on;
     }
@@ -2617,10 +2592,8 @@
             setPoiLoading(true, false);
             var rateLimitHit = false;
             try {
-                // Use whichever map is visible as the reference for bounds
                 var refMap = (is3DMode && map3d && map3d.isStyleLoaded()) ? map3d : map;
                 var points = await fetchPointsForPoi(poi, refMap);
-                // Place on both maps so switching 2D/3D always shows markers
                 placePoiMarkersOnMap(map, poi, points);
                 if (map3d) placePoiMarkersOnMap(map3d, poi, points);
             } catch(e) {
@@ -2650,7 +2623,6 @@
             btn.classList.add('active');
             panel.classList.add('visible');
 
-            // Use whichever map is currently visible/loaded as the reference for bounds
             var refMap = (is3DMode && map3d && map3d.isStyleLoaded()) ? map3d : map;
             if (!refMap || !refMap.isStyleLoaded()) return;
 
