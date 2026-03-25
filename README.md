@@ -483,6 +483,7 @@ The `stepValue(inputId, delta)` helper respects the `min` and `max` attributes o
 ## 👤 User Profiles
 
 Trip Master includes a built-in **User Profiles** system that allows drivers to save, load, and delete named configuration snapshots. Profiles are stored in the browser's `localStorage` under the key `tripmaster_profiles` and persist indefinitely across sessions on the same device.
+For further information see [POI Preference Persistence](#-poi-preference-persistence).
 
 ### 🗄️ Storage Model
 
@@ -1283,7 +1284,7 @@ The response is filtered to retain only alerts where `type === 'POLICE'` or `sub
 | `removeAllPoiMarkers(targetMap)` | Iterates `POI_TYPES` and calls `removePoiMarkersForType` for every type on `targetMap`. |
 | `createPoiMarkerElement(emoji, color)` | Creates and returns a styled 28×28 px circular `HTMLDivElement` with the POI emoji, colored background, white border, and drop shadow. |
 | `getPoiStore(targetMap)` | Returns `poiMarkersMap2d` or `poiMarkersMap3d` based on which map instance is passed. |
-| `setPoiLoading(on, rateLimit)` | Shows/hides `#poiLoadingLabel`. When `rateLimit` is `true`, displays `⛔ Server fetching delay!` instead of `⌛ Fetching data…`. Also disables/re-enables `#btnPoiOverlay` to prevent double-clicks during a fetch. |
+| `setPoiLoading(on, rateLimit)` | Shows/hides `#poiLoadingLabel`. When `rateLimit` is `true`, displays `⛔ POI fetching delayed!` instead of `⌛ Fetching data…`. Also disables/re-enables `#btnPoiOverlay` to prevent double-clicks during a fetch. |
 
 ### 🔄 Automatic POI Refresh While Driving
 
