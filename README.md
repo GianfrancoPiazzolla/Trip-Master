@@ -40,10 +40,11 @@
 19. [Map Fullscreen Mode](#️-map-fullscreen-mode)
 20. [Heading Mode](#-heading-mode)
 21. [POI Overlay](#-poi-overlay)
-22. [Responsive Layout Adaptations](#-responsive-layout-adaptations)
-23. [Dependencies](#-dependencies)
-24. [Getting Started](#-getting-started)
-25. [Mathematical Reference](#-mathematical-reference)
+22. [POI Preference Persistence](#-poi-preference-persistence)
+23. [Responsive Layout Adaptations](#-responsive-layout-adaptations)
+24. [Dependencies](#-dependencies)
+25. [Getting Started](#-getting-started)
+26. [Mathematical Reference](#-mathematical-reference)
 
 ---
 
@@ -1336,6 +1337,180 @@ Both `fetchOsmPoi` and `fetchWazeMobilePatrols` detect HTTP 429 responses and th
 | `poiTypeEnabled` | `Object` | Keyed by `poiId`; `true` if that POI layer is currently toggled on by the user |
 | `POI_TYPES` | `Array` | Immutable array of four POI descriptor objects (`id`, `label`, `emoji`, `color`, `source`, `overpassQuery`) |
 | `POI_REFRESH_DISTANCE_M` | `number` | `5000` — minimum displacement in metres between automatic POI refresh triggers |
+
+---
+
+## 💾 POI Preference Persistence
+
+Trip Master automatically **saves and restores** the per-layer toggle state of the POI overlay across page reloads and sessions, using the browser's `localStorage` API. No account, no server, and no cookies are required — all data lives entirely in the local browser storage of the device.
+
+### 🗝️ Storage Key
+
+| 🔑 Key | 📋 Storage | 📖 Purpose |
+|---|---|---|
+| `tripmaster_poi_prefs` | `localStorage` | Persists the `poiTypeEnabled` object — a map of each POI layer ID to its `boolean` toggle state |
+
+### ⚙️ Core Functions
+
+Three dedicated functions manage the full read/write lifecycle of POI preferences:
+
+#### 📖 `getPoiPrefs()` — Read from Storage
+
+Reads and deserializes the raw JSON string stored at `POI_PREFS_KEY`:
+
+```javascript
+function getPoiPrefs() {
+    try { return JSON.parse(localStorage.getItem(POI_PREFS_KEY)) || {}; }
+    catch(e) { return {}; }
+}
+```
+
+- 🛡️ Wrapped in a `try/catch` — if the stored value is malformed or absent, returns a safe empty object `{}` instead of throwing.
+- 📦 Returns a plain `Object` keyed by POI ID (e.g., `{ road_closure: true, ev_charging: false, ... }`).
+
+#### 💾 `savePoiPrefs()` — Write to Storage
+
+Serializes the live `poiTypeEnabled` object and writes it to `localStorage`:
+
+```javascript
+function savePoiPrefs() {
+    localStorage.setItem(POI_PREFS_KEY, JSON.stringify(poiTypeEnabled));
+}
+```
+
+- ✏️ Called automatically on every user interaction that changes a POI layer's toggle state.
+- 🔄 Overwrites any previous value at the same key — always reflects the current in-memory state.
+
+#### 📂 `loadPoiPrefs()` — Apply Stored State on Boot
+
+Reads persisted preferences and merges them into the live `poiTypeEnabled` object, then updates the POI Panel UI to reflect the restored state:
+
+```javascript
+function loadPoiPrefs() {
+    var prefs = getPoiPrefs();
+    Object.keys(poiTypeEnabled).forEach(function(key) {
+        if (typeof prefs[key] === 'boolean') {
+            poiTypeEnabled[key] = prefs[key];
+        }
+    });
+    Object.keys(poiTypeEnabled).forEach(function(key) {
+        var item = document.querySelector('.poi-panel-item[data-poi="' + key + '"]');
+        if (item) item.classList.toggle('active', poiTypeEnabled[key]);
+    });
+}
+```
+
+- 🔒 **Type-safe merge**: only values that are strictly `boolean` in the stored object are applied — unknown or corrupted entries are silently ignored.
+- 🎨 Immediately synchronizes the `.poi-panel-item` CSS `.active` class for each POI layer, so the panel checkboxes visually match the restored state even before the user opens the POI panel.
+- 🚀 Called once during `initializeSystem()` — the very first function to run after page load.
+
+### 🔁 Persistence Lifecycle
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                        PAGE LOAD                            │
+│  initializeSystem()                                         │
+│       └─► loadPoiPrefs()                                    │
+│               ├─► getPoiPrefs()  ──► localStorage.getItem() │
+│               ├─► merge into poiTypeEnabled{}               │
+│               └─► update .poi-panel-item CSS classes        │
+├─────────────────────────────────────────────────────────────┤
+│                  USER TOGGLES A POI LAYER                   │
+│  togglePoiType(poiId)                                       │
+│       ├─► flip poiTypeEnabled[poiId]                        │
+│       ├─► update .poi-panel-item CSS class                  │
+│       └─► savePoiPrefs()  ──► localStorage.setItem()        │
+├─────────────────────────────────────────────────────────────┤
+│               PROFILE LOADED (loadProfile)                  │
+│  loadProfile(name)                                          │
+│       ├─► merge p.poiTypeEnabled into poiTypeEnabled{}      │
+│       ├─► update .poi-panel-item CSS classes                │
+│       └─► savePoiPrefs()  ──► localStorage.setItem()        │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 💽 Stored Data Format
+
+The value written to `localStorage` under `tripmaster_poi_prefs` is a JSON-serialized object with one boolean entry per POI layer ID:
+
+```json
+{
+  "road_closure": true,
+  "mobile_patrol": false,
+  "speed_camera": true,
+  "ev_charging": false
+}
+```
+
+| 🔑 Key | 🏷️ POI Layer | ✅ `true` | ❌ `false` |
+|---|---|---|---|
+| `road_closure` | 🚧 Road Closures | Layer toggled ON | Layer toggled OFF |
+| `mobile_patrol` | 🚔 Mobile Patrols | Layer toggled ON | Layer toggled OFF |
+| `speed_camera` | 📷 Speed Cameras | Layer toggled ON | Layer toggled OFF |
+| `ev_charging` | ⚡ EV Charging | Layer toggled ON | Layer toggled OFF |
+
+> 💡 **Note:** Persisted preferences record only **which layers the user had enabled**, not the live marker data itself. Markers are always re-fetched from the live APIs (Overpass / Waze) when the overlay is activated after a page reload — the saved state simply pre-checks the correct layer toggles in the POI Panel.
+
+### ⏱️ Save Triggers
+
+`savePoiPrefs()` is called automatically in **three distinct scenarios**, ensuring the stored state is never stale:
+
+| 🔔 Trigger | 📋 Context | 🔧 Calling Function |
+|---|---|---|
+| 🖱️ User toggles an individual POI layer | POI Panel checkbox click | `togglePoiType(poiId)` |
+| 📂 User loads a saved User Profile | Profile modal → load action | `loadProfile(name)` |
+| 🔄 User overwrites a saved User Profile | Profile modal → overwrite action | `overwriteProfile(name)` (via `savePoiPrefs` called inside `loadProfile`) |
+
+### 🔗 Integration with User Profiles
+
+POI layer toggle states are also **embedded inside User Profiles** (stored under `tripmaster_profiles`). When a profile is saved, the entire `poiTypeEnabled` snapshot is captured alongside vehicle weight, battery capacity, GPS polling interval, map mode, theme, and weather overlay state:
+
+```javascript
+profiles[name] = {
+    vehicleWeight: ...,
+    batteryKwh:   ...,
+    gpsPolling:   ...,
+    theme:        ...,
+    is3DMode:     ...,
+    isHeadingUp:  ...,
+    isWeatherOverlayOn: ...,
+    poiTypeEnabled: Object.assign({}, poiTypeEnabled)  // ← POI snapshot
+};
+```
+
+When the profile is **loaded**, the POI snapshot is merged back into the live `poiTypeEnabled` object and immediately persisted to `localStorage` via `savePoiPrefs()`, so both storage locations stay in sync.
+
+#### 🗂️ Profile Card — POI Display
+
+In the Profiles modal, each profile card renders the enabled POI layers as labeled lines beneath the other profile metadata:
+
+```
+┌─────────────────────────────────────────────┐
+│  🚗 My EV Profile                           │
+│  Weight: 1850 Kg  Battery: 75 kWh           │
+│  GPS: 5 s  Map: 🛣️ / 🧭  Weather: On       │
+│  POI: 🚧 Road Closures                      │  ← only enabled layers shown
+│  POI: ⚡ EV Charging                        │
+│  Theme: 🌙 Dark                             │
+└─────────────────────────────────────────────┘
+```
+
+If **no POI layers are enabled** in a profile, the card displays `POI: **None**` instead of individual layer lines.
+
+### 🧹 Clearing Persisted POI Preferences
+
+Persisted POI preferences can be cleared manually from the browser's developer tools:
+
+```javascript
+// Clear only POI preferences
+localStorage.removeItem('tripmaster_poi_prefs');
+
+// Clear all Trip Master data (profiles + POI prefs)
+localStorage.removeItem('tripmaster_profiles');
+localStorage.removeItem('tripmaster_poi_prefs');
+```
+
+> ⚠️ **Note:** After clearing `tripmaster_poi_prefs`, all four POI layers will default to `false` (disabled) on the next page load, matching the compiled-in defaults of the `poiTypeEnabled` object.
 
 ---
 
