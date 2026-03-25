@@ -1302,7 +1302,7 @@ if (isPoiOverlayOn && !isPoiLoading) {
 
 | 🔧 Constant | 📋 Value | 📖 Description |
 |---|---|---|
-| `POI_REFRESH_DISTANCE_M` | `500` m | Minimum vehicle displacement from the last fetch anchor to trigger a new POI fetch |
+| `POI_REFRESH_DISTANCE_M` | `5000` m | Minimum vehicle displacement from the last fetch anchor to trigger a new POI fetch |
 
 ### 🏷️ Marker Popup Format
 
@@ -1335,7 +1335,7 @@ Both `fetchOsmPoi` and `fetchWazeMobilePatrols` detect HTTP 429 responses and th
 | `poiMarkersMap3d` | `Object` | Keyed by `poiId`; each value is an array of `maplibregl.Marker` instances on the 3D map |
 | `poiTypeEnabled` | `Object` | Keyed by `poiId`; `true` if that POI layer is currently toggled on by the user |
 | `POI_TYPES` | `Array` | Immutable array of four POI descriptor objects (`id`, `label`, `emoji`, `color`, `source`, `overpassQuery`) |
-| `POI_REFRESH_DISTANCE_M` | `number` | `500` — minimum displacement in metres between automatic POI refresh triggers |
+| `POI_REFRESH_DISTANCE_M` | `number` | `5000` — minimum displacement in metres between automatic POI refresh triggers |
 
 ---
 
