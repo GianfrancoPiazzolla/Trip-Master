@@ -361,7 +361,7 @@ A floating **`⛈️` button** is permanently overlaid in the **top-right area o
 ```
 ┌─────────────────────────── MAP WRAPPER ────────────────────────────────┐
 │    ┌───┐  ┌───┐  ┌───┐      ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐    │
-│    │ − │  │🎯 │ │ + │      │  🔺 │ │  🌍 │ │ 📌 │ │ ⛈️  │ │ ↕️ │    │
+│    │ − │  │🧿 │ │ + │      │  🔺 │ │  🌍 │ │ 📌 │ │ ⛈️  │ │ ↕️ │    │
 │    └───┘  └───┘  └───┘      └─────┘ └─────┘ └─────┘ └─────┘ └─────┘    │
 └────────────────────────────────────────────────────────────────────────┘
 ```
@@ -621,7 +621,7 @@ The MapLibre GL map style is switched per theme at initialization time (see [Map
 ├──────────────── RANGE ESTIMATOR ───────────────────────┤
 │  [kWh ±] [SOC% ±] [═══ Battery Bar ═══] [Range] [Rem.] │
 ├───────────── MAP ──────────┬───── CHARTS PANEL ────────┤
-│ [−][🎯][+]  [🔺][🌍][⛈️][📌][↕️] │ Elevation Profile│
+│ [−][🧿][+]  [🔺][🌍][⛈️][📌][↕️] │ Elevation Profile│
 │                            │  Consumption vs Distance  │
 │                            │  Speed Profile            │
 │          Route Map         │  Energy Balance           │
@@ -1035,7 +1035,7 @@ A set of three floating **zoom and re-center buttons** is overlaid in the **top-
 ```
 ┌─────────── MAP WRAPPER ─────────────────┐
 │  ┌───┐ ┌───┐ ┌───┐                      │
-│  │ − │ │🎯 │ │ + │    (map content)    │
+│  │ − │ │🧿 │ │ + │    (map content)    │
 │  └───┘ └───┘ └───┘                      │
 └─────────────────────────────────────────┘
 ```
@@ -1043,7 +1043,7 @@ A set of three floating **zoom and re-center buttons** is overlaid in the **top-
 | Button | Function | Description |
 |---|---|---|
 | `−` | `mapZoomOut()` | Decreases zoom level by 1 on the active map instance |
-| `🎯` | `mapCenterOnGPS()` | Re-centers the active map on the current GPS position |
+| `🧿` | `mapCenterOnGPS()` | Re-centers the active map on the current GPS position |
 | `+` | `mapZoomIn()` | Increases zoom level by 1 on the active map instance |
 
 All three functions resolve the currently active map as `const activeMap = is3DMode ? map3d : map` and call `activeMap.easeTo()` with a `duration: 250 ms` (zoom) or `400 ms` (center) smooth transition. `mapCenterOnGPS()` fires a fresh `navigator.geolocation.getCurrentPosition()` request with `enableHighAccuracy: true` before recentering.
@@ -1063,7 +1063,7 @@ A floating **`↕️` button** is permanently overlaid in the **top-right corner
 ```
 ┌─────────────────────────── MAP WRAPPER ────────────────────────────────┐
 │    ┌───┐  ┌───┐  ┌───┐      ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐    │
-│    │ − │  │🎯 │ │ + │      │  🔺 │ │  🌍 │ │ 📌 │ │ ⛈️  │ │ ↕️ │    │
+│    │ − │  │🧿 │ │ + │      │  🔺 │ │  🌍 │ │ 📌 │ │ ⛈️  │ │ ↕️ │    │
 │    └───┘  └───┘  └───┘      └─────┘ └─────┘ └─────┘ └─────┘ └─────┘    │
 └────────────────────────────────────────────────────────────────────────┘
 ```
@@ -1109,7 +1109,7 @@ A floating **`🔺` / `🧭` button** is permanently overlaid in the **top-right
 ```
 ┌─────────────────────────── MAP WRAPPER ────────────────────────────────┐
 │    ┌───┐  ┌───┐  ┌───┐      ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐    │
-│    │ − │  │🎯 │ │ + │      │  🔺 │ │  🌍 │ │ 📌 │ │ ⛈️  │ │ ↕️ │    │
+│    │ − │  │🧿 │ │ + │      │  🔺 │ │  🌍 │ │ 📌 │ │ ⛈️  │ │ ↕️ │    │
 │    └───┘  └───┘  └───┘      └─────┘ └─────┘ └─────┘ └─────┘ └─────┘    │
 └────────────────────────────────────────────────────────────────────────┘
 ```
@@ -1167,7 +1167,7 @@ A floating **`📌` button** is permanently overlaid in the **top-right area of 
 ```
 ┌─────────────────────────── MAP WRAPPER ────────────────────────────────┐
 │    ┌───┐  ┌───┐  ┌───┐      ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐    │
-│    │ − │  │🎯 │ │ + │      │  🔺 │ │  🌍 │ │ 📌 │ │ ⛈️  │ │ ↕️ │    │
+│    │ − │  │🧿 │ │ + │      │  🔺 │ │  🌍 │ │ 📌 │ │ ⛈️  │ │ ↕️ │    │
 │    └───┘  └───┘  └───┘      └─────┘ └─────┘ └─────┘ └─────┘ └─────┘    │
 └────────────────────────────────────────────────────────────────────────┘
 ```
@@ -1188,7 +1188,7 @@ The POI Panel (`#poiPanel`) slides into view whenever the overlay is active. It 
 ┌─────────────────────────────┐
 │  POI Layers                 │
 │  🚧  Road Closures    [ ]   │
-│  🚔  Mobile Patrols   [ ]   │
+│  👮  Mobile Patrols   [ ]   │
 │  📷  Speed Cameras    [ ]   │
 │  ⚡  EV Charging      [ ]   │
 │  ⌛ Fetching data…          │  ← visible only during fetch
@@ -1204,7 +1204,7 @@ Four POI layer types are defined in the `POI_TYPES` constant array:
 | ID | 🏷️ Label | Emoji | 🎨 Color | 🌐 Source | Notes |
 |---|---|---|---|---|---|
 | `road_closure` | Road Closure | 🚧 | `#ff6f00` | OSM Overpass | Barriers, jersey barriers, highway=construction, active construction ways |
-| `mobile_patrol` | Mobile Patrol | 🚔 | `#1565c0` | Waze Live Map | Filters `POLICE`-type alerts from the Waze georss alerts feed |
+| `mobile_patrol` | Mobile Patrol | 👮 | `#1565c0` | Waze Live Map | Filters `POLICE`-type alerts from the Waze georss alerts feed |
 | `speed_camera` | Speed Camera | 📷 | `#c62828` | OSM Overpass | `highway=speed_camera`, `enforcement=maxspeed`, `man_made=speed_camera` |
 | `ev_charging` | EV Charging | ⚡ | `#2e7d32` | OSM Overpass | `amenity=charging_station` nodes and ways |
 
@@ -1256,7 +1256,7 @@ The bounding box for each query is derived from `refMap.getBounds()` and formatt
 
 For `way` elements, the coordinates are extracted from `el.center.lat` / `el.center.lon` (Overpass `out center` directive). For nodes, `el.lat` / `el.lon` are used directly.
 
-#### 🚔 Waze Live Map — Mobile Patrols
+#### 👮 Waze Live Map — Mobile Patrols
 
 Mobile patrol data is fetched from the Waze georss feed, proxied through **corsproxy.io** to bypass the Waze CORS policy:
 
@@ -1446,7 +1446,7 @@ The value written to `localStorage` under `tripmaster_poi_prefs` is a JSON-seria
 | 🔑 Key | 🏷️ POI Layer | ✅ `true` | ❌ `false` |
 |---|---|---|---|
 | `road_closure` | 🚧 Road Closures | Layer toggled ON | Layer toggled OFF |
-| `mobile_patrol` | 🚔 Mobile Patrols | Layer toggled ON | Layer toggled OFF |
+| `mobile_patrol` | 👮 Mobile Patrols | Layer toggled ON | Layer toggled OFF |
 | `speed_camera` | 📷 Speed Cameras | Layer toggled ON | Layer toggled OFF |
 | `ev_charging` | ⚡ EV Charging | Layer toggled ON | Layer toggled OFF |
 
