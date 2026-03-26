@@ -69,7 +69,7 @@ The app runs entirely client-side. There is no server, no database, and no build
 | 🌐 **3D Perspective Map** | MapLibre GL 3D tilted-perspective view with identical route data and WebGL rendering |
 | 🔄 **2D / 3D Map Toggle** | One-click button to switch between flat 2D view and immersive 3D view |
 | 🧭 **Heading / North-Up Toggle** | One-click button to switch the active map between heading-up (travel direction) and north-up orientation |
-| 🖥️ **Map Fullscreen Mode** | One-click button to expand the map to the full viewport, hiding all UI panels |
+| ↕️ **Map Fullscreen Mode** | One-click button to expand the map to the full viewport, hiding all UI panels |
 | 🔍 **Map Zoom Controls** | Floating `−` / `⊕` / `+` buttons to zoom out, re-center on GPS, or zoom in on the active map |
 | 📍 **Live GPS Position Marker** | Custom blue dot marker tracking real-time position on both 2D and 3D maps |
 | 🟢 **Start & End Markers** | Green `S` and red `E` circular markers placed automatically at the first and last coordinate of any imported trip file |
@@ -356,12 +356,12 @@ Trip Master can project a **live precipitation radar layer** directly onto both 
 
 #### 🔘 Toggle Button
 
-A floating **`⛈️` button** is permanently overlaid in the **top-right area of the map panel**, between the 🛣️ 3D toggle and the 📌 POI overlay button:
+A floating **`⛈️` button** is permanently overlaid in the **top-right area of the map panel**, between the 🌍 3D toggle and the 📌 POI overlay button:
 
 ```
 ┌─────────────────────────── MAP WRAPPER ────────────────────────────────┐
 │    ┌───┐  ┌───┐  ┌───┐      ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐    │
-│    │ − │  │🎯 │ │ + │      │  🔺 │ │  🛣️ │ │ 📌 │ │ ⛈️  │ │ 🖥️ │    │
+│    │ − │  │🎯 │ │ + │      │  🔺 │ │  🌍 │ │ 📌 │ │ ⛈️  │ │ ↕️ │    │
 │    └───┘  └───┘  └───┘      └─────┘ └─────┘ └─────┘ └─────┘ └─────┘    │
 └────────────────────────────────────────────────────────────────────────┘
 ```
@@ -480,7 +480,7 @@ The `stepValue(inputId, delta)` helper respects the `min` and `max` attributes o
 
 ---
 
-## 👤 User Profiles
+## 🚘 EV Profiles
 
 Trip Master includes a built-in **User Profiles** system that allows drivers to save, load, and delete named configuration snapshots. Profiles are stored in the browser's `localStorage` under the key `tripmaster_profiles` and persist indefinitely across sessions on the same device.
 For further information see [POI Preference Persistence](#-poi-preference-persistence).
@@ -558,7 +558,7 @@ When a profile is loaded via `loadProfile()`, the UI is updated atomically:
 
 ### 🖥️ UI Entry Point
 
-The profiles modal is accessible from the **👤 button** in the application header. The modal contains:
+The profiles modal is accessible from the **🚘 button** in the application header. The modal contains:
 
 - A scrollable list of saved profile cards, each showing the profile name and a compact summary (`Weight · Battery · GPS · Map mode / Heading mode · Weather overlay · Theme`), along with **Load**, **Overwrite**, and **Delete** action buttons.
 - A text input field (max 40 characters) and a **💾 Save** button to persist the active configuration under a new name.
@@ -613,7 +613,7 @@ The MapLibre GL map style is switched per theme at initialization time (see [Map
 
 ```
 ┌─────────────────────── HEADER ─────────────────────────┐
-│  🔴 TRIP MASTER          [👤][🧮] [☀️/🌙] [⭐]      │
+│  🔴 TRIP MASTER          [🚘][🧮] [☀️/🌙] [⭐]      │
 ├──────────────── CONFIG GRID (4 cols) ──────────────────┤
 │  Weight │ Temp Efficiency │ Headwind │ GPS Polling     │
 ├──────────────── STAT CARDS (8 cols) ───────────────────┤
@@ -621,7 +621,7 @@ The MapLibre GL map style is switched per theme at initialization time (see [Map
 ├──────────────── RANGE ESTIMATOR ───────────────────────┤
 │  [kWh ±] [SOC% ±] [═══ Battery Bar ═══] [Range] [Rem.] │
 ├───────────── MAP ──────────┬───── CHARTS PANEL ────────┤
-│ [−][🎯][+]  [🔺][🛣️][⛈️][📌][🖥️] │ Elevation Profile│
+│ [−][🎯][+]  [🔺][🌍][⛈️][📌][↕️] │ Elevation Profile│
 │                            │  Consumption vs Distance  │
 │                            │  Speed Profile            │
 │          Route Map         │  Energy Balance           │
@@ -898,7 +898,7 @@ Trip Master provides two distinct map rendering modes that can be toggled at any
 A floating **`3D` / `2D` button** is permanently overlaid in the **top-right corner** of the map panel. Clicking it switches between modes instantly:
 
 - 🗺️ **Label `3D`** → the map is currently in **2D mode**; clicking will activate the 3D view
-- 🌐 **Label `2D`** (highlighted in `--secondary` blue) → the map is currently in **3D mode**; clicking will return to the flat 2D view
+- 🌍 **Label `2D`** (highlighted in `--secondary` blue) → the map is currently in **3D mode**; clicking will return to the flat 2D view
 
 ```
 ┌─────────── MAP WRAPPER ────────────────┐
@@ -923,7 +923,7 @@ The default map mode uses **MapLibre GL JS v4.7.1** rendering a flat, top-down v
 | 📐 Camera pitch | `0°` (flat top-down view) |
 | 🧭 Camera bearing | `0°` (north-up) |
 | ✨ Antialiasing | `true` |
-| 🛣️ Route layer type | `line` (GeoJSON `LineString`) — source ID `trip-path-2d` |
+| 🌍 Route layer type | `line` (GeoJSON `LineString`) — source ID `trip-path-2d` |
 | 🎨 Route color | `#e21017` |
 | 📏 Route line width | `5` px |
 | 🔍 Initial zoom | `15` (set on first GPS fix) |
@@ -933,7 +933,7 @@ The 2D map is contained in the `<div id="map">` element and initialized at page 
 
 ---
 
-### 🌐 3D Mode — MapLibre GL + OpenFreeMap
+### 🌍 3D Mode — MapLibre GL + OpenFreeMap
 
 The 3D mode reuses **MapLibre GL JS v4.7.1** with a pitched, tilted camera that gives a perspective-projected terrain view. It uses the same tile provider and the same GeoJSON route data as the 2D mode.
 
@@ -946,7 +946,7 @@ The 3D mode reuses **MapLibre GL JS v4.7.1** with a pitched, tilted camera that 
 | 📐 Camera pitch | `60°` (tilted perspective) |
 | 🧭 Camera bearing | `0°` (heading-up) |
 | ✨ Antialiasing | `true` (smooth WebGL rendering) |
-| 🛣️ Route layer type | `line` (GeoJSON `LineString`) — source ID `trip-path` |
+| 🌍 Route layer type | `line` (GeoJSON `LineString`) — source ID `trip-path` |
 | 🎨 Route color | `#e21017` |
 | 📏 Route line width | `5` px |
 | 🔍 Initial zoom | `15` |
@@ -1052,18 +1052,18 @@ The zoom group container (`#mapZoomGroup`) is automatically hidden when the map 
 
 ---
 
-## 🖥️ Map Fullscreen Mode
+## ↕️ Map Fullscreen Mode
 
 Trip Master provides a **fullscreen map mode** that expands the map to fill the entire viewport, hiding all UI panels and controls except the map overlay buttons.
 
 ### 🔘 Toggle Button
 
-A floating **`🖥️` button** is permanently overlaid in the **top-right corner** of the map panel, to the right of the POI overlay button:
+A floating **`↕️` button** is permanently overlaid in the **top-right corner** of the map panel, to the right of the POI overlay button:
 
 ```
 ┌─────────────────────────── MAP WRAPPER ────────────────────────────────┐
 │    ┌───┐  ┌───┐  ┌───┐      ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐    │
-│    │ − │  │🎯 │ │ + │      │  🔺 │ │  🛣️ │ │ 📌 │ │ ⛈️  │ │ 🖥️ │    │
+│    │ − │  │🎯 │ │ + │      │  🔺 │ │  🌍 │ │ 📌 │ │ ⛈️  │ │ ↕️ │    │
 │    └───┘  └───┘  └───┘      └─────┘ └─────┘ └─────┘ └─────┘ └─────┘    │
 └────────────────────────────────────────────────────────────────────────┘
 ```
@@ -1109,7 +1109,7 @@ A floating **`🔺` / `🧭` button** is permanently overlaid in the **top-right
 ```
 ┌─────────────────────────── MAP WRAPPER ────────────────────────────────┐
 │    ┌───┐  ┌───┐  ┌───┐      ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐    │
-│    │ − │  │🎯 │ │ + │      │  🔺 │ │  🛣️ │ │ 📌 │ │ ⛈️  │ │ 🖥️ │    │
+│    │ − │  │🎯 │ │ + │      │  🔺 │ │  🌍 │ │ 📌 │ │ ⛈️  │ │ ↕️ │    │
 │    └───┘  └───┘  └───┘      └─────┘ └─────┘ └─────┘ └─────┘ └─────┘    │
 └────────────────────────────────────────────────────────────────────────┘
 ```
@@ -1167,7 +1167,7 @@ A floating **`📌` button** is permanently overlaid in the **top-right area of 
 ```
 ┌─────────────────────────── MAP WRAPPER ────────────────────────────────┐
 │    ┌───┐  ┌───┐  ┌───┐      ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐    │
-│    │ − │  │🎯 │ │ + │      │  🔺 │ │  🛣️ │ │ 📌 │ │ ⛈️  │ │ 🖥️ │    │
+│    │ − │  │🎯 │ │ + │      │  🔺 │ │  🌍 │ │ 📌 │ │ ⛈️  │ │ ↕️ │    │
 │    └───┘  └───┘  └───┘      └─────┘ └─────┘ └─────┘ └─────┘ └─────┘    │
 └────────────────────────────────────────────────────────────────────────┘
 ```
@@ -1489,7 +1489,7 @@ In the Profiles modal, each profile card renders the enabled POI layers as label
 ┌─────────────────────────────────────────────┐
 │  🚗 My EV Profile                           │
 │  Weight: 1850 Kg  Battery: 75 kWh           │
-│  GPS: 5 s  Map: 🛣️ / 🧭  Weather: On       │
+│  GPS: 5 s  Map: 🌍 / 🧭  Weather: On       │
 │  POI: 🚧 Road Closures                      │  ← only enabled layers shown
 │  POI: ⚡ EV Charging                        │
 │  Theme: 🌙 Dark                             │
@@ -1521,7 +1521,7 @@ Trip Master includes two `ResizeObserver`-based scripts that automatically adapt
 
 ### 🗺️ Map Overlay Button Auto-Hide
 
-When the `.map-wrapper` element's height collapses below **50 px** (e.g., in very narrow viewports or when the browser collapses the map section), all six map overlay controls — the 🛣️ `3D` toggle button, the 🔺 heading button, the zoom button group, the ⛈️ weather overlay button, the 📌 POI overlay button, and the 🖥️ fullscreen button — are automatically hidden:
+When the `.map-wrapper` element's height collapses below **50 px** (e.g., in very narrow viewports or when the browser collapses the map section), all six map overlay controls — the 🌍 `3D` toggle button, the 🔺 heading button, the zoom button group, the ⛈️ weather overlay button, the 📌 POI overlay button, and the ↕️ fullscreen button — are automatically hidden:
 
 ```javascript
 function updateMapBtnVisibility(height) {
