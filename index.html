@@ -320,7 +320,7 @@
             z-index: 5;
         }
         .map3d-toggle-btn {
-            position: absolute; top: 10px; right: 130px; z-index: 10;
+            position: absolute; top: 10px; right: 130px; z-index: 20;
             background: var(--card-bg);
             border: 1px solid var(--border-color);
             color: var(--text-color);
@@ -334,7 +334,7 @@
         .map3d-toggle-btn:hover { background: var(--border-color); transform: translateY(-1px); }
         .map3d-toggle-btn.active { background: var(--warning); color: #000; border-color: var(--warning); box-shadow: 0 2px 8px rgba(41,182,246,0.4); }
         .map-fullscreen-btn {
-            position: absolute; top: 10px; right: 10px; z-index: 10;
+            position: absolute; top: 10px; right: 10px; z-index: 20;
             background: var(--card-bg);
             border: 1px solid var(--border-color);
             color: var(--text-color);
@@ -348,7 +348,7 @@
         .map-fullscreen-btn:hover { background: var(--border-color); transform: translateY(-1px); }
         .map-fullscreen-btn.active { background: var(--accent-purple); color: #000; border-color: var(--accent-purple); box-shadow: 0 2px 8px rgba(179,157,219,0.4); }
         .map-weather-btn {
-            position: absolute; top: 10px; right: 50px; z-index: 10;
+            position: absolute; top: 10px; right: 50px; z-index: 20;
             background: var(--card-bg);
             border: 1px solid var(--border-color);
             color: var(--text-color);
@@ -363,7 +363,7 @@
         .map-weather-btn.active { background: var(--secondary); color: #000; border-color: var(--secondary); box-shadow: 0 2px 8px rgba(41,182,246,0.4); }
 
         .map-poi-btn {
-            position: absolute; top: 10px; right: 90px; z-index: 10;
+            position: absolute; top: 10px; right: 90px; z-index: 20;
             background: var(--card-bg);
             border: 1px solid var(--border-color);
             color: var(--text-color);
@@ -379,7 +379,7 @@
 
         /* POI Panel */
         .poi-panel {
-            position: absolute; top: 46px; right: 10px; z-index: 10;
+            position: absolute; top: 46px; right: 10px; z-index: 20;
             background: var(--card-bg);
             border: 1px solid var(--border-color);
             border-radius: 8px; padding: 6px 8px;
@@ -424,6 +424,26 @@
             font-size: 0.58rem; color: var(--label-color); text-align: center;
             padding: 3px 0; letter-spacing: 0.5px;
         }
+        .poi-panel.minimized {
+            min-width: unset;
+            width: 30px;
+            height: 30px;
+            padding: 0;
+            overflow: hidden;
+            cursor: pointer;
+            align-items: center;
+            justify-content: center;
+        }
+        .poi-panel.minimized > * { display: none; }
+        .poi-panel.minimized::after {
+            content: '🚩';
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem; font-weight: 700;
+            color: var(--text-color);
+            white-space: nowrap;
+            display: block;
+            padding: 3px 6px;
+        }
 
         body.map-fullscreen .header { display: none; }
         body.map-fullscreen .container > .config-grid,
@@ -451,7 +471,7 @@
             min-height: 0;
         }
         .map-heading-btn {
-            position: absolute; top: 10px; right: 170px; z-index: 10;
+            position: absolute; top: 10px; right: 170px; z-index: 20;
             background: var(--card-bg);
             border: 1px solid var(--border-color);
             color: var(--text-color);
@@ -465,8 +485,8 @@
         .map-heading-btn:hover { background: var(--border-color); transform: translateY(-1px); }
         .map-heading-btn.active { background: var(--primary); color: #000; border-color: var(--primary); box-shadow: 0 2px 8px rgba(0,230,118,0.4); }
         .map-zoom-group {
-            position: absolute; top: 10px; left: 10px; z-index: 10;
-            display: flex; flex-direction: row; gap: 4px;
+            position: absolute; top: 10px; left: 10px; z-index: 20;
+            display: flex; flex-direction: row; gap: 1px;
         }
         .map-zoom-btn {
             background: var(--card-bg);
@@ -827,7 +847,7 @@
 <div class="header">
     <h1>Trip Master</h1>
     <div class="header-btns">
-        <button onclick="openProfilesModal()" class="hdr-btn" title="User Profiles">👤</button>
+        <button onclick="openProfilesModal()" class="hdr-btn" title="EV Profiles">🚘</button>
         <button onclick="showSummary()" class="hdr-btn" title="Trip Summary">🧮</button>
         <button onclick="toggleTheme()" id="themeBtn" class="hdr-btn">🌙</button>
         <button onclick="toggleModal(true)" class="hdr-btn">⭐</button>
@@ -838,7 +858,7 @@
 <div id="profilesModal" class="modal">
     <div class="modal-content">
         <span class="close-modal" onclick="closeProfilesModal()">&times;</span>
-        <h2>👤 EV Profiles</h2>
+        <h2>🚘 EV Profiles</h2>
         <div id="profilesList" class="profiles-list"></div>
         <div class="profile-save-row">
             <input type="text" id="profileNameInput" class="profile-name-input" placeholder="New profile name" maxlength="40">
@@ -972,7 +992,7 @@
                 <button class="map-zoom-btn" onclick="mapZoomIn()" title="Zoom In">+</button>
             </div>
             <button class="map-heading-btn" id="btnHeadingToggle" onclick="toggleHeadingMode()" title="Toggle North Up / Heading Up">🔺</button>
-            <button class="map3d-toggle-btn" id="btn3DToggle" onclick="toggle3DMap()" title="Toggle 2D/3D Map">🛣️</button>
+            <button class="map3d-toggle-btn" id="btn3DToggle" onclick="toggle3DMap()" title="Toggle 2D/3D Map">🌍</button>
             <button class="map-weather-btn" id="btnWeatherOverlay" onclick="toggleWeatherOverlay()" title="Toggle Weather Overlay">⛈️</button>
             <button class="map-poi-btn" id="btnPoiOverlay" onclick="togglePoiOverlay()" title="Toggle Points of Interest">📌</button>
             <div class="poi-panel" id="poiPanel">
@@ -997,9 +1017,9 @@
                     <span class="poi-panel-label">EV Charging</span>
                     <span class="poi-panel-check"></span>
                 </div>
-                <div class="poi-panel-loading" id="poiLoadingLabel" style="display:none;">Fetching data…</div>
+                <div class="poi-panel-loading" id="poiLoadingLabel" style="display:none;">⏳ Fetching data…</div>
             </div>
-            <button class="map-fullscreen-btn" id="btnFullscreen" onclick="toggleMapFullscreen()" title="Toggle Fullscreen Map">🖥️</button>
+            <button class="map-fullscreen-btn" id="btnFullscreen" onclick="toggleMapFullscreen()" title="Toggle Fullscreen Map">↕️</button>
         </div>
 
         <div class="charts-panel">
@@ -1247,7 +1267,7 @@
 
         container.innerHTML = keys.map(name => {
             const p = profiles[name];
-            const modeLabel = p.is3DMode ? '🛣️' : '🗺️';
+            const modeLabel = p.is3DMode ? '🌍' : '🗺️';
             const headingLabel = p.isHeadingUp ? '🔺' : '🧭';
             const weatherOverlayLabel = p.isWeatherOverlayOn ? 'On' : 'Off';
             const poiLabels = p.poiTypeEnabled
@@ -1756,6 +1776,8 @@
             positionMarker3d = new maplibregl.Marker({ element: createBlueMarkerElement(), anchor: 'center' })
                 .setLngLat([center.lng, center.lat])
                 .addTo(map3d);
+
+            syncPoiMarkersToMap(map, map3d);
         });
     }
 
@@ -1793,11 +1815,12 @@
                         map3d.once('styledata', function() { addWeatherOverlayToMap(map3d, weatherOverlayTimestamp); });
                     }
                 }
+                syncPoiMarkersToMap(map, map3d);
             }
             removeWeatherOverlayFromMap(map);
         } else {
             is3DMode = false;
-            btn.textContent = '🛣️';
+            btn.textContent = '🌍';
             btn.classList.remove('active');
             map3dEl.style.display = 'none';
             mapEl.style.display = 'block';
@@ -1810,6 +1833,7 @@
                     map.once('styledata', function() { addWeatherOverlayToMap(map, weatherOverlayTimestamp); });
                 }
             }
+            syncPoiMarkersToMap(map3d, map);
         }
     }
 
@@ -2610,12 +2634,32 @@
         POI_TYPES.forEach(function(poi) { removePoiMarkersForType(targetMap, poi.id); });
     }
 
+    function syncPoiMarkersToMap(sourceMap, targetMap) {
+        if (!isPoiOverlayOn || !sourceMap || !targetMap) return;
+        var sourceStore = getPoiStore(sourceMap);
+        if (!sourceStore) return;
+        POI_TYPES.forEach(function(poi) {
+            if (!poiTypeEnabled[poi.id]) return;
+            var sourceMarkers = sourceStore[poi.id];
+            if (!sourceMarkers || sourceMarkers.length === 0) return;
+            var points = sourceMarkers.map(function(m) {
+                var ll = m.getLngLat();
+                var popup = m.getPopup();
+                var popupHtml = popup ? popup.getHTML() : '';
+                var nameMatch = popupHtml.match(/<span[^>]*>([^<]*)<\/span>/);
+                return { lat: ll.lat, lon: ll.lng, name: nameMatch ? nameMatch[1] : null };
+            });
+            removePoiMarkersForType(targetMap, poi.id);
+            placePoiMarkersOnMap(targetMap, poi, points);
+        });
+    }
+
     function setPoiLoading(on, rateLimit) {
         isPoiLoading = on;
         var el = document.getElementById('poiLoadingLabel');
         if (el) {
             if (on) {
-                el.textContent = rateLimit ? '⛔ POI fetching delayed!' : '⌛ Fetching POI data…';
+                el.textContent = rateLimit ? '⛔ POI fetching delayed!' : '⏳ Fetching POI data…';
                 el.style.display = 'block';
             } else {
                 el.style.display = 'none';
@@ -2628,6 +2672,7 @@
     async function togglePoiType(poiId) {
         if (!isPoiOverlayOn || isPoiLoading) return;
 
+        startPoiMinimizeTimer();
         poiTypeEnabled[poiId] = !poiTypeEnabled[poiId];
         var item = document.querySelector('.poi-panel-item[data-poi="' + poiId + '"]');
         if (item) item.classList.toggle('active', poiTypeEnabled[poiId]);
@@ -2659,6 +2704,26 @@
         }
     }
 
+    var poiMinimizeTimer = null;
+
+    function startPoiMinimizeTimer() {
+        clearTimeout(poiMinimizeTimer);
+        poiMinimizeTimer = setTimeout(function() {
+            var panel = document.getElementById('poiPanel');
+            if (panel && panel.classList.contains('visible')) {
+                panel.classList.add('minimized');
+            }
+        }, 5000);
+    }
+
+    function expandPoiPanel() {
+        var panel = document.getElementById('poiPanel');
+        if (panel && panel.classList.contains('minimized')) {
+            panel.classList.remove('minimized');
+            startPoiMinimizeTimer();
+        }
+    }
+
     async function togglePoiOverlay() {
         if (isPoiLoading) return;
 
@@ -2669,6 +2734,14 @@
         if (isPoiOverlayOn) {
             btn.classList.add('active');
             panel.classList.add('visible');
+            panel.classList.remove('minimized');
+            panel.addEventListener('click', function(e) {
+                if (panel.classList.contains('minimized')) {
+                    e.stopPropagation();
+                    expandPoiPanel();
+                }
+            });
+            startPoiMinimizeTimer();
 
             var refMap = (is3DMode && map3d && map3d.isStyleLoaded()) ? map3d : map;
             if (!refMap || !refMap.isStyleLoaded()) return;
@@ -2700,8 +2773,10 @@
                 }
             }
         } else {
+            clearTimeout(poiMinimizeTimer);
             btn.classList.remove('active');
             panel.classList.remove('visible');
+            panel.classList.remove('minimized');
             removeAllPoiMarkers(map);
             removeAllPoiMarkers(map3d);
             lastPoiRefreshPoint = null;
