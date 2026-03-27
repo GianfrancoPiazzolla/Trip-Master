@@ -1835,6 +1835,8 @@
             }
             syncPoiMarkersToMap(map3d, map);
         }
+
+        if (isPoiOverlayOn) switchPoiOverlay();
     }
 
     function mapZoomIn() {
@@ -2780,6 +2782,40 @@
             removeAllPoiMarkers(map);
             removeAllPoiMarkers(map3d);
             lastPoiRefreshPoint = null;
+        }
+    }
+
+    async function switchPoiOverlay() {
+        if (isPoiOverlayOn) {
+            var refMap = (is3DMode && map3d && map3d.isStyleLoaded()) ? map3d : map;
+            if (!refMap || !refMap.isStyleLoaded()) return;
+
+            setPoiLoading(true, false);
+            var rateLimitHit = false;
+            try {
+                for (var i = 0; i < POI_TYPES.length; i++) {
+                    var poi = POI_TYPES[i];
+                    if (!poiTypeEnabled[poi.id]) continue;
+                    try {
+                        var points = await fetchPointsForPoi(poi, refMap);
+                        placePoiMarkersOnMap(map, poi, points);
+                        if (map3d) placePoiMarkersOnMap(map3d, poi, points);
+                    } catch(e) {
+                        if (e.isRateLimit) { rateLimitHit = true; break; }
+                    }
+                }
+                if (!rateLimitHit) {
+                    var center = refMap.getCenter();
+                    lastPoiRefreshPoint = { lat: center.lat, lon: center.lng };
+                }
+            } finally {
+                if (rateLimitHit) {
+                    setPoiLoading(true, true);
+                    setTimeout(function() { setPoiLoading(false); }, 3000);
+                } else {
+                    setPoiLoading(false);
+                }
+            }
         }
     }
 
