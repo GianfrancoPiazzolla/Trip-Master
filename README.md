@@ -40,11 +40,15 @@
 19. [Map Fullscreen Mode](#️-map-fullscreen-mode)
 20. [Heading Mode](#-heading-mode)
 21. [POI Overlay](#-poi-overlay)
-22. [POI Preference Persistence](#-poi-preference-persistence)
-23. [Responsive Layout Adaptations](#-responsive-layout-adaptations)
-24. [Dependencies](#-dependencies)
-25. [Getting Started](#-getting-started)
-26. [Mathematical Reference](#-mathematical-reference)
+22. [POI Panel Minimize & Expand](#-poi-panel-minimize--expand)
+23. [POI Watchdog System](#-poi-watchdog-system)
+24. [POI Map Synchronization](#-poi-map-synchronization)
+25. [POI Overlay Switch on Map Mode Change](#-poi-overlay-switch-on-map-mode-change)
+26. [POI Preference Persistence](#-poi-preference-persistence)
+27. [Responsive Layout Adaptations](#-responsive-layout-adaptations)
+28. [Dependencies](#-dependencies)
+29. [Getting Started](#-getting-started)
+30. [Mathematical Reference](#-mathematical-reference)
 
 ---
 
@@ -77,6 +81,9 @@ The app runs entirely client-side. There is no server, no database, and no build
 | 🌡️ **Live Weather Panel** | Auto-fetches Open-Meteo for temperature, humidity, wind, and pressure |
 | 🌧️ **Weather Radar Overlay** | One-click RainViewer precipitation radar projected on both 2D and 3D maps |
 | 📌 **POI Overlay** | One-click overlay showing Road Closures, Mobile Patrols, Speed Cameras, and EV Charging stations on both 2D and 3D maps, sourced from OpenStreetMap Overpass API and Waze Live Map |
+| 🗂️ **POI Panel Auto-Minimize** | The POI layer selection panel auto-minimizes after 5 seconds of inactivity and expands on click |
+| 🐕 **POI Watchdog** | Background timer that detects and automatically re-plots missing POI markers if they fail to appear |
+| 🔁 **POI Map Sync** | Synchronizes POI markers from one map instance to the other when switching between 2D and 3D modes |
 | 🌙 **Dark / Light Theme** | Full dual-theme UI with smooth CSS variable transitions |
 | 📱 **PWA / Installable** | Service Worker + Web Manifest for offline use and home-screen install |
 | 🔒 **Wake Lock** | Prevents device screen from sleeping during active tracking |
@@ -498,7 +505,13 @@ Profiles are serialized as a JSON object where each key is the user-defined prof
     "is3DMode": true,
     "isHeadingUp": true,
     "isWeatherOverlayOn": false,
-    "theme": "dark"
+    "theme": "dark",
+    "poiTypeEnabled": {
+      "mobile_patrol": false,
+      "speed_camera": true,
+      "road_closure": false,
+      "ev_charging": true
+    }
   },
   "My Tesla Model X": {
     "vehicleWeight": 2400,
@@ -507,14 +520,20 @@ Profiles are serialized as a JSON object where each key is the user-defined prof
     "is3DMode": false,
     "isHeadingUp": false,
     "isWeatherOverlayOn": true,
-    "theme": "light"
+    "theme": "light",
+    "poiTypeEnabled": {
+      "mobile_patrol": true,
+      "speed_camera": false,
+      "road_closure": true,
+      "ev_charging": false
+    }
   }
 }
 ```
 
 ### 💾 Saved Parameters
 
-Each profile snapshot captures seven configuration fields:
+Each profile snapshot captures **eight** configuration fields:
 
 | Field | Source Element ID | Description |
 |---|---|---|
@@ -525,6 +544,7 @@ Each profile snapshot captures seven configuration fields:
 | `isHeadingUp` | `isHeadingUp` | Whether heading-up orientation was active (`true` / `false`) |
 | `isWeatherOverlayOn` | `isWeatherOverlayOn` | Whether the RainViewer precipitation radar overlay was active (`true` / `false`) |
 | `theme` | `currentTheme` | Active UI theme (`"light"` or `"dark"`) |
+| `poiTypeEnabled` | `poiTypeEnabled` | Snapshot of the four POI layer toggle states at save time (`Object.assign({}, poiTypeEnabled)`) |
 
 > 💡 **Note:** Temperature efficiency and headwind speed are intentionally excluded — they represent real-time environmental conditions rather than vehicle-specific parameters.
 
@@ -537,9 +557,9 @@ Each profile snapshot captures seven configuration fields:
 | `openProfilesModal()` | Renders the profiles list and shows the profiles modal |
 | `closeProfilesModal()` | Hides the profiles modal |
 | `renderProfilesList()` | Iterates all saved profiles and injects them as `profile-item` cards into the modal; shows an empty-state message when no profiles exist |
-| `saveProfile()` | Reads the profile name input and all six config fields, merges them into the profiles object, and persists via `saveProfiles()` |
-| `loadProfile(name)` | Restores `vehicleWeight` and `batteryCapacity` fields, updates the `batteryKwh` display via `updateBattery()`, syncs the GPS polling segmented control by toggling the matching `.active` segment, and restores the saved Light/Dark theme preference by calling `toggleTheme()` if the stored `theme` value differs from the current one. Additionally restores `is3DMode` (calls `toggle3DMap()` if different), `isHeadingUp` (calls `toggleHeadingMode()` if different), and `isWeatherOverlayOn` (calls `toggleWeatherOverlay()` if different) |
-| `overwriteProfile(name)` | Overwrites an existing profile with the current configuration values without renaming; updates the profiles list in place |
+| `saveProfile()` | Reads the profile name input and all eight config fields (including `poiTypeEnabled` snapshot), merges them into the profiles object, and persists via `saveProfiles()` |
+| `loadProfile(name)` | Restores all configuration fields; see [Load Behavior](#-load-behavior) for the full atomic sequence |
+| `overwriteProfile(name)` | Overwrites an existing profile with the **full** current configuration — including `vehicleWeight`, `batteryKwh`, `gpsPolling`, `theme`, `is3DMode`, `isHeadingUp`, `isWeatherOverlayOn`, and the current `poiTypeEnabled` snapshot — without renaming; updates the profiles list in place |
 | `deleteProfile(name)` | Removes the named key from the profiles object and refreshes the list |
 | `escapeHtml(str)` | Sanitizes a string for safe HTML injection by replacing `&`, `<`, `>`, `"`, and `'` with their corresponding HTML entities; used internally by `renderProfilesList()` |
 
@@ -550,18 +570,37 @@ When a profile is loaded via `loadProfile()`, the UI is updated atomically:
 1. `vehicleWeight` input value is set directly.
 2. `batteryCapacity` input value is set, then `updateBattery()` is called to refresh the SOC bar and recompute the range estimate.
 3. The GPS polling segmented control iterates all `.segment` buttons in `#gpsPollingGroup`, removes the `active` class from all of them, and re-applies it to the button whose `data-value` attribute matches the stored `gpsPolling` value. The hidden `#gpsPolling` input is also updated to keep it in sync.
-4. If the profile contains an `is3DMode` boolean that differs from the current state, `toggle3DMap()` is called to switch the map view accordingly.
-5. If the profile contains an `isHeadingUp` boolean that differs from the current state, `toggleHeadingMode()` is called to restore the heading orientation.
-6. If the profile contains an `isWeatherOverlayOn` boolean that differs from the current state, `toggleWeatherOverlay()` is called to activate or deactivate the RainViewer precipitation radar overlay accordingly.
+4. **POI overlay is fully reset before restoring the profile state:** `stopPoiWatchdog()` and `clearTimeout(poiMinimizeTimer)` are called, `isPoiOverlayOn` is set to `false`, all POI markers are removed from both maps via `removeAllPoiMarkers()`, `lastPoiRefreshPoint` is reset to `null`, and the POI button and panel are cleared of their `.active` / `.visible` / `.minimized` CSS classes. This ensures a clean slate before applying the profile's saved POI configuration.
+5. If the profile contains an `is3DMode` boolean that differs from the current state, `toggle3DMap()` is called to switch the map view accordingly.
+6. If the profile contains an `isHeadingUp` boolean that differs from the current state, `toggleHeadingMode()` is called to restore the heading orientation.
 7. If the profile contains a `theme` value that differs from the current `currentTheme`, `toggleTheme()` is called to switch the UI to the saved Light/Dark mode.
-8. The modal is closed automatically.
+8. If the profile contains an `isWeatherOverlayOn` boolean that differs from the current state, `toggleWeatherOverlay()` is called to activate or deactivate the RainViewer precipitation radar overlay accordingly.
+9. **POI state is restored from the profile snapshot:** The `poiTypeEnabled` object is merged key-by-key from `p.poiTypeEnabled`, the `.poi-panel-item` CSS classes are updated to match, `savePoiPrefs()` is called to sync `localStorage`, and — if at least one POI type was enabled in the profile — `isPoiOverlayOn` is set to `true`, the POI button and panel are activated, `startPoiMinimizeTimer()` and `startPoiWatchdog()` are started, and a full POI fetch is performed asynchronously for all enabled types.
+10. The modal is closed automatically.
 
 ### 🖥️ UI Entry Point
 
 The profiles modal is accessible from the **🚘 button** in the application header. The modal contains:
 
-- A scrollable list of saved profile cards, each showing the profile name and a compact summary (`Weight · Battery · GPS · Map mode / Heading mode · Weather overlay · Theme`), along with **Load**, **Overwrite**, and **Delete** action buttons.
+- A scrollable list of saved profile cards, each showing the profile name and a compact summary (`Weight · Battery · GPS · Map mode / Heading mode · Weather overlay · enabled POI layers · Theme`), along with **Load**, **Overwrite**, and **Delete** action buttons.
 - A text input field (max 40 characters) and a **💾 Save** button to persist the active configuration under a new name.
+
+#### 🗂️ Profile Card — POI Display
+
+In the Profiles modal, each profile card renders the enabled POI layers as labeled lines beneath the other profile metadata:
+
+```
+┌─────────────────────────────────────────────┐
+│  🚗 My EV Profile                           │
+│  Weight: 1850 Kg  Battery: 75 kWh           │
+│  GPS: 5 s  Map: 🌍 / 🧭  Weather: On       │
+│  POI: 🚧 Road Closures                      │  ← only enabled layers shown
+│  POI: ⚡ EV Charging                        │
+│  Theme: 🌙 Dark                             │
+└─────────────────────────────────────────────┘
+```
+
+If **no POI layers are enabled** in a profile, the card displays `POI: **None**` instead of individual layer lines.
 
 ---
 
@@ -1021,6 +1060,8 @@ Both the 2D and 3D MapLibre instances select their vector tile style based on th
 | `poiMarkersMap2d` | `Object` | Per-type marker arrays for the 2D map, keyed by `poiId` |
 | `poiMarkersMap3d` | `Object` | Per-type marker arrays for the 3D map, keyed by `poiId` |
 | `poiTypeEnabled` | `Object` | Per-type boolean flags tracking which POI layers are toggled on by the user |
+| `poiMinimizeTimer` | `number \| null` | `setTimeout` handle for the POI panel auto-minimize; `null` when not running |
+| `poiWatchdogTimer` | `number \| null` | `setTimeout` handle for the POI watchdog loop; `null` when stopped |
 | `window._importStartMarker` | `maplibregl.Marker \| null` | Start (`S`) endpoint marker on the 2D map; set by `placeImportMarkers()` after a file import |
 | `window._importEndMarker` | `maplibregl.Marker \| null` | End (`E`) endpoint marker on the 2D map; set by `placeImportMarkers()` after a file import |
 | `window._importStartMarker3d` | `maplibregl.Marker \| null` | Start (`S`) endpoint marker on the 3D map; set by `placeImportMarkers()` after a file import |
@@ -1203,9 +1244,9 @@ Four POI layer types are defined in the `POI_TYPES` constant array:
 
 | ID | 🏷️ Label | Emoji | 🎨 Color | 🌐 Source | Notes |
 |---|---|---|---|---|---|
-| `road_closure` | Road Closure | 🚧 | `#ff6f00` | OSM Overpass | Barriers, jersey barriers, highway=construction, active construction ways |
 | `mobile_patrol` | Mobile Patrol | 👮 | `#1565c0` | Waze Live Map | Filters `POLICE`-type alerts from the Waze georss alerts feed |
 | `speed_camera` | Speed Camera | 📷 | `#c62828` | OSM Overpass | `highway=speed_camera`, `enforcement=maxspeed`, `man_made=speed_camera` |
+| `road_closure` | Road Closure | 🚧 | `#ff6f00` | OSM Overpass | Barriers, jersey barriers, highway=construction, active construction ways |
 | `ev_charging` | EV Charging | ⚡ | `#2e7d32` | OSM Overpass | `amenity=charging_station` nodes and ways |
 
 ### 🌐 Data Sources & API Endpoints
@@ -1341,6 +1382,335 @@ Both `fetchOsmPoi` and `fetchWazeMobilePatrols` detect HTTP 429 responses and th
 
 ---
 
+## 🗂️ POI Panel Minimize & Expand
+
+To avoid cluttering the map area during normal driving, the POI layer-selection panel includes an **auto-minimize** feature. After a configurable inactivity timeout, the panel collapses to a small icon; a click anywhere on the collapsed panel restores it to full size.
+
+### ⏱️ Auto-Minimize Timer
+
+The timer is managed by `startPoiMinimizeTimer()`. Every time the user interacts with the POI panel — opening it, toggling a layer, or having a profile loaded that activates POI — the timer is reset:
+
+```javascript
+function startPoiMinimizeTimer() {
+    clearTimeout(poiMinimizeTimer);
+    poiMinimizeTimer = setTimeout(function() {
+        var panel = document.getElementById('poiPanel');
+        if (panel && panel.classList.contains('visible')) {
+            panel.classList.add('minimized');
+        }
+    }, 5000);
+}
+```
+
+| ⚙️ Property | 📋 Value |
+|---|---|
+| Timeout duration | **5 000 ms** (5 seconds) of inactivity |
+| Trigger condition | Panel must have the `.visible` class at the moment the timer fires |
+| CSS effect | Adds `.minimized` class to `#poiPanel` — collapses the panel to a 30×30 px icon showing `🚩` |
+| Timer handle | `poiMinimizeTimer` — a `number \| null` module-level variable |
+
+The timer is **reset** (cleared and restarted) in every call to `startPoiMinimizeTimer()`, which is invoked from:
+
+| 📍 Call Site | 🔁 When |
+|---|---|
+| `togglePoiOverlay()` — **On** branch | POI overlay is first activated |
+| `togglePoiType(poiId)` | User clicks any POI layer row |
+| `loadProfile(name)` | Profile with enabled POI layers is loaded |
+
+The timer is **cleared without restarting** (`clearTimeout(poiMinimizeTimer)`) in:
+- `stopPoiWatchdog()` / `closeProfilesModal()` / `loadProfile()` — before the panel state is reset to ensure no stale minimization fires after a full POI reset.
+
+### 🔓 Expand on Click
+
+When the panel is in the minimized state, a click on it calls `expandPoiPanel()`:
+
+```javascript
+function expandPoiPanel() {
+    var panel = document.getElementById('poiPanel');
+    if (panel && panel.classList.contains('minimized')) {
+        panel.classList.remove('minimized');
+        startPoiMinimizeTimer();  // restart the 5-second countdown
+    }
+}
+```
+
+The click listener that triggers `expandPoiPanel()` is attached once per overlay activation — inside both `togglePoiOverlay()` and `loadProfile()` — using an inline `addEventListener`:
+
+```javascript
+poiPanel.addEventListener('click', function(e) {
+    if (poiPanel.classList.contains('minimized')) {
+        e.stopPropagation();
+        expandPoiPanel();
+    }
+});
+```
+
+`e.stopPropagation()` prevents the click from bubbling to the map layer and accidentally triggering a map interaction while the panel is collapsed.
+
+### 🎨 CSS States
+
+The `#poiPanel` element transitions through three visual states via CSS class combinations:
+
+| 🏷️ CSS Classes | 👁️ Visual State | 📐 Dimensions |
+|---|---|---|
+| *(no classes)* | 🚫 Hidden — overlay is off | `display: none` |
+| `.visible` | 📋 Expanded — full layer list visible | min-width: 172 px, auto height |
+| `.visible .minimized` | 🚩 Collapsed — icon only | 30×30 px, content hidden, shows `🚩` via `::after` pseudo-element |
+
+---
+
+## 🐕 POI Watchdog System
+
+The POI Watchdog is a **background self-healing mechanism** that monitors the POI marker state and automatically re-fetches and re-plots markers if they are detected as missing. This covers edge cases where markers fail to appear due to map style reloads, WebGL context loss, or race conditions during map mode switching.
+
+### 🔍 Detection Logic
+
+The watchdog uses two helper predicates:
+
+#### `hasAnyPoiEnabled()` — Are Any POI Layers Toggled On?
+
+```javascript
+function hasAnyPoiEnabled() {
+    for (var id in poiTypeEnabled) {
+        if (poiTypeEnabled[id]) return true;
+    }
+    return false;
+}
+```
+
+Returns `true` if at least one POI type has its toggle set to `true` in `poiTypeEnabled`.
+
+#### `areSelectedPoiMarkersPlotted()` — Are All Enabled Layers Actually Visible?
+
+```javascript
+function areSelectedPoiMarkersPlotted() {
+    var activeMap = is3DMode ? map3d : map;
+    var store = getPoiStore(activeMap || map);
+    if (!store) return true;
+    var anyEnabled = false;
+    for (var id in poiTypeEnabled) {
+        if (poiTypeEnabled[id]) {
+            anyEnabled = true;
+            if (!store[id] || store[id].length === 0) return false;
+        }
+    }
+    return !anyEnabled || true;
+}
+```
+
+Inspects the marker store for the currently active map. Returns `false` if any enabled POI layer has an **empty or absent** marker array — indicating that markers should exist but don't. Returns `true` if all enabled layers have at least one marker, or if no layers are enabled.
+
+### ⏱️ Watchdog Timer Loop
+
+The watchdog is managed by two functions:
+
+#### `startPoiWatchdog()`
+
+```javascript
+function startPoiWatchdog() {
+    stopPoiWatchdog();
+    poiWatchdogTimer = setTimeout(async function() {
+        if (!isPoiOverlayOn) return;
+        if (hasAnyPoiEnabled() && !areSelectedPoiMarkersPlotted()) {
+            await forceReplotSelectedPoi();
+            poiWatchdogTimer = setTimeout(arguments.callee, POI_WATCHDOG_EXTENDED_MS);
+        } else {
+            poiWatchdogTimer = setTimeout(arguments.callee, POI_WATCHDOG_INTERVAL_MS);
+        }
+    }, POI_WATCHDOG_INTERVAL_MS);
+}
+```
+
+| ⚙️ Constant | 📋 Value | 📖 Description |
+|---|---|---|
+| `POI_WATCHDOG_INTERVAL_MS` | `5 000` ms | Normal polling interval — checks every 5 seconds when markers look fine |
+| `POI_WATCHDOG_EXTENDED_MS` | `900 000` ms | Extended interval (15 minutes) — used after a successful force-replot to avoid hammering the API |
+
+**Decision logic at each tick:**
+
+```
+isPoiOverlayOn?
+  ├── No  → exit (watchdog stops itself)
+  └── Yes → hasAnyPoiEnabled() AND !areSelectedPoiMarkersPlotted()?
+              ├── Yes (markers missing) → forceReplotSelectedPoi() → reschedule at EXTENDED
+              └── No  (markers present) → reschedule at INTERVAL
+```
+
+#### `stopPoiWatchdog()`
+
+```javascript
+function stopPoiWatchdog() {
+    if (poiWatchdogTimer) {
+        clearTimeout(poiWatchdogTimer);
+        poiWatchdogTimer = null;
+    }
+}
+```
+
+Cancels the pending `setTimeout` and resets `poiWatchdogTimer` to `null`. Called whenever the POI overlay is turned off, a profile is loaded (before re-initializing POI state), or the app is cleaning up POI state.
+
+### 🔧 Force Replot — `forceReplotSelectedPoi()`
+
+When the watchdog detects missing markers, it calls `forceReplotSelectedPoi()`, which performs a full refresh cycle:
+
+```javascript
+async function forceReplotSelectedPoi() {
+    if (!isPoiOverlayOn || isPoiLoading) return;
+    var refMap = (is3DMode && map3d && map3d.isStyleLoaded()) ? map3d : map;
+    if (!refMap || !refMap.isStyleLoaded()) return;
+
+    setPoiLoading(true, false);
+    var rateLimitHit = false;
+    try {
+        removeAllPoiMarkers(map);
+        removeAllPoiMarkers(map3d);
+        for (var i = 0; i < POI_TYPES.length; i++) {
+            var poi = POI_TYPES[i];
+            if (!poiTypeEnabled[poi.id]) continue;
+            try {
+                var points = await fetchPointsForPoi(poi, refMap);
+                placePoiMarkersOnMap(map, poi, points);
+                if (map3d) placePoiMarkersOnMap(map3d, poi, points);
+            } catch(e) {
+                if (e.isRateLimit) { rateLimitHit = true; break; }
+            }
+        }
+        if (!rateLimitHit) {
+            var center = refMap.getCenter();
+            lastPoiRefreshPoint = { lat: center.lat, lon: center.lng };
+        }
+    } finally {
+        if (rateLimitHit) {
+            setPoiLoading(true, true);
+            setTimeout(function() { setPoiLoading(false); }, 3000);
+        } else {
+            setPoiLoading(false);
+        }
+    }
+}
+```
+
+The function:
+1. 🛑 Bails out if a fetch is already in progress (`isPoiLoading`) or the overlay is off.
+2. 🗑️ Clears all existing markers from both map instances via `removeAllPoiMarkers()`.
+3. 🌐 Fetches fresh data for every **enabled** POI type from the appropriate API.
+4. 📍 Places fresh markers on both 2D and 3D maps.
+5. 🔄 Updates `lastPoiRefreshPoint` to the current map center.
+6. ⚠️ On rate-limit error, displays the `⛔ POI fetching delayed!` label for 3 seconds before clearing it.
+
+### 🚀 Start / Stop Triggers
+
+| 📍 Action | 🔁 Effect on Watchdog |
+|---|---|
+| `togglePoiOverlay()` — **On** | `startPoiWatchdog()` — begins monitoring |
+| `togglePoiOverlay()` — **Off** | `stopPoiWatchdog()` — stops monitoring |
+| `loadProfile(name)` — **before** state reset | `stopPoiWatchdog()` — ensures clean state |
+| `loadProfile(name)` — **after** state restore (if POI enabled) | `startPoiWatchdog()` — resumes monitoring with restored state |
+
+---
+
+## 🔁 POI Map Synchronization
+
+When the user switches between 2D and 3D map modes while the POI overlay is active, Trip Master automatically **synchronizes the existing POI markers** from the currently active map instance to the newly activated one. This avoids a full re-fetch from the network on every map mode switch.
+
+### ⚙️ `syncPoiMarkersToMap(sourceMap, targetMap)`
+
+```javascript
+function syncPoiMarkersToMap(sourceMap, targetMap) {
+    if (!isPoiOverlayOn || !sourceMap || !targetMap) return;
+    var sourceStore = getPoiStore(sourceMap);
+    if (!sourceStore) return;
+    POI_TYPES.forEach(function(poi) {
+        if (!poiTypeEnabled[poi.id]) return;
+        var sourceMarkers = sourceStore[poi.id];
+        if (!sourceMarkers || sourceMarkers.length === 0) return;
+        var points = sourceMarkers.map(function(m) {
+            var ll = m.getLngLat();
+            var popup = m.getPopup();
+            var popupHtml = popup ? popup.getHTML() : '';
+            var nameMatch = popupHtml.match(/<span[^>]*>([^<]*)<\/span>/);
+            return { lat: ll.lat, lon: ll.lng, name: nameMatch ? nameMatch[1] : null };
+        });
+        removePoiMarkersForType(targetMap, poi.id);
+        placePoiMarkersOnMap(targetMap, poi, points);
+    });
+}
+```
+
+**Behavior:**
+
+1. 🚦 No-ops if the overlay is off, or if either map reference is null.
+2. 🔍 For each **enabled** POI type, reads the existing marker positions and popup names from `sourceMap`'s marker store.
+3. 🗑️ Removes any stale markers of that type from `targetMap`.
+4. 📍 Re-places fresh markers on `targetMap` at the same positions, reconstructing the popup HTML from the extracted name.
+
+This means the user sees **zero loading delay** when toggling the map mode — markers are cloned in-memory from one instance to the other rather than re-fetched from the API.
+
+### 🔄 Call Sites
+
+| 📍 Trigger | 🗺️ `sourceMap` | 🎯 `targetMap` |
+|---|---|---|
+| `toggle3DMap()` — **2D → 3D** (3D map already initialized) | `map` (2D) | `map3d` (3D) |
+| `toggle3DMap()` — **3D → 2D** | `map3d` (3D) | `map` (2D) |
+| `setup3DMap()` — on 3D map `load` event (first 3D activation) | `map` (2D) | `map3d` (3D) |
+
+> 💡 **Note:** On the **first** 3D activation, `setup3DMap()` calls `syncPoiMarkersToMap(map, map3d)` inside the `map3d.on('load', ...)` handler — after the new map instance is fully ready — ensuring markers are placed on a loaded WebGL context. On **subsequent** activations, `toggle3DMap()` calls `syncPoiMarkersToMap` directly since the 3D map is already initialized.
+
+---
+
+## 🔀 POI Overlay Switch on Map Mode Change
+
+In addition to synchronizing markers, when the user switches between 2D and 3D modes while the POI overlay is active, `toggle3DMap()` calls `switchPoiOverlay()` to refresh the overlay on the newly active map. This handles the case where the newly visible map may have stale or missing data due to the mode switch.
+
+### ⚙️ `switchPoiOverlay()`
+
+```javascript
+async function switchPoiOverlay() {
+    if (isPoiOverlayOn) {
+        var refMap = (is3DMode && map3d && map3d.isStyleLoaded()) ? map3d : map;
+        if (!refMap || !refMap.isStyleLoaded()) return;
+
+        setPoiLoading(true, false);
+        var rateLimitHit = false;
+        try {
+            for (var i = 0; i < POI_TYPES.length; i++) {
+                var poi = POI_TYPES[i];
+                if (!poiTypeEnabled[poi.id]) continue;
+                try {
+                    var points = await fetchPointsForPoi(poi, refMap);
+                    placePoiMarkersOnMap(map, poi, points);
+                    if (map3d) placePoiMarkersOnMap(map3d, poi, points);
+                } catch(e) {
+                    if (e.isRateLimit) { rateLimitHit = true; break; }
+                }
+            }
+            if (!rateLimitHit) {
+                var center = refMap.getCenter();
+                lastPoiRefreshPoint = { lat: center.lat, lon: center.lng };
+            }
+        } finally {
+            if (rateLimitHit) {
+                setPoiLoading(true, true);
+                setTimeout(function() { setPoiLoading(false); }, 3000);
+            } else {
+                setPoiLoading(false);
+            }
+        }
+    }
+}
+```
+
+**Key differences from `forceReplotSelectedPoi()`:**
+
+| 🔧 Aspect | `switchPoiOverlay()` | `forceReplotSelectedPoi()` |
+|---|---|---|
+| 🗑️ Clears existing markers first | ❌ No — places on top of existing | ✅ Yes — full clear then replot |
+| 🚦 Guards against `isPoiLoading` | ❌ No | ✅ Yes |
+| 📍 Trigger | Map mode switch (`toggle3DMap`) | Watchdog detects missing markers |
+| 🎯 Purpose | Ensure freshest data on mode switch | Self-heal after a display failure |
+
+---
+
 ## 💾 POI Preference Persistence
 
 Trip Master automatically **saves and restores** the per-layer toggle state of the POI overlay across page reloads and sessions, using the browser's `localStorage` API. No account, no server, and no cookies are required — all data lives entirely in the local browser storage of the device.
@@ -1436,18 +1806,18 @@ The value written to `localStorage` under `tripmaster_poi_prefs` is a JSON-seria
 
 ```json
 {
-  "road_closure": true,
   "mobile_patrol": false,
   "speed_camera": true,
+  "road_closure": true,
   "ev_charging": false
 }
 ```
 
 | 🔑 Key | 🏷️ POI Layer | ✅ `true` | ❌ `false` |
 |---|---|---|---|
-| `road_closure` | 🚧 Road Closures | Layer toggled ON | Layer toggled OFF |
 | `mobile_patrol` | 👮 Mobile Patrols | Layer toggled ON | Layer toggled OFF |
 | `speed_camera` | 📷 Speed Cameras | Layer toggled ON | Layer toggled OFF |
+| `road_closure` | 🚧 Road Closures | Layer toggled ON | Layer toggled OFF |
 | `ev_charging` | ⚡ EV Charging | Layer toggled ON | Layer toggled OFF |
 
 > 💡 **Note:** Persisted preferences record only **which layers the user had enabled**, not the live marker data itself. Markers are always re-fetched from the live APIs (Overpass / Waze) when the overlay is activated after a page reload — the saved state simply pre-checks the correct layer toggles in the POI Panel.
@@ -1460,7 +1830,7 @@ The value written to `localStorage` under `tripmaster_poi_prefs` is a JSON-seria
 |---|---|---|
 | 🖱️ User toggles an individual POI layer | POI Panel checkbox click | `togglePoiType(poiId)` |
 | 📂 User loads a saved User Profile | Profile modal → load action | `loadProfile(name)` |
-| 🔄 User overwrites a saved User Profile | Profile modal → overwrite action | `overwriteProfile(name)` (via `savePoiPrefs` called inside `loadProfile`) |
+| 🔄 User overwrites a saved User Profile | Profile modal → overwrite action | `overwriteProfile(name)` |
 
 ### 🔗 Integration with User Profiles
 
@@ -1480,23 +1850,6 @@ profiles[name] = {
 ```
 
 When the profile is **loaded**, the POI snapshot is merged back into the live `poiTypeEnabled` object and immediately persisted to `localStorage` via `savePoiPrefs()`, so both storage locations stay in sync.
-
-#### 🗂️ Profile Card — POI Display
-
-In the Profiles modal, each profile card renders the enabled POI layers as labeled lines beneath the other profile metadata:
-
-```
-┌─────────────────────────────────────────────┐
-│  🚗 My EV Profile                           │
-│  Weight: 1850 Kg  Battery: 75 kWh           │
-│  GPS: 5 s  Map: 🌍 / 🧭  Weather: On       │
-│  POI: 🚧 Road Closures                      │  ← only enabled layers shown
-│  POI: ⚡ EV Charging                        │
-│  Theme: 🌙 Dark                             │
-└─────────────────────────────────────────────┘
-```
-
-If **no POI layers are enabled** in a profile, the card displays `POI: **None**` instead of individual layer lines.
 
 ### 🧹 Clearing Persisted POI Preferences
 
