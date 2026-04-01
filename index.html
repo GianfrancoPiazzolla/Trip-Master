@@ -1172,7 +1172,7 @@
 </div>
 
 <script>
-    let pollInterval = null, tripTimer = null;
+    let pollInterval = null, tripTimer = null, autosaveInterval = null;
     let totalDistance = 0, totalRegenWh = 0, totalConsumedWh = 0, lastPoint = null;
     let map, pathLine, altChart, consChart, energyChart, speedChart;
     let startTime = null, tripSeconds = 0;
@@ -1199,6 +1199,7 @@
         setupSegmentedControl();
         updateBattery();
         loadPoiPrefs();
+        restoreLastSettings();
 
         window.onclick = function(event) {
             if (event.target == document.getElementById('infoModal')) toggleModal(false);
@@ -2211,14 +2212,79 @@
         pollInterval = setInterval(() => {
             navigator.geolocation.getCurrentPosition(updateLocation, null, { enableHighAccuracy: true });
         }, intervalMs);
+        autosaveInterval = setInterval(saveLastSettings, 60000);
     }
 
     function stopTracking() {
         if (pollInterval) clearInterval(pollInterval);
         if (tripTimer) clearInterval(tripTimer);
+        if (autosaveInterval) clearInterval(autosaveInterval);
+        autosaveInterval = null;
         document.getElementById('btnStart').disabled = false;
         document.getElementById('btnStart').classList.remove('active');
         document.getElementById('btnStop').disabled = true;
+        saveLastSettings();
+    }
+
+    const LAST_SETTINGS_KEY = 'tripmaster_last_settings';
+
+    function saveLastSettings() {
+        var settings = {
+            vehicleWeight: document.getElementById('vehicleWeight').value,
+            windSpeed: document.getElementById('windSpeed').value,
+            gpsPolling: document.getElementById('gpsPolling').value,
+            batteryCapacity: document.getElementById('batteryCapacity').value,
+            currentSoc: document.getElementById('socInput').value,
+            isHeadingUp: isHeadingUp,
+            is3DMode: is3DMode,
+            poiTypeEnabled: Object.assign({}, poiTypeEnabled),
+            isWeatherOverlayOn: isWeatherOverlayOn,
+            theme: currentTheme
+        };
+        localStorage.setItem(LAST_SETTINGS_KEY, JSON.stringify(settings));
+    }
+
+    function restoreLastSettings() {
+        var raw;
+        try { raw = localStorage.getItem(LAST_SETTINGS_KEY); } catch(e) { return; }
+        if (!raw) return;
+        var s;
+        try { s = JSON.parse(raw); } catch(e) { return; }
+
+        if (s.vehicleWeight !== undefined) document.getElementById('vehicleWeight').value = s.vehicleWeight;
+        if (s.windSpeed !== undefined) document.getElementById('windSpeed').value = s.windSpeed;
+        if (s.batteryCapacity !== undefined) document.getElementById('batteryCapacity').value = s.batteryCapacity;
+        if (s.currentSoc !== undefined) {
+            document.getElementById('socInput').value = s.currentSoc;
+            updateBattery();
+        }
+
+        if (s.gpsPolling !== undefined) {
+            document.querySelectorAll('#gpsPollingGroup .segment').forEach(function(btn) {
+                btn.classList.remove('active');
+                if (btn.getAttribute('data-value') === String(s.gpsPolling)) btn.classList.add('active');
+            });
+            document.getElementById('gpsPolling').value = s.gpsPolling;
+        }
+
+        if (s.theme && s.theme !== currentTheme) toggleTheme();
+
+        if (typeof s.isHeadingUp === 'boolean' && s.isHeadingUp !== isHeadingUp) toggleHeadingMode();
+
+        if (typeof s.is3DMode === 'boolean' && s.is3DMode !== is3DMode) toggle3DMap();
+
+        if (typeof s.isWeatherOverlayOn === 'boolean' && s.isWeatherOverlayOn !== isWeatherOverlayOn) toggleWeatherOverlay();
+
+        if (s.poiTypeEnabled && typeof s.poiTypeEnabled === 'object') {
+            Object.keys(poiTypeEnabled).forEach(function(key) {
+                if (typeof s.poiTypeEnabled[key] === 'boolean') poiTypeEnabled[key] = s.poiTypeEnabled[key];
+            });
+            Object.keys(poiTypeEnabled).forEach(function(key) {
+                var item = document.querySelector('.poi-panel-item[data-poi="' + key + '"]');
+                if (item) item.classList.toggle('active', poiTypeEnabled[key]);
+            });
+            savePoiPrefs();
+        }
     }
 
     function updateLocation(pos) {
