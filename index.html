@@ -1201,6 +1201,8 @@
         loadPoiPrefs();
         restoreLastSettings();
 
+        autosaveInterval = setInterval(saveLastSettings, 60000);
+
         window.onclick = function(event) {
             if (event.target == document.getElementById('infoModal')) toggleModal(false);
             if (event.target == document.getElementById('summaryModal')) document.getElementById('summaryModal').style.display='none';
@@ -2212,14 +2214,11 @@
         pollInterval = setInterval(() => {
             navigator.geolocation.getCurrentPosition(updateLocation, null, { enableHighAccuracy: true });
         }, intervalMs);
-        autosaveInterval = setInterval(saveLastSettings, 60000);
     }
 
     function stopTracking() {
         if (pollInterval) clearInterval(pollInterval);
         if (tripTimer) clearInterval(tripTimer);
-        if (autosaveInterval) clearInterval(autosaveInterval);
-        autosaveInterval = null;
         document.getElementById('btnStart').disabled = false;
         document.getElementById('btnStart').classList.remove('active');
         document.getElementById('btnStop').disabled = true;
