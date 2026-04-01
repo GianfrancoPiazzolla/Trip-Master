@@ -677,9 +677,9 @@ function saveLastSettings() {
 
 `saveLastSettings()` is called automatically in **two distinct scenarios**:
 
-#### 🔄 1. Periodic Autosave During Active Tracking
+#### 🔄 1. Periodic Autosave
 
-When the user starts a trip via `startTracking()`, a repeating timer is created alongside the GPS poll interval:
+When the app starts, a repeating timer is created alongside the GPS poll interval:
 
 ```javascript
 autosaveInterval = setInterval(saveLastSettings, 60000);
@@ -689,20 +689,18 @@ autosaveInterval = setInterval(saveLastSettings, 60000);
 |---|---|
 | ⏱️ Timer interval | **60 000 ms** (once every 60 seconds) |
 | 📦 Timer handle | `autosaveInterval` — a `number \| null` module-level variable |
-| 🚦 Lifecycle | Created by `startTracking()` · Cleared by `stopTracking()` |
+| 🚦 Lifecycle | Created by `initializeSystem()` |
 
 This ensures that even during a long trip, configuration changes made mid-journey (e.g., switching to 3D mode, toggling a POI layer, or enabling the weather overlay) are periodically captured without any user action.
 
 #### 🛑 2. Immediate Save on Trip Stop
 
-When the user stops a trip via `stopTracking()`, `saveLastSettings()` is called **synchronously** — immediately before the autosave interval is cleared:
+When the user stops a trip via `stopTracking()`, `saveLastSettings()` is called **synchronously** — immediately:
 
 ```javascript
 function stopTracking() {
     if (pollInterval)      clearInterval(pollInterval);
     if (tripTimer)         clearInterval(tripTimer);
-    if (autosaveInterval)  clearInterval(autosaveInterval);
-    autosaveInterval = null;
     // ...
     saveLastSettings();  // ← immediate final snapshot
 }
@@ -716,7 +714,7 @@ This guarantees that the **final state** of all settings at the exact moment the
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
-│                        startTracking()                           │
+│                        initializeSystem()                           │
 │   autosaveInterval = setInterval(saveLastSettings, 60 000 ms)    │
 │                            │                                     │
 │                     every 60 seconds                             │
@@ -725,7 +723,6 @@ This guarantees that the **final state** of all settings at the exact moment the
 │                 └─► localStorage.setItem(LAST_SETTINGS_KEY, …)   │
 ├──────────────────────────────────────────────────────────────────┤
 │                        stopTracking()                            │
-│         clearInterval(autosaveInterval) → autosaveInterval=null  │
 │                            │                                     │
 │                     immediately after                            │
 │                            ▼                                     │
@@ -794,7 +791,7 @@ This ordering guarantees that all subsystems (map, charts, segmented controls, b
 
 | 🔤 Variable | 📋 Type | 📖 Description |
 |---|---|---|
-| `autosaveInterval` | `number \| null` | Handle of the `setInterval` timer that fires `saveLastSettings` every 60 s during an active trip; `null` when no trip is in progress |
+| `autosaveInterval` | `number \| null` | Handle of the `setInterval` timer that fires `saveLastSettings` every 60 s during an active trip; `null` otherwise |
 
 ---
 
