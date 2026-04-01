@@ -29,26 +29,27 @@
 8. [Weather Integration](#-weather-integration)
 9. [Configuration Parameters](#️-configuration-parameters)
 10. [User Profiles](#-user-profiles)
-11. [UI & Theming](#-ui--theming)
-12. [Progressive Web App](#-progressive-web-app)
-13. [Stat Cards Reference](#-stat-cards-reference)
-14. [Trip Summary Modal](#-trip-summary--efficiency-scoring)
-15. [Map Modes: 2D & 3D](#️-map-modes-2d--3d)
-16. [GPS Position Marker](#-gps-position-marker)
-17. [Start & End Markers](#-start--end-markers)
-18. [Map Zoom Controls](#-map-zoom-controls)
-19. [Map Fullscreen Mode](#️-map-fullscreen-mode)
-20. [Heading Mode](#-heading-mode)
-21. [POI Overlay](#-poi-overlay)
-22. [POI Panel Minimize & Expand](#-poi-panel-minimize--expand)
-23. [POI Watchdog System](#-poi-watchdog-system)
-24. [POI Map Synchronization](#-poi-map-synchronization)
-25. [POI Overlay Switch on Map Mode Change](#-poi-overlay-switch-on-map-mode-change)
-26. [POI Preference Persistence](#-poi-preference-persistence)
-27. [Responsive Layout Adaptations](#-responsive-layout-adaptations)
-28. [Dependencies](#-dependencies)
-29. [Getting Started](#-getting-started)
-30. [Mathematical Reference](#-mathematical-reference)
+11. [Last Settings Auto-Save](#-last-settings-auto-save)
+12. [UI & Theming](#-ui--theming)
+13. [Progressive Web App](#-progressive-web-app)
+14. [Stat Cards Reference](#-stat-cards-reference)
+15. [Trip Summary Modal](#-trip-summary--efficiency-scoring)
+16. [Map Modes: 2D & 3D](#️-map-modes-2d--3d)
+17. [GPS Position Marker](#-gps-position-marker)
+18. [Start & End Markers](#-start--end-markers)
+19. [Map Zoom Controls](#-map-zoom-controls)
+20. [Map Fullscreen Mode](#️-map-fullscreen-mode)
+21. [Heading Mode](#-heading-mode)
+22. [POI Overlay](#-poi-overlay)
+23. [POI Panel Minimize & Expand](#-poi-panel-minimize--expand)
+24. [POI Watchdog System](#-poi-watchdog-system)
+25. [POI Map Synchronization](#-poi-map-synchronization)
+26. [POI Overlay Switch on Map Mode Change](#-poi-overlay-switch-on-map-mode-change)
+27. [POI Preference Persistence](#-poi-preference-persistence)
+28. [Responsive Layout Adaptations](#-responsive-layout-adaptations)
+29. [Dependencies](#-dependencies)
+30. [Getting Started](#-getting-started)
+31. [Mathematical Reference](#-mathematical-reference)
 
 ---
 
@@ -480,7 +481,7 @@ A **segmented control** with five options:
 
 ### 🔋 Battery Capacity & SOC
 
-- **Battery kWh:** Numeric field with `−` / `+` stepper buttons — total usable pack energy [kWh]. The stepper calls `stepValue('batteryCapacity', ±1)` to increment or decrement by 1 kWh while respecting the field's `min`/`max` bounds.
+- **Battery kWh:** Numeric field with `−` / `+` stepper buttons — total usable pack energy [kWh]. The stepper calls `stepValue('batteryCapacity', ±0.5)` to increment or decrement by 0.5 kWh while respecting the field's `min`/`max` bounds.
 - **SOC %:** Numeric input (0–100) with `−` / `+` stepper buttons. Each stepper call invokes `stepValue('socInput', ±1)` followed immediately by `updateBattery()` to keep the visual battery bar, the percentage label, and the range estimate in sync. The SOC percentage and the battery bar are **dynamically updated in real time** at every GPS fix by `updateBatterySoC()`: the function computes the net energy drawn (`totalConsumedWh − totalRegenWh`), derives the new SOC from the initial charge level set at trip start (`initialSoc`), writes the result back to `#socInput`, and calls `updateBattery()` to refresh both the bar fill width and the color-coded state, keeping the visual indicator always consistent with the actual energy consumption.
 
 The `stepValue(inputId, delta)` helper respects the `min` and `max` attributes of the target input and clamps the result before writing it back, preventing out-of-range values.
@@ -601,6 +602,227 @@ In the Profiles modal, each profile card renders the enabled POI layers as label
 ```
 
 If **no POI layers are enabled** in a profile, the card displays `POI: **None**` instead of individual layer lines.
+
+---
+
+## 💾 Last Settings Auto-Save
+
+Trip Master automatically **saves and restores the last active configuration** across page reloads using the browser's `localStorage` API. This mechanism is independent of the named [User Profiles](#-user-profiles) system and operates silently in the background — no user interaction is needed.
+
+Unlike User Profiles (which capture named snapshots including POI state, map mode, and theme), the Last Settings Auto-Save is a **lightweight, always-on autosave** focused on the core operational parameters the driver was using when the session ended.
+
+---
+
+### 🗝️ Storage Key
+
+| 🔑 Constant | 📋 Value | 📖 Purpose |
+|---|---|---|
+| `LAST_SETTINGS_KEY` | `'tripmaster_last_settings'` | `localStorage` key under which the current configuration snapshot is serialized as a JSON string |
+
+```javascript
+const LAST_SETTINGS_KEY = 'tripmaster_last_settings';
+```
+
+---
+
+### 📦 Saved Parameters
+
+Each autosave snapshot captures **nine** configuration fields:
+
+| 🔑 Field | 🏷️ Source | 📋 Type | 📖 Description |
+|---|---|---|---|
+| `vehicleWeight` | `#vehicleWeight` input value | `string` | Vehicle + occupant mass [Kg] |
+| `windSpeed` | `#windSpeed` input value | `string` | Headwind speed [Km/h] |
+| `gpsPolling` | `#gpsPolling` hidden input value | `string` | GPS polling interval [s] |
+| `batteryCapacity` | `#batteryCapacity` input value | `string` | Total usable battery capacity [kWh] |
+| `currentSoc` | `#socInput` input value | `string` | State of Charge at save time [%] |
+| `isHeadingUp` | `isHeadingUp` runtime variable | `boolean` | Whether heading-up map orientation was active |
+| `is3DMode` | `is3DMode` runtime variable | `boolean` | Whether the 3D map view was active |
+| `poiTypeEnabled` | `poiTypeEnabled` runtime object | `Object` | Shallow copy (`Object.assign`) of POI layer toggle states |
+| `isWeatherOverlayOn` | `isWeatherOverlayOn` runtime variable | `boolean` | Whether the RainViewer precipitation radar overlay was active |
+
+> 💡 **Note:** Temperature efficiency (`η_T`) is **not** included in the autosave — it represents a real-time environmental condition and is expected to be re-set manually at each session start.
+
+---
+
+### ⚙️ `saveLastSettings()` — Write to Storage
+
+```javascript
+function saveLastSettings() {
+    var settings = {
+        vehicleWeight:      document.getElementById('vehicleWeight').value,
+        windSpeed:          document.getElementById('windSpeed').value,
+        gpsPolling:         document.getElementById('gpsPolling').value,
+        batteryCapacity:    document.getElementById('batteryCapacity').value,
+        currentSoc:         document.getElementById('socInput').value,
+        isHeadingUp:        isHeadingUp,
+        is3DMode:           is3DMode,
+        poiTypeEnabled:     Object.assign({}, poiTypeEnabled),
+        isWeatherOverlayOn: isWeatherOverlayOn
+    };
+    localStorage.setItem(LAST_SETTINGS_KEY, JSON.stringify(settings));
+}
+```
+
+- 📸 Collects the live values from all relevant DOM inputs and runtime state variables at the moment of the call.
+- 🔒 The `poiTypeEnabled` object is **shallow-copied** via `Object.assign({}, poiTypeEnabled)` to prevent future mutations of the live object from affecting the stored snapshot.
+- 💽 Serializes the complete settings object to a JSON string and writes it to `localStorage` under `LAST_SETTINGS_KEY`, overwriting any previous entry.
+
+---
+
+### ⏰ Invocation Triggers
+
+`saveLastSettings()` is called automatically in **two distinct scenarios**:
+
+#### 🔄 1. Periodic Autosave During Active Tracking
+
+When the user starts a trip via `startTracking()`, a repeating timer is created alongside the GPS poll interval:
+
+```javascript
+autosaveInterval = setInterval(saveLastSettings, 60000);
+```
+
+| ⚙️ Property | 📋 Value |
+|---|---|
+| ⏱️ Timer interval | **60 000 ms** (once every 60 seconds) |
+| 📦 Timer handle | `autosaveInterval` — a `number \| null` module-level variable |
+| 🚦 Lifecycle | Created by `startTracking()` · Cleared by `stopTracking()` |
+
+This ensures that even during a long trip, configuration changes made mid-journey (e.g., switching to 3D mode, toggling a POI layer, or enabling the weather overlay) are periodically captured without any user action.
+
+#### 🛑 2. Immediate Save on Trip Stop
+
+When the user stops a trip via `stopTracking()`, `saveLastSettings()` is called **synchronously** — immediately before the autosave interval is cleared:
+
+```javascript
+function stopTracking() {
+    if (pollInterval)      clearInterval(pollInterval);
+    if (tripTimer)         clearInterval(tripTimer);
+    if (autosaveInterval)  clearInterval(autosaveInterval);
+    autosaveInterval = null;
+    // ...
+    saveLastSettings();  // ← immediate final snapshot
+}
+```
+
+This guarantees that the **final state** of all settings at the exact moment the user stops tracking is always persisted — even if less than 60 seconds have elapsed since the last periodic autosave.
+
+---
+
+### 🔁 Invocation Flow Diagram
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│                        startTracking()                           │
+│   autosaveInterval = setInterval(saveLastSettings, 60 000 ms)    │
+│                            │                                     │
+│                     every 60 seconds                             │
+│                            ▼                                     │
+│                   saveLastSettings()                             │
+│                 └─► localStorage.setItem(LAST_SETTINGS_KEY, …)   │
+├──────────────────────────────────────────────────────────────────┤
+│                        stopTracking()                            │
+│         clearInterval(autosaveInterval) → autosaveInterval=null  │
+│                            │                                     │
+│                     immediately after                            │
+│                            ▼                                     │
+│                   saveLastSettings()                             │
+│                 └─► localStorage.setItem(LAST_SETTINGS_KEY, …)   │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### 📂 `restoreLastSettings()` — Read and Apply on Boot
+
+On page load, `initializeSystem()` calls `restoreLastSettings()` to rehydrate all saved settings back into the UI:
+
+```javascript
+function restoreLastSettings() {
+    var raw;
+    try { raw = localStorage.getItem(LAST_SETTINGS_KEY); } catch(e) { return; }
+    if (!raw) return;
+    var s;
+    try { s = JSON.parse(raw); } catch(e) { return; }
+    // ... restore fields
+}
+```
+
+The restore sequence applies each field conditionally — only if the field is present in the stored object — using the following atomic steps:
+
+| 🔢 Step | 📋 Action |
+|---|---|
+| 1️⃣ | `vehicleWeight` input value is set directly from `s.vehicleWeight` |
+| 2️⃣ | `windSpeed` input value is set directly from `s.windSpeed` |
+| 3️⃣ | `batteryCapacity` input value is set; then `updateBattery()` is called to refresh the SOC bar and recompute the range estimate |
+| 4️⃣ | `socInput` value is set from `s.currentSoc`; then `updateBattery()` is called immediately after |
+| 5️⃣ | The GPS polling segmented control iterates all `.segment` buttons in `#gpsPollingGroup`, removes the `active` class from all, and re-applies it to the button matching `s.gpsPolling`; the hidden `#gpsPolling` input is also updated |
+| 6️⃣ | If `s.isHeadingUp` is a `boolean` that differs from the current `isHeadingUp` state, `toggleHeadingMode()` is called |
+| 7️⃣ | If `s.is3DMode` is a `boolean` that differs from the current `is3DMode` state, `toggle3DMap()` is called |
+| 8️⃣ | If `s.isWeatherOverlayOn` is a `boolean` that differs from the current `isWeatherOverlayOn` state, `toggleWeatherOverlay()` is called |
+| 9️⃣ | If `s.poiTypeEnabled` is an object, each key is merged into the live `poiTypeEnabled` object (only strict `boolean` values); the `.poi-panel-item` CSS classes are updated accordingly; `savePoiPrefs()` is called to keep the dedicated POI preferences storage in sync |
+
+> ⚠️ **Note:** Steps 6–8 use **diff-based toggling**: the restore function only calls the toggle function if the stored state differs from the current default — preventing double-invocations that would result in no net change.
+
+---
+
+### 🔗 Integration with `initializeSystem()`
+
+`restoreLastSettings()` is called as the **last step** of `initializeSystem()`, which runs once on page load:
+
+```javascript
+function initializeSystem() {
+    setupMap();
+    setupCharts();
+    setupSegmentedControl();
+    updateBattery();
+    loadPoiPrefs();
+    restoreLastSettings();  // ← applied last, after all subsystems are ready
+    // ...
+}
+```
+
+This ordering guarantees that all subsystems (map, charts, segmented controls, battery widget, POI panel) are fully initialized **before** the saved state is applied — preventing restore calls from targeting unready DOM elements or uninitialized map instances.
+
+---
+
+### 📦 State Variable
+
+| 🔤 Variable | 📋 Type | 📖 Description |
+|---|---|---|
+| `autosaveInterval` | `number \| null` | Handle of the `setInterval` timer that fires `saveLastSettings` every 60 s during an active trip; `null` when no trip is in progress |
+
+---
+
+### 🗺️ Relationship with Other Persistence Mechanisms
+
+Trip Master uses **three distinct persistence mechanisms** in `localStorage`, each with a different scope and purpose:
+
+| 🔑 Storage Key | 🏷️ Mechanism | 📖 Scope | 🔄 When Written |
+|---|---|---|---|
+| `tripmaster_last_settings` | 💾 Last Settings Auto-Save | Operational params + transient runtime state | Every 60 s during trip + on trip stop |
+| `tripmaster_profiles` | 🚘 User Profiles | Named snapshots (no `windSpeed`, no `currentSoc`) | On explicit Save / Overwrite action |
+| `tripmaster_poi_prefs` | 📌 POI Preferences | POI layer toggle state only | On every POI toggle, profile load, profile overwrite |
+
+> 💡 **Note:** The `poiTypeEnabled` object is persisted by **all three mechanisms** simultaneously (as part of `saveLastSettings`, inside User Profiles, and independently via `savePoiPrefs`). When `restoreLastSettings()` applies a POI snapshot, it explicitly calls `savePoiPrefs()` to keep `tripmaster_poi_prefs` in sync with the restored state.
+
+---
+
+### 🧹 Clearing Persisted Last Settings
+
+The autosaved settings can be cleared manually from the browser's developer tools console:
+
+```javascript
+// Clear only the last-settings autosave
+localStorage.removeItem('tripmaster_last_settings');
+
+// Clear all Trip Master persistent data
+localStorage.removeItem('tripmaster_last_settings');
+localStorage.removeItem('tripmaster_profiles');
+localStorage.removeItem('tripmaster_poi_prefs');
+```
+
+> ⚠️ **Note:** After clearing `tripmaster_last_settings`, the app will start with its compiled-in defaults on the next page load — no vehicle weight, no wind speed override, GPS polling at 5 s, SOC at 100%, 2D map mode, north-up orientation, weather overlay off, and all POI layers at their last `tripmaster_poi_prefs` state (which is restored independently by `loadPoiPrefs()`).
 
 ---
 
