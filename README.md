@@ -627,7 +627,7 @@ const LAST_SETTINGS_KEY = 'tripmaster_last_settings';
 
 ### 📦 Saved Parameters
 
-Each autosave snapshot captures **nine** configuration fields:
+Each autosave snapshot captures **ten** configuration fields:
 
 | 🔑 Field | 🏷️ Source | 📋 Type | 📖 Description |
 |---|---|---|---|
@@ -640,6 +640,7 @@ Each autosave snapshot captures **nine** configuration fields:
 | `is3DMode` | `is3DMode` runtime variable | `boolean` | Whether the 3D map view was active |
 | `poiTypeEnabled` | `poiTypeEnabled` runtime object | `Object` | Shallow copy (`Object.assign`) of POI layer toggle states |
 | `isWeatherOverlayOn` | `isWeatherOverlayOn` runtime variable | `boolean` | Whether the RainViewer precipitation radar overlay was active |
+| `theme` | `currentTheme` runtime variable | `string` | Active UI theme at save time — `"light"` ☀️ or `"dark"` 🌙 |
 
 > 💡 **Note:** Temperature efficiency (`η_T`) is **not** included in the autosave — it represents a real-time environmental condition and is expected to be re-set manually at each session start.
 
@@ -658,13 +659,15 @@ function saveLastSettings() {
         isHeadingUp:        isHeadingUp,
         is3DMode:           is3DMode,
         poiTypeEnabled:     Object.assign({}, poiTypeEnabled),
-        isWeatherOverlayOn: isWeatherOverlayOn
+        isWeatherOverlayOn: isWeatherOverlayOn,
+        theme:              currentTheme
     };
     localStorage.setItem(LAST_SETTINGS_KEY, JSON.stringify(settings));
 }
 ```
 
 - 📸 Collects the live values from all relevant DOM inputs and runtime state variables at the moment of the call.
+- 🎨 The `theme` field captures the value of `currentTheme` (`"light"` ☀️ or `"dark"` 🌙) so that the active UI appearance is seamlessly restored on the next page load.
 - 🔒 The `poiTypeEnabled` object is **shallow-copied** via `Object.assign({}, poiTypeEnabled)` to prevent future mutations of the live object from affecting the stored snapshot.
 - 💽 Serializes the complete settings object to a JSON string and writes it to `localStorage` under `LAST_SETTINGS_KEY`, overwriting any previous entry.
 
@@ -757,12 +760,13 @@ The restore sequence applies each field conditionally — only if the field is p
 | 3️⃣ | `batteryCapacity` input value is set; then `updateBattery()` is called to refresh the SOC bar and recompute the range estimate |
 | 4️⃣ | `socInput` value is set from `s.currentSoc`; then `updateBattery()` is called immediately after |
 | 5️⃣ | The GPS polling segmented control iterates all `.segment` buttons in `#gpsPollingGroup`, removes the `active` class from all, and re-applies it to the button matching `s.gpsPolling`; the hidden `#gpsPolling` input is also updated |
-| 6️⃣ | If `s.isHeadingUp` is a `boolean` that differs from the current `isHeadingUp` state, `toggleHeadingMode()` is called |
-| 7️⃣ | If `s.is3DMode` is a `boolean` that differs from the current `is3DMode` state, `toggle3DMap()` is called |
-| 8️⃣ | If `s.isWeatherOverlayOn` is a `boolean` that differs from the current `isWeatherOverlayOn` state, `toggleWeatherOverlay()` is called |
-| 9️⃣ | If `s.poiTypeEnabled` is an object, each key is merged into the live `poiTypeEnabled` object (only strict `boolean` values); the `.poi-panel-item` CSS classes are updated accordingly; `savePoiPrefs()` is called to keep the dedicated POI preferences storage in sync |
+| 6️⃣ | 🎨 If `s.theme` is a non-empty string that differs from the current `currentTheme`, `toggleTheme()` is called to restore the saved ☀️ Light / 🌙 Dark appearance |
+| 7️⃣ | If `s.isHeadingUp` is a `boolean` that differs from the current `isHeadingUp` state, `toggleHeadingMode()` is called |
+| 8️⃣ | If `s.is3DMode` is a `boolean` that differs from the current `is3DMode` state, `toggle3DMap()` is called |
+| 9️⃣ | If `s.isWeatherOverlayOn` is a `boolean` that differs from the current `isWeatherOverlayOn` state, `toggleWeatherOverlay()` is called |
+| 🔟 | If `s.poiTypeEnabled` is an object, each key is merged into the live `poiTypeEnabled` object (only strict `boolean` values); the `.poi-panel-item` CSS classes are updated accordingly; `savePoiPrefs()` is called to keep the dedicated POI preferences storage in sync |
 
-> ⚠️ **Note:** Steps 6–8 use **diff-based toggling**: the restore function only calls the toggle function if the stored state differs from the current default — preventing double-invocations that would result in no net change.
+> ⚠️ **Note:** Steps 6–9 use **diff-based toggling**: the restore function only calls the toggle function if the stored state differs from the current default — preventing double-invocations that would result in no net change.
 
 ---
 
@@ -804,7 +808,7 @@ Trip Master uses **three distinct persistence mechanisms** in `localStorage`, ea
 | `tripmaster_profiles` | 🚘 User Profiles | Named snapshots (no `windSpeed`, no `currentSoc`) | On explicit Save / Overwrite action |
 | `tripmaster_poi_prefs` | 📌 POI Preferences | POI layer toggle state only | On every POI toggle, profile load, profile overwrite |
 
-> 💡 **Note:** The `poiTypeEnabled` object is persisted by **all three mechanisms** simultaneously (as part of `saveLastSettings`, inside User Profiles, and independently via `savePoiPrefs`). When `restoreLastSettings()` applies a POI snapshot, it explicitly calls `savePoiPrefs()` to keep `tripmaster_poi_prefs` in sync with the restored state.
+> 💡 **Note:** The `poiTypeEnabled` object is persisted by **all three mechanisms** simultaneously (as part of `saveLastSettings`, inside User Profiles, and independently via `savePoiPrefs`). When `restoreLastSettings()` applies a POI snapshot, it explicitly calls `savePoiPrefs()` to keep `tripmaster_poi_prefs` in sync with the restored state. The `theme` 🎨 field is persisted by both the Last Settings Auto-Save and User Profiles, but is **not** tracked by the dedicated POI preferences key.
 
 ---
 
@@ -822,7 +826,7 @@ localStorage.removeItem('tripmaster_profiles');
 localStorage.removeItem('tripmaster_poi_prefs');
 ```
 
-> ⚠️ **Note:** After clearing `tripmaster_last_settings`, the app will start with its compiled-in defaults on the next page load — no vehicle weight, no wind speed override, GPS polling at 5 s, SOC at 100%, 2D map mode, north-up orientation, weather overlay off, and all POI layers at their last `tripmaster_poi_prefs` state (which is restored independently by `loadPoiPrefs()`).
+> ⚠️ **Note:** After clearing `tripmaster_last_settings`, the app will start with its compiled-in defaults on the next page load — no vehicle weight, no wind speed override, GPS polling at 5 s, SOC at 100%, 2D map mode, north-up orientation, weather overlay off, ☀️ light theme, and all POI layers at their last `tripmaster_poi_prefs` state (which is restored independently by `loadPoiPrefs()`).
 
 ---
 
