@@ -1,4 +1,4 @@
-const CACHE_NAME = 'trip-master-v1';
+const CACHE_NAME = 'trip-master-cache-v1';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -8,16 +8,15 @@ const ASSETS_TO_CACHE = [
   'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png'
 ];
 
-// Installazione: salvataggio file in cache
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(ASSETS_TO_CACHE);
     })
   );
+  self.skipWaiting();
 });
 
-// Attivazione e pulizia vecchie cache
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
@@ -26,8 +25,6 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Strategia di fetch: Network First, falling back to cache
-// Fondamentale per le mappe e i dati in tempo reale
 self.addEventListener('fetch', (event) => {
   event.respondWith(
     fetch(event.request).catch(() => {
