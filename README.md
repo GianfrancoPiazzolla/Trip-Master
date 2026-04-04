@@ -46,10 +46,20 @@
 25. [POI Map Synchronization](#-poi-map-synchronization)
 26. [POI Overlay Switch on Map Mode Change](#-poi-overlay-switch-on-map-mode-change)
 27. [POI Preference Persistence](#-poi-preference-persistence)
-28. [Responsive Layout Adaptations](#-responsive-layout-adaptations)
-29. [Dependencies](#-dependencies)
-30. [Getting Started](#-getting-started)
-31. [Mathematical Reference](#-mathematical-reference)
+28. [🔋 Battery SOC Auto-Update](#-battery-soc-auto-update)
+29. [🔵 Blue GPS Position Marker](#-gps-position-marker)
+30. [⏱️ Trip Time Display](#-trip-time-display)
+31. [🌙 Dark Theme Map Filter](#-dark-theme-map-filter)
+32. [🔘 Stepper Buttons](#-stepper-buttons)
+33. [✨ Action Button Shine Effect](#-action-button-shine-effect)
+34. [🌦️ Weather Pictogram Mapping](#️-weather-pictogram-mapping)
+35. [🧭 Wind Direction Display](#-wind-direction-display)
+36. [🖱️ Modal Click-Outside-To-Close](#-modal-click-outside-to-close)
+37. [📊 Energy Balance Chart Gradient Bars](#-energy-balance-chart-gradient-bars)
+38. [📐 Responsive Layout Adaptations](#-responsive-layout-adaptations)
+39. [📦 Dependencies](#-dependencies)
+40. [🚀 Getting Started](#-getting-started)
+41. [📐 Mathematical Reference](#-mathematical-reference)
 
 ---
 
@@ -240,7 +250,7 @@ All charts are rendered via **Chart.js v4** with `animation: false` for zero-lat
 - **X-axis:** Distance [Km]
 - **Y-axis:** Instantaneous consumption [Wh/Km]
 - **Color:** `#ff1744` (danger red) — high consumption is immediately visible
-- A **zero-baseline annotation** is drawn at $y = 0$ via `chartjs-plugin-annotation`
+- A **zero-baseline annotation** is drawn at $y = 0$ via `chartjs-plugin-annotation` (v3.0.1), making it easy to visually distinguish energy-consuming segments (above the line) from energy-recovering segments (below the line)
 
 ### 🏎️ Speed Profile
 
@@ -560,7 +570,7 @@ Each profile snapshot captures **eight** configuration fields:
 | `renderProfilesList()` | Iterates all saved profiles and injects them as `profile-item` cards into the modal; shows an empty-state message when no profiles exist |
 | `saveProfile()` | Reads the profile name input and all eight config fields (including `poiTypeEnabled` snapshot), merges them into the profiles object, and persists via `saveProfiles()` |
 | `loadProfile(name)` | Restores all configuration fields; see [Load Behavior](#-load-behavior) for the full atomic sequence |
-| `overwriteProfile(name)` | Overwrites an existing profile with the **full** current configuration — including `vehicleWeight`, `batteryKwh`, `gpsPolling`, `theme`, `is3DMode`, `isHeadingUp`, `isWeatherOverlayOn`, and the current `poiTypeEnabled` snapshot — without renaming; updates the profiles list in place |
+| `overwriteProfile(name)` | Overwrites an existing profile with the **full** current configuration — including `vehicleWeight`, `batteryKwh`, `gpsPolling`, `theme`, `is3DMode`, `isHeadingUp`, `isWeatherOverlayOn`, and the current `poiTypeEnabled` snapshot — without renaming; updates the profiles list in place. The overwrite button is styled in **yellow/warning** (`var(--warning)`) with a **sync/refresh SVG icon** (two curved arrows), positioned between the blue Load button and the red Delete button in each profile card. |
 | `deleteProfile(name)` | Removes the named key from the profiles object and refreshes the list |
 | `escapeHtml(str)` | Sanitizes a string for safe HTML injection by replacing `&`, `<`, `>`, `"`, and `'` with their corresponding HTML entities; used internally by `renderProfilesList()` |
 
@@ -2091,6 +2101,239 @@ localStorage.removeItem('tripmaster_poi_prefs');
 
 ---
 
+## 🔋 Battery SOC Auto-Update
+
+During an active trip, the **Current SoC (%)** input and the visual battery bar are **automatically updated in real time** at every GPS fix by `updateBatterySoC()`.
+
+### ⚙️ How It Works
+
+```javascript
+function updateBatterySoC() {
+    const cap = parseFloat(document.getElementById('batteryCapacity').value) || 100;
+    const netWh = totalConsumedWh - totalRegenWh;
+    const newSoc = Math.min(100, Math.max(0, initialSoc - (netWh / (cap * 1000)) * 100));
+    document.getElementById('socInput').value = Math.round(newSoc);
+    updateBattery();
+}
+```
+
+| Step | Description |
+|---|---|
+| 1️⃣ | **Capture initial SoC** — at trip start (`startTracking()`), the current SOC value is stored in `initialSoc` |
+| 2️⃣ | **Compute net energy** — `netWh = totalConsumedWh − totalRegenWh` (energy consumed minus energy recovered) |
+| 3️⃣ | **Derive new SoC** — subtract the net energy percentage from the initial SoC, clamped to [0, 100] |
+| 4️⃣ | **Update UI** — writes the rounded value back to `#socInput` and calls `updateBattery()` to refresh the visual bar and range estimate |
+
+### 📊 SOC Bar Color States
+
+The battery fill bar transitions through three visual states based on the current SOC percentage:
+
+| SOC Range | CSS Class | Gradient |
+|---|---|---|
+| $> 30\%$ | *(none)* | 🟢 `#00e676` → `#69f0ae` |
+| $15\% < \text{SOC} \leq 30\%$ | `.warn` | 🟡 `#ffd740` → `#ffee58` |
+| $\leq 15\%$ | `.critical` | 🔴 `#ff1744` → `#ff5252` |
+
+The bar also features a **sheen overlay** (`linear-gradient(180deg, rgba(255,255,255,0.3) → transparent)`) on the top 40% for a glass-like effect, and a **positive terminal nub** on the right side (via `::after` pseudo-element).
+
+### 🔄 Call Chain
+
+`updateBatterySoC()` is called from `updateLocation()` at every valid GPS step (after the 5 m displacement filter), immediately after `computeRangeEstimate()` and before the POI refresh check.
+
+---
+
+## 🔵 Blue GPS Position Marker
+
+A custom **blue dot marker** tracks the real-time GPS position on both the 2D and 3D maps.
+
+### 🎨 Marker Appearance
+
+Created by `createBlueMarkerElement()`, the marker is a 14×14 px circular `<div>` with:
+- **Radial gradient** background: `#64b5f6` (light blue) at 35%/35% → `#1565c0` (dark blue)
+- **White border** (2 px solid)
+- **Double shadow**: outer ring (`0 0 0 2px rgba(41,182,246,0.5)`) + drop shadow (`0 2px 6px rgba(0,0,0,0.35)`)
+- **`pointer-events: none`** — clicks pass through to the map
+
+### 📍 Marker Lifecycle
+
+| Map | Variable | Initialization |
+|---|---|---|
+| **2D** | `positionMarker` | Created in `map.on('load')` handler inside `setupMap()` — placed at the first GPS fix or at Rome fallback |
+| **3D** | `positionMarker3d` | Created in `map3d.on('load')` handler inside `setup3DMap()` — placed at the map center on first 3D activation |
+
+At each GPS step, both markers are repositioned via `marker.setLngLat([longitude, latitude])`.
+
+### 🗺️ Fallback Behavior
+
+If the Geolocation API fails or is unavailable, the marker is placed at **Rome, Italy** (41.8919, 12.5113) as a default position, and weather data is fetched for Rome coordinates.
+
+---
+
+## ⏱️ Trip Time Display
+
+The **Trip Time** stat card (`#tripTimeDisplay`) shows a running wall-clock timer formatted as `HH:MM:SS`.
+
+### ⚙️ Implementation
+
+```javascript
+tripTimer = setInterval(() => {
+    tripSeconds++;
+    const h = String(Math.floor(tripSeconds / 3600)).padStart(2, '0');
+    const m = String(Math.floor((tripSeconds % 3600) / 60)).padStart(2, '0');
+    const s = String(tripSeconds % 60).padStart(2, '0');
+    document.getElementById('tripTimeDisplay').innerText = `${h}:${m}:${s}`;
+}, 1000);
+```
+
+- Fires every **1 second** independently of the GPS polling interval
+- Uses `padStart(2, '0')` for zero-padded formatting
+- Resets to `00:00:00` when a new trip is started via `startTracking()`
+- The `tripSeconds` counter is also used in the Trip Summary modal to display the total trip duration
+
+---
+
+## 🌙 Dark Theme Map Filter
+
+In dark mode, both the 2D and 3D map instances receive a **CSS brightness filter**:
+
+```css
+[data-theme="dark"] #map     { filter: brightness(0.7); }
+[data-theme="dark"] #map3d   { filter: brightness(0.7); }
+```
+
+This dims the OpenFreeMap `liberty` style tiles by 30%, creating a moody dark cartography effect that matches the overall dark theme without requiring a separate dark tile style. The filter is applied at the CSS level — no JavaScript map style change is needed for the dark map appearance.
+
+---
+
+## 🔘 Stepper Buttons
+
+The **Battery Capacity (kWh)** and **Current SoC (%)** inputs feature **− / + stepper buttons** for quick manual adjustment without typing.
+
+### ⚙️ `stepValue(inputId, delta)` Helper
+
+```javascript
+function stepValue(inputId, delta) {
+    const input = document.getElementById(inputId);
+    const min = input.min !== '' ? parseFloat(input.min) : -Infinity;
+    const max = input.max !== '' ? parseFloat(input.max) : Infinity;
+    let val = (parseFloat(input.value) || 0) + delta;
+    val = Math.min(max, Math.max(min, val));
+    input.value = val;
+}
+```
+
+| Input | Step Delta | Additional Action |
+|---|---|---|
+| `batteryCapacity` | ±0.5 | None |
+| `socInput` | ±1 | Calls `updateBattery()` immediately to sync the visual bar and range estimate |
+
+The helper respects the `min`/`max` HTML attributes and clamps the result, preventing out-of-range values. Stepper buttons are 28×28 px with a hover lift effect (`translateY(-1px)`) and an active press effect (`translateY(0)`).
+
+---
+
+## ✨ Action Button Shine Effect
+
+The **Start Trip** and **Stop Trip** buttons feature a **sweeping shine animation** on hover:
+
+```css
+.action-btn::after {
+    content: '';
+    position: absolute; top: 0; left: -100%; width: 60%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+    transition: left 0.4s ease;
+}
+.action-btn:hover:not(:disabled)::after { left: 140%; }
+```
+
+A semi-transparent white gradient sweeps across the button from left to right over 400ms. Additionally:
+- **Start button** has a 3D push-down effect (`box-shadow: 0 4px 0 #00912a`) that compresses on hover
+- **Stop button** has a matching red push-down effect (`box-shadow: 0 4px 0 #9b0000`)
+- When **active/disabled**, buttons dim to 60% opacity with a dark background and `cursor: not-allowed`
+
+---
+
+## 🌦️ Weather Pictogram Mapping
+
+The `getWeatherPictogram(code)` function maps **WMO weather codes** to emoji pictograms:
+
+| WMO Code(s) | Emoji | Condition |
+|---|---|---|
+| 0 | ☀️ | Clear sky |
+| 1 | 🌤️ | Mainly clear |
+| 2 | ⛅ | Partly cloudy |
+| 3 | ☁️ | Overcast |
+| 45 | 🌫️ | Fog |
+| 48 | 🌫️ | Depositing rime fog |
+| 51 | 🌦️ | Light drizzle |
+| 53 | 🌦️ | Moderate drizzle |
+| 55 | 🌦️ | Dense drizzle |
+| 56 | ❄️💧 | Light freezing drizzle |
+| 57 | ❄️💧 | Dense freezing drizzle |
+| 61 | 🌧️ | Slight rain |
+| 63 | 🌧️ | Moderate rain |
+| 65 | 🌧️ | Heavy rain |
+| 66 | ❄️🌧️ | Light freezing rain |
+| 67 | ❄️🌧️ | Heavy freezing rain |
+| 71 | ❄️ | Slight snow fall |
+| 73 | ❄️ | Moderate snow fall |
+| 75 | ❄️ | Heavy snow fall |
+| 77 | ❄️ | Snow grains |
+| 80 | 🌦️ | Slight rain showers |
+| 81 | 🌦️ | Moderate rain showers |
+| 82 | 🌧️ | Violent rain showers |
+| 85 | 🌨️ | Slight snow showers |
+| 86 | 🌨️ | Heavy snow showers |
+| 95 | ⛈️ | Thunderstorm |
+| 96 | ⛈️⚡ | Thunderstorm with slight hail |
+| 99 | ⛈️⚡ | Thunderstorm with heavy hail |
+| *(other)* | 🌡️ | Fallback for unmapped codes |
+
+---
+
+## 🧭 Wind Direction Display
+
+Wind direction is converted from degrees to a **cardinal direction with triple arrows**:
+
+```javascript
+function getWindDirection(degree) {
+    const directions = ['↑↑↑ N', '↗↗↗ NE', '→→→ E', '↘↘↘ SE', '↓↓↓ S', '↙↙↙ SW', '←←← W', '↖↖↖ NW'];
+    return directions[Math.round(degree / 45) % 8];
+}
+```
+
+The degree value is divided by 45 and rounded to the nearest octant, producing one of eight directional labels with enhanced visual arrows for quick recognition.
+
+---
+
+## 🖱️ Modal Click-Outside-To-Close
+
+All three modals (Info, Summary, Profiles) support **click-outside-to-close** via a global `window.onclick` handler in `initializeSystem()`:
+
+```javascript
+window.onclick = function(event) {
+    if (event.target == document.getElementById('infoModal')) toggleModal(false);
+    if (event.target == document.getElementById('summaryModal')) document.getElementById('summaryModal').style.display='none';
+    if (event.target == document.getElementById('profilesModal')) closeProfilesModal();
+};
+```
+
+The check `event.target == modalElement` ensures only clicks on the **backdrop overlay** (not on the modal content itself) trigger dismissal.
+
+---
+
+## 📊 Energy Balance Chart Gradient Bars
+
+The Energy Balance horizontal bar chart uses **directional linear gradients** for visual depth:
+
+| Bar | Gradient Direction | Colors |
+|---|---|---|
+| **Consumed** (red) | Right → Left | `rgba(255,23,68,0.95)` → `rgba(200,0,40,0.7)` |
+| **Recovered** (green) | Right → Left | `rgba(0,230,118,0.95)` → `rgba(0,180,90,0.7)` |
+
+The gradients are created dynamically via `ctx.chart.ctx.createLinearGradient(ctx.chart.width, 0, 0, 0)`, flowing from the bar tip (right) toward the origin (left), giving a "fading energy" visual metaphor. Bars also feature `borderRadius: 5` and `borderSkipped: false` for rounded corners on all sides.
+
+---
+
 ## 📐 Responsive Layout Adaptations
 
 Trip Master includes two `ResizeObserver`-based scripts that automatically adapt the UI layout to available screen space without requiring a page reload.
@@ -2140,7 +2383,7 @@ All dependencies are loaded from CDN — no `npm install` required.
 |---|---|---|---|
 | 🌐 MapLibre GL JS | `4.7.1` | WebGL-powered vector map engine for both 2D and 3D modes | unpkg |
 | 📊 Chart.js | `latest` | All real-time charts | jsDelivr |
-| 📌 chartjs-plugin-annotation | `3.0.1` | Zero-baseline line on charts | jsDelivr |
+| 📌 chartjs-plugin-annotation | `3.0.1` | Zero-baseline annotation line on Consumption chart | jsDelivr |
 | 🌦️ Open-Meteo API | — | Live weather data | Free REST API |
 | 🌍 OpenFreeMap Tiles | — | Vector map styles (`liberty`) for both 2D and 3D | OpenFreeMap CDN |
 | 🔤 Google Fonts (Syne) | — | UI typography | Google CDN |
