@@ -46,20 +46,22 @@
 25. [POI Map Synchronization](#-poi-map-synchronization)
 26. [POI Overlay Switch on Map Mode Change](#-poi-overlay-switch-on-map-mode-change)
 27. [POI Preference Persistence](#-poi-preference-persistence)
-28. [🔋 Battery SOC Auto-Update](#-battery-soc-auto-update)
-29. [🔵 Blue GPS Position Marker](#-gps-position-marker)
-30. [⏱️ Trip Time Display](#-trip-time-display)
-31. [🌙 Dark Theme Map Filter](#-dark-theme-map-filter)
-32. [🔘 Stepper Buttons](#-stepper-buttons)
-33. [✨ Action Button Shine Effect](#-action-button-shine-effect)
-34. [🌦️ Weather Pictogram Mapping](#️-weather-pictogram-mapping)
-35. [🧭 Wind Direction Display](#-wind-direction-display)
-36. [🖱️ Modal Click-Outside-To-Close](#-modal-click-outside-to-close)
-37. [📊 Energy Balance Chart Gradient Bars](#-energy-balance-chart-gradient-bars)
-38. [📐 Responsive Layout Adaptations](#-responsive-layout-adaptations)
-39. [📦 Dependencies](#-dependencies)
-40. [🚀 Getting Started](#-getting-started)
-41. [📐 Mathematical Reference](#-mathematical-reference)
+28. [Battery SOC Auto-Update](#-battery-soc-auto-update)
+29. [Blue GPS Position Marker](#-gps-position-marker)
+30. [Trip Time Display](#-trip-time-display)
+31. [Dark Theme Map Filter](#-dark-theme-map-filter)
+32. [Stepper Buttons](#-stepper-buttons)
+33. [Action Button Shine Effect](#-action-button-shine-effect)
+34. [Weather Pictogram Mapping](#️-weather-pictogram-mapping)
+35. [Wind Direction Display](#-wind-direction-display)
+36. [Modal Click-Outside-To-Close](#-modal-click-outside-to-close)
+37. [Energy Balance Chart Gradient Bars](#-energy-balance-chart-gradient-bars)
+38. [Energy Flow Dashboard](#️-energy-flow-dashboard)
+39. [Driving Style Analyzer](#-driving-style-analyzer)
+40. [Responsive Layout Adaptations](#-responsive-layout-adaptations)
+41. [Dependencies](#-dependencies)
+40. [Getting Started](#-getting-started)
+41. [Mathematical Reference](#-mathematical-reference)
 
 ---
 
@@ -311,6 +313,247 @@ where $P_{\max} = \max(P_{\text{rolling}},\ P_{\text{gravity}},\ P_{\text{aero}}
 
 ---
 
+## ⚡️ Energy Flow Dashboard
+
+Trip Master provides two complementary real-time visualizations that give drivers immediate insight into energy consumption: a **live energy flow diagram** showing power distribution between vehicle components, and a **color-coded heat map** applied directly on the route polyline to identify high-consumption segments at a glance.
+
+---
+
+### ⚡️ Live Energy Flow Diagram
+
+A **SVG-based live diagram** renders the instantaneous power flow between the battery, motor, wheels, HVAC system, and auxiliary loads. It is updated at every valid GPS fix via `updateEnergyFlow(instantPowerW, regenW, tempC)`.
+
+#### 📐 SVG Layout
+
+```
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                                                            │
+│   ┌─────────┐                                    ┌─────────┐               │
+│   │   🔋   │                                    │   🛞    │               │
+│   │Battery  │═══════⚡ Motor ══════►       c    │ Wheels  │               │
+│   │         │    (⚡ Motor Power W)             │         │               │
+│   │         │                                    │         │               │
+│   └────╬────┘                                    └─────────┘               │
+│        ║                                                                   │
+│        ║ ❄️ HVAC                                                          │
+│        ║ (❄️ HVAC Power W)                                                │
+│        ▼                                                                   │
+│   ┌─────────┐                                    ┌─────────┐               │
+│   │   ❄️    │                                   │   💡    │               │
+│   │ HVAC    │════════════════════════════════════│  Aux    │               │
+│   │         │                                    │  300W   │               │
+│   └─────────┘                                    └─────────┘               │
+│                                                                            │
+│   ↩ Regen (green arrow, when braking)                                     │
+│                                                                            │
+└────────────────────────────────────────────────────────────────────────────┘
+```
+
+#### 🔢 Energy Distribution Formulas
+
+| Component | Emoji | Formula | Description |
+|---|---|---|---|
+| 🔋 Battery | 🔋 | — | Source/sink node |
+| ⚡ Motor | ⚡ | `motorW = max(0, instantPowerW)` | Instantaneous power to motor [W] |
+| 🛞 Wheels | 🛞 | — | Output/mechanical node |
+| ❄️ HVAC | ❄️ | `hvacW = max(0, abs(tempC - 22) × 50)` | HVAC load — 50W per °C deviation from 22°C |
+| 💡 Aux | 💡 | `auxW = 300` | Fixed auxiliary load [W] (infotainment, lights, etc.) |
+| ↩ Regen | ↩ | `regenW = lastInstantPowerW < 0 ? abs(lastInstantPowerW) × 0.7 : 0` | Regenerative braking power [W] |
+
+#### 🎨 Flow Line Styling
+
+Flow lines use **linear gradients** whose thickness is proportional to power:
+
+```javascript
+// Motor flow line (Battery → Motor → Wheels)
+stroke-width = max(2, (motorW / totalDraw) × 6)
+
+// HVAC flow line (Battery → HVAC)
+stroke-width = max(1, (hvacW / totalDraw) × 4)
+
+// Regen arrow (Wheels → Battery, when braking)
+stroke-width = max(2, (regenW / totalDraw) × 6)
+// Includes SVG glow filter: <feGaussianBlur stdDeviation="2">
+```
+
+| Line | Gradient | Direction | Width Factor |
+|---|---|---|---|
+| 🔴 Motor | `#ff1744` → `#ff5252` | Left → Right | ×6 |
+| 🔵 HVAC | `#29b6f6` → `#0288d1` | Left → Right | ×4 |
+| 🟢 Regen | `#00e676` → `#69f0ae` | Right → Left (reverse!) | ×6 + glow |
+
+#### 🌙 Theme Adaptation
+
+All SVG colors adapt to the active UI theme:
+
+| Element | 🌙 Dark | ☀️ Light |
+|---|---|---|
+| Node background | `#1a2030` | `#e8eaed` |
+| Node border | `#2a3040` | `#d0d4da` |
+| Text color | `#e8edf2` | `#0d0d12` |
+| Subtext color | `#4a5568` | `#8892a0` |
+
+#### 🔄 Update Frequency
+
+`updateEnergyFlow()` is called from `updateFeatures()` at every valid GPS fix (after the 5 m displacement filter):
+
+---
+
+### 🗺️ Route Heat Map
+
+Each GPS segment is **individually colored** on the 2D map based on its instantaneous energy consumption, creating a continuous gradient that highlights efficient vs. energy-intensive segments at a glance.
+
+#### 🛠️ Implementation
+
+`updateRouteHeatMap(distKm, consWhKm)` adds each new segment as a separate GeoJSON LineString layer:
+
+```javascript
+// Each segment becomes its own source/layer pair
+map.addSource('route-seg-' + i, { type: 'geojson', data: { ... } });
+map.addLayer({
+    id: 'route-seg-lyr-' + i,
+    type: 'line',
+    source: 'route-seg-' + i,
+    paint: { 'line-color': color, 'line-width': 5, 'line-opacity': 0.9 }
+});
+```
+
+The original uniform route polyline (`trip-path-2d-layer`) is **hidden** while the heat map is active.
+
+#### 🎨 Heat Color Scale
+
+| Consumption (Wh/Km) | Color | Hex | Meaning |
+|---|---|---|---|
+| < 0 | 🔵 Blue | `#29b6f6` | Regenerative braking active |
+| 0 – 120 | 🟢 Green | `#00e676` | Highly efficient |
+| 120 – 180 | 🟢 Light green | `#69f0ae` | Efficient |
+| 180 – 250 | 🟡 Yellow | `#ffd740` | Moderate consumption |
+| 250 – 350 | 🟠 Orange | `#ff9100` | High consumption |
+| > 350 | 🔴 Red | `#ff1744` | Very high consumption |
+
+```javascript
+function getHeatColor(consWhKm) {
+    if (consWhKm < 0)   return '#29b6f6';  // 🔵 Regen
+    if (consWhKm < 120) return '#00e676';  // 🟢 Excellent
+    if (consWhKm < 180) return '#69f0ae';  // 🟢 Good
+    if (consWhKm < 250) return '#ffd740';  // 🟡 Moderate
+    if (consWhKm < 350) return '#ff9100';  // 🟠 High
+    return '#ff1744';                      // 🔴 Very high
+}
+```
+
+#### 📍 Visual Pattern
+
+The heat map reveals driving patterns instantly:
+- **Downhill stretches** → blue segments (energy recovered)
+- **Uphill climbs** → red/orange segments (high drain)
+- **Flat cruise** → green segments (efficient steady-state)
+- **City traffic** → mixed green/yellow (frequent stops, regen bursts)
+
+> 💡 **Note:** Segments accumulate for the entire trip duration. The heat map is not reset between GPS fixes — each segment is permanent and layered sequentially on the map.
+
+---
+
+## 🎯 Driving Style Analyzer
+
+Trip Master continuously evaluates driving behavior across **three independent dimensions** and computes an **overall Driving Score (0–100)**, displayed as both a set of progress bars and a semi-circular gauge.
+
+---
+
+### 🎯 Scoring Dimensions
+
+The `drivingStyle` state object tracks three scores simultaneously:
+
+```javascript
+let drivingStyle = {
+    accelScore:  100,    // Acceleration bias score
+    brakeScore:  100,    // Braking bias score
+    smoothScore: 100,    // Speed smoothness score
+    accelEvents: 0,      // Count of aggressive acceleration events
+    brakeEvents: 0,      // Count of hard braking events
+    speedVarSum: 0,      // Running sum of speed samples
+    speedSamples: 0,     // Number of speed samples
+    lastSpeedForAccel: 0 // Previous speed for delta calculation
+};
+```
+
+#### 📐 Scoring Algorithm
+
+| Score | Trigger | Penalty Formula | Notes |
+|---|---|---|---|
+| **Acceleration Bias** | `abs(Δspeed) > 15 km/h` | `accelScore -= abs(Δspeed) × 0.5` | Measures aggressive throttle usage |
+| **Braking Bias** | `Δspeed < 0` AND `abs(Δspeed) > 10 km/h` | `brakeScore -= abs(Δspeed) × 0.3` | Measures hard deceleration |
+| **Smoothness Bias** | Every sample | `smoothScore -= abs(speed - avgSpeed) × 0.05` | Measures speed consistency |
+
+**Natural recovery:** All scores slowly recover toward 100 over time:
+```javascript
+ds.accelScore  = Math.min(100, ds.accelScore  + 0.02);
+ds.brakeScore  = Math.min(100, ds.brakeScore  + 0.02);
+ds.smoothScore = Math.min(100, ds.smoothScore + 0.02);
+```
+
+**Overall Score:**
+```javascript
+overall = Math.round((accelScore + brakeScore + smoothScore) / 3);
+```
+
+#### 🏆 Score Badges
+
+| Overall Score | Badge | Color | Meaning |
+|---|---|---|---|
+| ≥ 80 | 🏆 **Excellent** | 🟢 `var(--primary)` | Smooth, efficient driving |
+| ≥ 60 | 👍 **Good** | 🟡 `var(--warning)` | Generally acceptable driving |
+| < 60 | ⚡ **Aggressive** | 🔴 `var(--danger)` | Heavy acceleration/braking |
+
+---
+
+### 📊 UI Components
+
+#### 📐 Driving Score Card Layout
+
+```
+┌───────────────────────────────────────────────────────────┐
+│  🎯 Driving Style Analyzer                               │
+│  ┌────────────────────────────────────┐  ┌─────────────┐  │
+│  │ Acceleration  ████████████░░  85   │  │    ╭───╮    │  │
+│  │ Braking       ██████████████  100  │  │   ╱ 82  ╲   │  │
+│  │ Smoothness    ████████░░░░░░  60   │  │  ╱ SCORE    │  │
+│  └────────────────────────────────────┘  └─────────────┘  │
+└───────────────────────────────────────────────────────────┘
+```
+
+| Element | ID | Description |
+|---|---|---|
+| Accel bar + value | `#dsAccelBar`, `#dsAccelVal` | Width = `accelScore%`, text = `score/100` |
+| Brake bar + value | `#dsBrakeBar`, `#dsBrakeVal` | Width = `brakeScore%`, text = `score/100` |
+| Smooth bar + value | `#dsSmoothBar`, `#dsSmoothVal` | Width = `smoothScore%`, text = `score/100` |
+| Badge | `#dsBadge` | Shows 🏆/👍/⚡ with color coding |
+| Gauge SVG | `#dsGaugeSvg` | Semi-circular arc gauge |
+
+#### 🎨 Gauge Visualization
+
+The **semi-circular SVG gauge** (`#dsGaugeSvg`, viewBox: 0 0 100 60) draws an arc from 180° to 360°:
+
+```javascript
+// Arc color based on score
+if (score >= 80) arcColor = '#00e676';  // 🟢 Green
+else if (score >= 60) arcColor = '#ffd740';  // 🟡 Yellow
+else arcColor = '#ff1744';  // 🔴 Red
+
+// Arc angle = (score / 100) × 180°
+const angle = (score / 100) * 180;
+```
+
+The gauge includes a **glow filter** (`#gaugeGlow`) for the score arc and uses `JetBrains Mono` for the numeric display.
+
+---
+
+### 🔄 Update Frequency
+
+`updateDrivingStyle(speedKmh)` is called from `updateFeatures()` at every valid GPS fix:
+
+---
+
 ## 🌡️ Weather Integration
 
 Trip Master provides two complementary weather visualization features: a **Weather Condition Panel** that displays real-time meteorological data fetched from Open-Meteo, and a **Weather Radar Overlay** that projects live precipitation radar tiles directly onto the 2D and 3D maps using the RainViewer API.
@@ -357,7 +600,7 @@ Each weather value is compared against its previous reading. Values that have **
 
 #### 🌡️ Automatic Thermal Efficiency Calibration
 
-On the first weather sync, `updateEfficiencyByTemp()` auto-selects the thermal efficiency factor $\eta_T$ based on the retrieved ambient temperature:
+On every weather sync (every ~2 km of travel), `updateEfficiencyByTemp()` auto-selects the thermal efficiency factor $\eta_T$ based on the retrieved ambient temperature, ensuring the energy model adapts to changing weather conditions throughout the trip:
 
 | Temperature Range | $\eta_T$ | Label |
 |---|---|---|
@@ -477,6 +720,13 @@ This factor reduces all energy estimates to account for reduced battery efficien
 - **Default:** 0 Km/h
 - **Role:** Feeds directly into $E_{\text{resistance}}$ as $0.8 \cdot v_w \cdot d / \eta_T$
 
+### ⚡️ Electricity Price
+
+- **Input:** Numeric field (`id="elecPrice"`)
+- **Default:** 0.20 €/kWh
+- **Role:** Used for calculating trip cost and comparing EV expenses against ICE vehicles. This value is **saved in EV profiles** alongside vehicle weight, battery capacity, and GPS polling interval, allowing users to maintain different electricity pricing assumptions per vehicle profile.
+- **Unit:** €/kWh
+
 ### ⏱️ GPS Polling Interval
 
 A **segmented control** with five options:
@@ -513,6 +763,7 @@ Profiles are serialized as a JSON object where each key is the user-defined prof
     "vehicleWeight": 2200,
     "gpsPolling": 5,
     "batteryKwh": 100,
+    "elecPrice": 0.30,
     "is3DMode": true,
     "isHeadingUp": true,
     "isWeatherOverlayOn": false,
@@ -528,6 +779,7 @@ Profiles are serialized as a JSON object where each key is the user-defined prof
     "vehicleWeight": 2400,
     "gpsPolling": 10,
     "batteryKwh": 100,
+    "elecPrice": 0.35,
     "is3DMode": false,
     "isHeadingUp": false,
     "isWeatherOverlayOn": true,
@@ -544,13 +796,14 @@ Profiles are serialized as a JSON object where each key is the user-defined prof
 
 ### 💾 Saved Parameters
 
-Each profile snapshot captures **eight** configuration fields:
+Each profile snapshot captures **nine** configuration fields:
 
 | Field | Source Element ID | Description |
 |---|---|---|
 | `vehicleWeight` | `vehicleWeight` | Vehicle + occupant mass [Kg] |
 | `gpsPolling` | `gpsPolling` | GPS polling interval [s] |
 | `batteryKwh` | `batteryCapacity` | Total usable battery capacity [kWh] |
+| `elecPrice` | `elecPrice` | Electricity price for cost calculations [€/kWh] |
 | `is3DMode` | `is3DMode` | Whether the 3D map view was active (`true` / `false`) |
 | `isHeadingUp` | `isHeadingUp` | Whether heading-up orientation was active (`true` / `false`) |
 | `isWeatherOverlayOn` | `isWeatherOverlayOn` | Whether the RainViewer precipitation radar overlay was active (`true` / `false`) |
@@ -568,9 +821,9 @@ Each profile snapshot captures **eight** configuration fields:
 | `openProfilesModal()` | Renders the profiles list and shows the profiles modal |
 | `closeProfilesModal()` | Hides the profiles modal |
 | `renderProfilesList()` | Iterates all saved profiles and injects them as `profile-item` cards into the modal; shows an empty-state message when no profiles exist |
-| `saveProfile()` | Reads the profile name input and all eight config fields (including `poiTypeEnabled` snapshot), merges them into the profiles object, and persists via `saveProfiles()` |
+| `saveProfile()` | Reads the profile name input and all nine config fields (including `poiTypeEnabled` snapshot), merges them into the profiles object, and persists via `saveProfiles()` |
 | `loadProfile(name)` | Restores all configuration fields; see [Load Behavior](#-load-behavior) for the full atomic sequence |
-| `overwriteProfile(name)` | Overwrites an existing profile with the **full** current configuration — including `vehicleWeight`, `batteryKwh`, `gpsPolling`, `theme`, `is3DMode`, `isHeadingUp`, `isWeatherOverlayOn`, and the current `poiTypeEnabled` snapshot — without renaming; updates the profiles list in place. The overwrite button is styled in **yellow/warning** (`var(--warning)`) with a **sync/refresh SVG icon** (two curved arrows), positioned between the blue Load button and the red Delete button in each profile card. |
+| `overwriteProfile(name)` | Overwrites an existing profile with the **full** current configuration — including `vehicleWeight`, `batteryKwh`, `elecPrice`, `gpsPolling`, `theme`, `is3DMode`, `isHeadingUp`, `isWeatherOverlayOn`, and the current `poiTypeEnabled` snapshot — without renaming; updates the profiles list in place. The overwrite button is styled in **yellow/warning** (`var(--warning)`) with a **sync/refresh SVG icon** (two curved arrows), positioned between the blue Load button and the red Delete button in each profile card. |
 | `deleteProfile(name)` | Removes the named key from the profiles object and refreshes the list |
 | `escapeHtml(str)` | Sanitizes a string for safe HTML injection by replacing `&`, `<`, `>`, `"`, and `'` with their corresponding HTML entities; used internally by `renderProfilesList()` |
 
@@ -580,14 +833,15 @@ When a profile is loaded via `loadProfile()`, the UI is updated atomically:
 
 1. `vehicleWeight` input value is set directly.
 2. `batteryCapacity` input value is set, then `updateBattery()` is called to refresh the SOC bar and recompute the range estimate.
-3. The GPS polling segmented control iterates all `.segment` buttons in `#gpsPollingGroup`, removes the `active` class from all of them, and re-applies it to the button whose `data-value` attribute matches the stored `gpsPolling` value. The hidden `#gpsPolling` input is also updated to keep it in sync.
-4. **POI overlay is fully reset before restoring the profile state:** `stopPoiWatchdog()` and `clearTimeout(poiMinimizeTimer)` are called, `isPoiOverlayOn` is set to `false`, all POI markers are removed from both maps via `removeAllPoiMarkers()`, `lastPoiRefreshPoint` is reset to `null`, and the POI button and panel are cleared of their `.active` / `.visible` / `.minimized` CSS classes. This ensures a clean slate before applying the profile's saved POI configuration.
-5. If the profile contains an `is3DMode` boolean that differs from the current state, `toggle3DMap()` is called to switch the map view accordingly.
-6. If the profile contains an `isHeadingUp` boolean that differs from the current state, `toggleHeadingMode()` is called to restore the heading orientation.
-7. If the profile contains a `theme` value that differs from the current `currentTheme`, `toggleTheme()` is called to switch the UI to the saved Light/Dark mode.
-8. If the profile contains an `isWeatherOverlayOn` boolean that differs from the current state, `toggleWeatherOverlay()` is called to activate or deactivate the RainViewer precipitation radar overlay accordingly.
-9. **POI state is restored from the profile snapshot:** The `poiTypeEnabled` object is merged key-by-key from `p.poiTypeEnabled`, the `.poi-panel-item` CSS classes are updated to match, `savePoiPrefs()` is called to sync `localStorage`, and — if at least one POI type was enabled in the profile — `isPoiOverlayOn` is set to `true`, the POI button and panel are activated, `startPoiMinimizeTimer()` and `startPoiWatchdog()` are started, and a full POI fetch is performed asynchronously for all enabled types.
-10. The modal is closed automatically.
+3. If the profile contains `elecPrice`, it is restored to the `elecPrice` input field; otherwise the current value is preserved.
+4. The GPS polling segmented control iterates all `.segment` buttons in `#gpsPollingGroup`, removes the `active` class from all of them, and re-applies it to the button whose `data-value` attribute matches the stored `gpsPolling` value. The hidden `#gpsPolling` input is also updated to keep it in sync.
+5. **POI overlay is fully reset before restoring the profile state:** `stopPoiWatchdog()` and `clearTimeout(poiMinimizeTimer)` are called, `isPoiOverlayOn` is set to `false`, all POI markers are removed from both maps via `removeAllPoiMarkers()`, `lastPoiRefreshPoint` is reset to `null`, and the POI button and panel are cleared of their `.active` / `.visible` / `.minimized` CSS classes. This ensures a clean slate before applying the profile's saved POI configuration.
+6. If the profile contains an `is3DMode` boolean that differs from the current state, `toggle3DMap()` is called to switch the map view accordingly.
+7. If the profile contains an `isHeadingUp` boolean that differs from the current state, `toggleHeadingMode()` is called to restore the heading orientation.
+8. If the profile contains a `theme` value that differs from the current `currentTheme`, `toggleTheme()` is called to switch the UI to the saved Light/Dark mode.
+9. If the profile contains an `isWeatherOverlayOn` boolean that differs from the current state, `toggleWeatherOverlay()` is called to activate or deactivate the RainViewer precipitation radar overlay accordingly.
+10. **POI state is restored from the profile snapshot:** The `poiTypeEnabled` object is merged key-by-key from `p.poiTypeEnabled`, the `.poi-panel-item` CSS classes are updated to match, `savePoiPrefs()` is called to sync `localStorage`, and — if at least one POI type was enabled in the profile — `isPoiOverlayOn` is set to `true`, the POI button and panel are activated, `startPoiMinimizeTimer()` and `startPoiWatchdog()` are started, and a full POI fetch is performed asynchronously for all enabled types.
+11. The modal is closed automatically.
 
 ### 🖥️ UI Entry Point
 
@@ -604,6 +858,7 @@ In the Profiles modal, each profile card renders the enabled POI layers as label
 ┌─────────────────────────────────────────────┐
 │  🚗 My EV Profile                           │
 │  Weight: 1850 Kg  Battery: 75 kWh           │
+│  kWh Price: 0.30 €/kWh                      │
 │  GPS: 5 s  Map: 🌍 / 🧭  Weather: On       │
 │  POI: 🚧 Road Closures                      │  ← only enabled layers shown
 │  POI: ⚡ EV Charging                        │
@@ -893,11 +1148,14 @@ The MapLibre GL map style is switched per theme at initialization time (see [Map
 ├──────────────── RANGE ESTIMATOR ───────────────────────┤
 │  [kWh ±] [SOC% ±] [═══ Battery Bar ═══] [Range] [Rem.] │
 ├───────────── MAP ──────────┬───── CHARTS PANEL ────────┤
-│ [−][🧿][+]  [🔺][🌍][⛈️][📌][↕️] │ Elevation Profile│
-│                            │  Consumption vs Distance  │
+│ [−][🧿][+]  [🔺][🌍][⛈️][📌][↕️]                    │
+│                            │  Elevation Profile        │
+│                            │  Consumption Profile      │
 │                            │  Speed Profile            │
-│          Route Map         │  Energy Balance           │
-│                            │  Power Breakdown          │
+│                            │  Energy Balance           │
+│          Route Map         │  Power Breakdown          │
+│                            │  Energy Flow              │
+│                            │  Driving Style Analyzer   │
 │                            │  Weather Panel            │
 ├─────────────────────── CONTROLS ───────────────────────┤
 │           [▶ Start Trip]    [⏹ Stop Trip]             │
@@ -974,8 +1232,14 @@ Clicking the **📋 Summary** button opens a modal with a post-trip analytics sn
 | 🔋 Total Consumed | $E_{\text{consumed,total}}$ (Wh) |
 | ♻️ Total Recovered | $E_{\text{regen,total}}$ (Wh) |
 | 📈 Regen Efficiency | $E_{\text{regen}} / E_{\text{consumed}} \times 100$ (%) |
-| 📍 Data Points | `altChart.data.datasets[0].data.length` |
 | 🔌 Net Energy | $E_{\text{consumed}} - E_{\text{regen}}$ (Wh) |
+| 💰 Trip Cost | $E_{\text{kWh}} \times \text{elecPrice}$ (€) |
+| 📊 Cost per Km | $\text{Trip Cost} / D_{\text{total}}\,\text{(Km)}$ (€/Km) |
+| 💚 VS ICE Saved | $\text{ICE Cost} - \text{Trip Cost}$ (€) |
+| 🚗 ICE Cost | $(D_{\text{total}} / \text{ICE Efficiency}) \times \text{ICE Fuel Price}$ (€) |
+| ⛽ ICE Fuel Price | Live diesel fuel price from API or cache (€/L) |
+| ⚙️ ICE Efficiency | Vehicle efficiency for ICE comparison (Km/L) |
+| 📍 Total Data Points | `altChart.data.datasets[0].data.length` |
 
 ### 🏆 Efficiency Badge
 
@@ -2123,6 +2387,25 @@ function updateBatterySoC() {
 | 2️⃣ | **Compute net energy** — `netWh = totalConsumedWh − totalRegenWh` (energy consumed minus energy recovered) |
 | 3️⃣ | **Derive new SoC** — subtract the net energy percentage from the initial SoC, clamped to [0, 100] |
 | 4️⃣ | **Update UI** — writes the rounded value back to `#socInput` and calls `updateBattery()` to refresh the visual bar and range estimate |
+
+### ✏️ Manual SOC Override with Auto-Update
+
+The system supports **manual SOC adjustments** during an active trip. When the user manually modifies the SOC value — either by using the `−` / `+` stepper buttons or by directly typing a value — the `initialSoc` variable is automatically updated to the new value. This ensures that subsequent auto-update calculations in `updateBatterySoC()` are based on the manually set reference point rather than the original trip-start value.
+
+```javascript
+// Stepper buttons: initialSoc is updated on each +/- click
+function stepValue(inputId, delta) {
+    // ... existing logic ...
+    if (inputId === 'socInput') {
+        initialSoc = val;
+    }
+}
+
+// Direct input: initialSoc is updated on every keystroke
+// oninput="initialSoc = parseFloat(this.value); updateBattery()"
+```
+
+This prevents the auto-update from silently overwriting manual adjustments with the original trip-start SOC value, ensuring that user corrections are preserved throughout the trip.
 
 ### 📊 SOC Bar Color States
 
