@@ -3582,7 +3582,7 @@
         svg.innerHTML = `
             <path d="M ${bgStart.x} ${bgStart.y} A ${r} ${r} 0 1 1 ${bgEnd.x} ${bgEnd.y}" fill="none" stroke="${bgArc}" stroke-width="6" stroke-linecap="round"/>
             <path d="M ${start.x} ${start.y} A ${r} ${r} 0 ${largeArc} 1 ${end.x} ${end.y}" fill="none" stroke="${arcColor}" stroke-width="6" stroke-linecap="round" filter="url(#gaugeGlow)"/>
-            <text x="${cx}" y="${cy - 5}" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="16" font-weight="700" fill="${textColor}">${score}/100</text>
+            <text x="${cx}" y="${cy - 5}" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="14" font-weight="700" fill="${isDark ? '#4a5568' : '#8892a0'}">${score}/100</text>
             <text x="${cx}" y="${cy + 8}" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="6" fill="${isDark ? '#4a5568' : '#8892a0'}">SCORE</text>
         `;
     }
