@@ -3434,6 +3434,10 @@
             const lyrId = 'route-seg-lyr-' + i;
             if (map.getLayer(lyrId)) map.removeLayer(lyrId);
             if (map.getSource(srcId)) map.removeSource(srcId);
+            const srcId3d = 'route-seg-3d-' + i;
+            const lyrId3d = 'route-seg-3d-lyr-' + i;
+            if (map3d && map3d.getLayer(lyrId3d)) map3d.removeLayer(lyrId3d);
+            if (map3d && map3d.getSource(srcId3d)) map3d.removeSource(srcId3d);
         }
 
         for (let i = 0; i < routeSegments.length; i++) {
@@ -3458,10 +3462,29 @@
                 layout: { 'line-join': 'round', 'line-cap': 'round' },
                 paint: { 'line-color': color, 'line-width': 5, 'line-opacity': 0.9 }
             });
+
+            if (map3d) {
+                const srcId3d = 'route-seg-3d-' + i;
+                const lyrId3d = 'route-seg-3d-lyr-' + i;
+                map3d.addSource(srcId3d, {
+                    type: 'geojson',
+                    data: { type: 'Feature', geometry: { type: 'LineString', coordinates: coords } }
+                });
+                map3d.addLayer({
+                    id: lyrId3d,
+                    type: 'line',
+                    source: srcId3d,
+                    layout: { 'line-join': 'round', 'line-cap': 'round' },
+                    paint: { 'line-color': color, 'line-width': 5, 'line-opacity': 0.9 }
+                });
+            }
         }
 
         if (map.getLayer('trip-path-2d-layer')) {
             map.setLayoutProperty('trip-path-2d-layer', 'visibility', 'none');
+        }
+        if (map3d && map3d.getLayer('trip-path-layer')) {
+            map3d.setLayoutProperty('trip-path-layer', 'visibility', 'none');
         }
     }
 
@@ -3483,10 +3506,17 @@
             const lyrId = 'route-seg-lyr-' + i;
             if (map.getLayer(lyrId)) map.removeLayer(lyrId);
             if (map.getSource(srcId)) map.removeSource(srcId);
+            const srcId3d = 'route-seg-3d-' + i;
+            const lyrId3d = 'route-seg-3d-lyr-' + i;
+            if (map3d && map3d.getLayer(lyrId3d)) map3d.removeLayer(lyrId3d);
+            if (map3d && map3d.getSource(srcId3d)) map3d.removeSource(srcId3d);
         }
  
         if (map.getLayer('trip-path-2d-layer')) {
             map.setLayoutProperty('trip-path-2d-layer', 'visibility', 'visible');
+        }
+        if (map3d && map3d.getLayer('trip-path-layer')) {
+            map3d.setLayoutProperty('trip-path-layer', 'visibility', 'visible');
         }
     }
 
