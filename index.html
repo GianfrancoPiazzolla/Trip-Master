@@ -261,13 +261,25 @@
             position: absolute; top: 0; left: 0; right: 0; bottom: 0;
             background: linear-gradient(180deg, rgba(255,255,255,0.3) 0%, transparent 60%);
         }
-        .battery-soc-label {
+        .battery-soc-remaining-label {
             position: absolute;
-            top: 50%; left: 50%;
+            top: 35%; left: 50%;
             transform: translate(-50%, -50%);
             font-size: 0.85rem; font-weight: 700;
             font-family: 'JetBrains Mono', monospace;
-            color: #000;
+            color: var(--secondary);
+            text-shadow: 0 0 4px rgba(255,255,255,0.8);
+            z-index: 1;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+        .battery-soc-consumed-label {
+            position: absolute;
+            top: 70%; left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 0.85rem; font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--danger);
             text-shadow: 0 0 4px rgba(255,255,255,0.8);
             z-index: 1;
             pointer-events: none;
@@ -304,8 +316,11 @@
         .range-card.battery-stacked .battery-range-group .battery-widget .battery-body::after {
             display: none;
         }
-        .range-card.battery-stacked .battery-range-group .battery-widget .battery-soc-label {
+        .range-card.battery-stacked .battery-range-group .battery-widget .battery-soc-remaining-label {
             font-size: 0.75rem;
+        }
+        .battery-soc-consumed-label {
+            font-size: 0.65rem;
         }
         .range-card.battery-stacked .battery-range-group .range-section {
             flex-direction: row;
@@ -1048,7 +1063,8 @@
             <div class="battery-widget">
                 <div class="battery-body">
                     <div class="battery-fill" id="batteryFill" style="width:80%;"></div>
-                    <span class="battery-soc-label" id="socLabel">100%</span>
+                    <span class="battery-soc-remaining-label" id="socRemainingLabel">100%</span>
+                    <span class="battery-soc-consumed-label" id="socConsumedLabel">--%</span>
                 </div>
             </div>
             <div class="range-section">
@@ -1682,10 +1698,22 @@
 
     function updateBattery() {
         const soc = Math.min(100, Math.max(0, parseInt(document.getElementById('socInput').value) || 0));
+        const cap = parseFloat(document.getElementById('batteryCapacity').value) || 100;
         const fill = document.getElementById('batteryFill');
-        const label = document.getElementById('socLabel');
+        const remainingLabel = document.getElementById('socRemainingLabel');
+        const consumedLabel = document.getElementById('socConsumedLabel');
         fill.style.width = soc + '%';
-        label.innerText = soc + '%';
+        
+        let remainingLabelText = soc + '%';
+        let consumedLabelText = '--%';
+        const netConsumedWh = totalConsumedWh - totalRegenWh;
+        const consumedPercent = (netConsumedWh / (cap * 1000)) * 100;
+        if (consumedPercent > 0) {
+            consumedLabelText = '-' + consumedPercent.toFixed(0) + '%';
+        }
+        remainingLabel.innerText = remainingLabelText;
+        consumedLabel.innerText = consumedLabelText;
+        
         fill.className = 'battery-fill' + (soc <= 15 ? ' critical' : soc <= 30 ? ' warn' : '');
         computeRangeEstimate();
     }
