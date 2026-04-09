@@ -265,22 +265,20 @@
             position: absolute;
             top: 35%; left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 0.85rem; font-weight: 700;
+            font-size: 25px; font-weight: 700;
             font-family: 'JetBrains Mono', monospace;
-            color: var(--secondary);
-            text-shadow: 0 0 4px rgba(255,255,255,0.8);
+            color: var(--chart-tick);
             z-index: 1;
             pointer-events: none;
             white-space: nowrap;
         }
         .battery-soc-consumed-label {
             position: absolute;
-            top: 70%; left: 50%;
+            top: 80%; left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 0.85rem; font-weight: 700;
+            font-size: 15px; font-weight: 700;
             font-family: 'JetBrains Mono', monospace;
             color: var(--danger);
-            text-shadow: 0 0 4px rgba(255,255,255,0.8);
             z-index: 1;
             pointer-events: none;
             white-space: nowrap;
@@ -473,6 +471,7 @@
         body.map-fullscreen .container > .config-grid,
         body.map-fullscreen .container > .range-card,
         body.map-fullscreen .container > .grid-stats,
+        body.map-fullscreen .container > .cost-meter-card,
         body.map-fullscreen .container > .controls { display: none; }
         body.map-fullscreen .main-display { flex: 1; min-height: 0; }
         body.map-fullscreen .charts-panel { display: none; }
@@ -1063,8 +1062,8 @@
             <div class="battery-widget">
                 <div class="battery-body">
                     <div class="battery-fill" id="batteryFill" style="width:80%;"></div>
-                    <span class="battery-soc-remaining-label" id="socRemainingLabel">100%</span>
-                    <span class="battery-soc-consumed-label" id="socConsumedLabel">--%</span>
+                    <span class="battery-soc-remaining-label" id="socRemainingLabel">100 %</span>
+                    <span class="battery-soc-consumed-label" id="socConsumedLabel">-- %</span>
                 </div>
             </div>
             <div class="range-section">
@@ -1703,13 +1702,13 @@
         const remainingLabel = document.getElementById('socRemainingLabel');
         const consumedLabel = document.getElementById('socConsumedLabel');
         fill.style.width = soc + '%';
-        
-        let remainingLabelText = soc + '%';
-        let consumedLabelText = '--%';
+
+        let remainingLabelText = soc + ' %';
+        let consumedLabelText = '-- %';
         const netConsumedWh = totalConsumedWh - totalRegenWh;
         const consumedPercent = (netConsumedWh / (cap * 1000)) * 100;
         if (consumedPercent > 0) {
-            consumedLabelText = '-' + consumedPercent.toFixed(0) + '%';
+            consumedLabelText = consumedPercent.toFixed(0) + ' %';
         }
         remainingLabel.innerText = remainingLabelText;
         consumedLabel.innerText = consumedLabelText;
