@@ -803,6 +803,11 @@
         .stepper-btn:hover { background: var(--border-color); transform: translateY(-1px); }
         .stepper-btn:active { transform: translateY(0); }
 
+        .trip-locked { pointer-events: none; opacity: 0.5; cursor: not-allowed; }
+        .trip-locked input[type="number"] { pointer-events: none; opacity: 0.5; cursor: not-allowed; }
+        .trip-locked .segment { pointer-events: none; opacity: 0.5; }
+        .trip-locked .stepper-btn { pointer-events: none; opacity: 0.5; }
+
         /* === PROFILES MODAL === */
         .profiles-list { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; max-height: 280px; overflow-y: auto; }
         .profiles-list::-webkit-scrollbar { width: 4px; }
@@ -1696,6 +1701,7 @@
     }
 
     function updateBattery() {
+        const isDark = currentTheme === 'dark';
         const soc = Math.min(100, Math.max(0, parseInt(document.getElementById('socInput').value) || 0));
         const cap = parseFloat(document.getElementById('batteryCapacity').value) || 100;
         const fill = document.getElementById('batteryFill');
@@ -1707,11 +1713,17 @@
         let consumedLabelText = '-- %';
         const netConsumedWh = totalConsumedWh - totalRegenWh;
         const consumedPercent = (netConsumedWh / (cap * 1000)) * 100;
+
+        remainingLabel.innerText = remainingLabelText;
+        remainingLabel.style.color = '#000000';
+        if (isDark && soc < 50) {
+                remainingLabel.style.color = '#ffffff';
+        }
+
         if (consumedPercent > 0) {
             consumedLabelText = consumedPercent.toFixed(0) + ' %';
         }
-        remainingLabel.innerText = remainingLabelText;
-        consumedLabel.innerText = consumedLabelText;
+        consumedLabel.innerText = consumedLabelText;    
         
         fill.className = 'battery-fill' + (soc <= 15 ? ' critical' : soc <= 30 ? ' warn' : '');
         computeRangeEstimate();
@@ -2407,6 +2419,11 @@
         document.getElementById('btnStart').disabled = true;
         document.getElementById('btnStart').classList.add('active');
         document.getElementById('btnStop').disabled = false;
+        document.querySelector('.header-btns button[title="EV Profiles"]').classList.add('trip-locked');
+        document.getElementById('vehicleWeight').parentElement.classList.add('trip-locked');
+        document.getElementById('elecPrice').parentElement.classList.add('trip-locked');
+        document.getElementById('gpsPollingGroup').classList.add('trip-locked');
+        document.getElementById('batteryCapacity').parentElement.classList.add('trip-locked');
         startTime = Date.now();
         tripSeconds = 0;
         initialSoc = Math.min(100, Math.max(0, parseInt(document.getElementById('socInput').value) || 100));
@@ -2435,6 +2452,11 @@
         document.getElementById('btnStart').disabled = false;
         document.getElementById('btnStart').classList.remove('active');
         document.getElementById('btnStop').disabled = true;
+        document.querySelector('.header-btns button[title="EV Profiles"]').classList.remove('trip-locked');
+        document.getElementById('vehicleWeight').parentElement.classList.remove('trip-locked');
+        document.getElementById('elecPrice').parentElement.classList.remove('trip-locked');
+        document.getElementById('gpsPollingGroup').classList.remove('trip-locked');
+        document.getElementById('batteryCapacity').parentElement.classList.remove('trip-locked');
         saveLastSettings();
     }
 
