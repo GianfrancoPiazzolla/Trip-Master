@@ -53,7 +53,8 @@
 32. [Stepper Buttons](#-stepper-buttons)
 33. [Action Button Shine Effect](#-action-button-shine-effect)
 34. [Weather Pictogram Mapping](#️-weather-pictogram-mapping)
-35. [Wind Direction Display](#-wind-direction-display)
+35. [Automated Headwind Calculation](#-automated-headwind-calculation)
+36. [Wind Direction Display](#-wind-direction-display)
 36. [Modal Click-Outside-To-Close](#-modal-click-outside-to-close)
 37. [Energy Balance Chart Gradient Bars](#-energy-balance-chart-gradient-bars)
 38. [Energy Flow Dashboard](#️-energy-flow-dashboard)
@@ -326,27 +327,27 @@ A **SVG-based live diagram** renders the instantaneous power flow between the ba
 #### 📐 SVG Layout
 
 ```
-┌────────────────────────────────────────────────────────────────────────────┐
-│                                                                            │
-│   ┌─────────┐                                    ┌─────────┐               │
-│   │   🔋   │                                    │   🛞    │               │
-│   │Battery  │═══════⚡ Motor ══════►       c    │ Wheels  │               │
-│   │         │    (⚡ Motor Power W)             │         │               │
-│   │         │                                    │         │               │
-│   └────╬────┘                                    └─────────┘               │
-│        ║                                                                   │
-│        ║ ❄️ HVAC                                                          │
-│        ║ (❄️ HVAC Power W)                                                │
-│        ▼                                                                   │
-│   ┌─────────┐                                    ┌─────────┐               │
-│   │   ❄️    │                                   │   💡    │               │
-│   │ HVAC    │════════════════════════════════════│  Aux    │               │
-│   │         │                                    │  300W   │               │
-│   └─────────┘                                    └─────────┘               │
-│                                                                            │
-│   ↩ Regen (green arrow, when braking)                                     │
-│                                                                            │
-└────────────────────────────────────────────────────────────────────────────┘
+┌───────────────────────────────────────────────────┐
+│                                                   │
+│   ┌─────────┐                      ┌─────────┐    │
+│   │    🔋   │                      │   🛞     │    │
+│   │ Battery │═══════⚡ Motor ══════►│ Wheels  │    │
+│   │         │   (⚡ Motor Power W)  │         │    │
+│   │         │                      │         │    │
+│   └────╬────┘                      └─────────┘    │
+│        ║                                          │
+│        ║ ❄️ HVAC                                  │
+│        ║ (❄️ HVAC Power W)                        │
+│        ▼                                          │
+│   ┌─────────┐                      ┌─────────┐    │
+│   │   ❄️    │                       │   💡    │    │
+│   │ HVAC    │══════════════════════│  Aux    │    │
+│   │         │                      │  300W   │    │
+│   └─────────┘                      └─────────┘    │
+│                                                   │
+│   ↩ Regen (green arrow, when braking)             │
+│                                                   │
+└───────────────────────────────────────────────────┘
 ```
 
 #### 🔢 Energy Distribution Formulas
@@ -513,7 +514,7 @@ overall = Math.round((accelScore + brakeScore + smoothScore) / 3);
 
 ```
 ┌───────────────────────────────────────────────────────────┐
-│  🎯 Driving Style Analyzer                               │
+│  🎯 Driving Style Analyzer                                │
 │  ┌────────────────────────────────────┐  ┌─────────────┐  │
 │  │ Acceleration  ████████████░░  85   │  │    ╭───╮    │  │
 │  │ Braking       ██████████████  100  │  │   ╱ 82  ╲   │  │
@@ -622,7 +623,7 @@ A floating **`⛈️` button** is permanently overlaid in the **top-right area o
 ```
 ┌─────────────────────────── MAP WRAPPER ────────────────────────────────┐
 │    ┌───┐  ┌───┐  ┌───┐      ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐    │
-│    │ − │  │🧿 │ │ + │      │  🔺 │ │  🌍 │ │ 📌 │ │ ⛈️  │ │ ↕️ │    │
+│    │ − │  │ 🧿 │  │ + │      │  🔺  │ │ 🌍  │ │  📌 │ │ ⛈  │ │  ↕️  │    │
 │    └───┘  └───┘  └───┘      └─────┘ └─────┘ └─────┘ └─────┘ └─────┘    │
 └────────────────────────────────────────────────────────────────────────┘
 ```
@@ -719,6 +720,203 @@ This factor reduces all energy estimates to account for reduced battery efficien
 - **Input:** Numeric field (`id="windSpeed"`)
 - **Default:** 0 Km/h
 - **Role:** Feeds directly into $E_{\text{resistance}}$ as $0.8 \cdot v_w \cdot d / \eta_T$
+
+---
+
+## 🌬️ Automated Headwind Calculation
+
+Trip Master features a **real-time, physics-aware automatic headwind computation** system that continuously derives the effective headwind component acting on the vehicle from live weather data and the vehicle's instantaneous travel direction. This replaces the need for the driver to manually estimate and enter a headwind value — the `#windSpeed` field is updated automatically on every weather sync and on every GPS fix where a valid heading is available.
+
+---
+
+### 🔄 Overview & Trigger Points
+
+`computeAndApplyHeadwind()` is a lightweight, stateless function that is invoked from **two distinct trigger points** in the application lifecycle:
+
+| 📍 Trigger | 🔁 Context | 🔧 Caller |
+|---|---|---|
+| 🌤️ **Weather sync** | Fires every ~2 Km of travel or on first GPS fix | `fetchWeather()` — immediately after storing `lastWeatherWindSpeed` and `lastWeatherWindDir` |
+| 🛰️ **GPS fix** | Fires at every valid GPS segment (after the 5 m displacement filter) | `updateLocation()` — immediately after recomputing `lastHeading` from the last two coordinates |
+
+This dual-trigger design ensures that the headwind value is **always up to date** — it adapts both when the weather changes (new wind speed/direction data) and when the vehicle changes direction (new travel bearing).
+
+---
+
+### 📦 State Variables
+
+The computation depends on three module-level state variables:
+
+| 🔤 Variable | 📋 Type | 📖 Description |
+|---|---|---|
+| `lastWeatherWindSpeed` | `number` | Most recently fetched wind speed from Open-Meteo [Km/h]; initialized to `0` |
+| `lastWeatherWindDir` | `number \| null` | Most recently fetched meteorological wind direction from Open-Meteo [°, 0 = N, clockwise]; `null` until the first weather fetch |
+| `lastHeading` | `number` | Most recently computed vehicle travel bearing [°, 0 = N, clockwise]; updated at every valid GPS step |
+
+---
+
+### ⚙️ `computeAndApplyHeadwind()` — Algorithm
+
+```javascript
+function computeAndApplyHeadwind() {
+    if (lastWeatherWindDir === null) return;
+    const windVectorDir = (lastWeatherWindDir + 180) % 360;
+    const angleDiff = (lastHeading - windVectorDir + 360) % 360;
+    const angleRad = angleDiff * Math.PI / 180;
+    const headwindComponent = lastWeatherWindSpeed * Math.cos(angleRad);
+    const headwindKmh = Math.round(headwindComponent * 10) / 10;
+    document.getElementById('windSpeed').value = headwindKmh;
+}
+```
+
+#### 🔢 Step-by-Step Derivation
+
+**Step 1 — Guard clause:**
+
+The function exits immediately if no wind direction has been received yet (`lastWeatherWindDir === null`), preventing NaN propagation into the energy model before the first weather fetch.
+
+**Step 2 — Meteorological → mathematical wind vector direction:**
+
+Meteorological convention defines wind direction as the azimuth *from which the wind blows* (e.g., 270° = wind coming from the West, blowing East). To compute the dot product with the vehicle's heading vector, the direction is converted to the azimuth *toward which the wind moves*:
+
+$$\theta_{\text{wind}} = (\theta_{\text{met}} + 180°) \mod 360°$$
+
+**Step 3 — Angular difference between vehicle heading and wind vector:**
+
+$$\Delta\theta = (\theta_{\text{heading}} - \theta_{\text{wind}} + 360°) \mod 360°$$
+
+The `+ 360°` and `mod 360°` idiom normalizes the result to the range $[0°, 360°)$, avoiding negative-angle ambiguity.
+
+**Step 4 — Headwind component via dot product:**
+
+The effective headwind speed along the vehicle's axis of travel is the projection of the wind velocity vector onto the heading direction:
+
+$$v_{\text{headwind}} = v_{\text{wind}} \cdot \cos(\Delta\theta)$$
+
+| $\Delta\theta$ | $\cos(\Delta\theta)$ | Physical Meaning |
+|---|---|---|
+| $0°$ | $+1.0$ | 💨 Pure headwind — full resistance |
+| $90°$ or $270°$ | $0.0$ | ➡️ Pure crosswind — zero net component |
+| $180°$ | $-1.0$ | 🔙 Pure tailwind — full assistance |
+| $(0°, 90°)$ | $(0, +1)$ | 🌬️ Partial headwind |
+| $(90°, 180°)$ | $(-1, 0)$ | 🍃 Partial tailwind |
+
+**Step 5 — Rounding and UI update:**
+
+The computed value is rounded to one decimal place and written directly to the `#windSpeed` input field:
+
+$$v_{\text{headwind,rounded}} = \mathrm{round}(v_{\text{headwind}} \times 10) / 10$$
+
+```javascript
+document.getElementById('windSpeed').value = headwindKmh;
+```
+
+This single write immediately affects the physics engine on the very next GPS segment, since `calculatePhysics()` reads `#windSpeed` live at each step.
+
+---
+
+### 🔁 Data Flow Diagram
+
+```
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                          WEATHER SYNC (~2 Km)                                │
+│                                                                              │
+│  fetchWeather(lat, lon)                                                      │
+│       │                                                                      │
+│       ├─► lastWeatherWindSpeed = data.current.wind_speed_10m     [Km/h]      │
+│       ├─► lastWeatherWindDir   = data.current.wind_direction_10m [°, met]    │
+│       └─► computeAndApplyHeadwind()                                          │
+│                   │                                                          │
+│                   └─► #windSpeed.value = f(lastWeatherWindSpeed,             │
+│                                            lastWeatherWindDir,               │
+│                                            lastHeading)                      │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                          GPS FIX (every T_poll seconds)                      │
+│                                                                              │
+│  updateLocation(pos)                                                         │
+│       │                                                                      │
+│       ├─► lastHeading = atan2(dLon, dLat) → [0°, 360°)                       │
+│       └─► computeAndApplyHeadwind()                                          │
+│                   │                                                          │
+│                   └─► #windSpeed.value = f(lastWeatherWindSpeed,             │
+│                                            lastWeatherWindDir,               │
+│                                            lastHeading)   ← updated heading  │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                    PHYSICS ENGINE (every GPS step)                           │
+│                                                                              │
+│  calculatePhysics()                                                          │
+│       └─► vw = parseFloat(document.getElementById('windSpeed').value)        │
+│               → used in E_resistance = (120 + 0.8·vw + 0.012·m) / ηT · d     │
+└──────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### ➕ Signed Value Semantics
+
+The headwind component $v_{\text{headwind}}$ is a **signed quantity**:
+
+- **Positive values** → actual headwind → increases `#windSpeed` → increases energy consumption in `E_resistance`
+- **Negative values** → tailwind → the value written to `#windSpeed` is negative → the `0.8 · v_w · d / η_T` term in the resistance formula becomes negative, effectively reducing the computed energy cost for that segment
+
+This means the physics engine naturally handles tailwind as an energy *benefit*, without any special-casing — simply by allowing $v_w < 0$ in the resistance formula.
+
+> 💡 **Note:** The `#windSpeed` field remains **fully editable by the user** at any time. If the user types a manual override, it will be used for subsequent GPS steps — until the next call to `computeAndApplyHeadwind()` (triggered by the next weather sync or GPS fix) overwrites it with the freshly computed value. For stable manual control, the user should wait until after a weather sync before editing the field.
+
+---
+
+### 🧮 Worked Example
+
+Suppose:
+- 🌬️ Open-Meteo reports `wind_speed_10m = 30 Km/h`, `wind_direction_10m = 270°` (wind from the West, blowing East)
+- 🚗 Vehicle is heading `lastHeading = 90°` (traveling East)
+
+**Step 2:** $\theta_{\text{wind}} = (270 + 180) \mod 360 = 90°$ (wind vector points East)
+
+**Step 3:** $\Delta\theta = (90 - 90 + 360) \mod 360 = 0°$
+
+**Step 4:** $v_{\text{headwind}} = 30 \cdot \cos(0°) = 30 \cdot 1.0 = 30\ \text{Km/h}$
+
+**Result:** `#windSpeed` is set to `30` → full headwind penalty applied. ✅
+
+Now suppose the vehicle turns around and heads West (`lastHeading = 270°`):
+
+**Step 3:** $\Delta\theta = (270 - 90 + 360) \mod 360 = 180°$
+
+**Step 4:** $v_{\text{headwind}} = 30 \cdot \cos(180°) = 30 \cdot (-1.0) = -30\ \text{Km/h}$
+
+**Result:** `#windSpeed` is set to `-30` → full tailwind benefit applied. 🍃
+
+---
+
+### ⚡ Integration with the Physics Engine
+
+The auto-computed headwind value $v_w$ feeds directly into `calculatePhysics()` as part of the resistance energy term:
+
+$$E_{\text{resistance}} = \frac{120 + 0.8 \cdot v_w + 0.012 \cdot m}{\eta_T} \cdot d$$
+
+Since $v_w$ is updated at **every GPS fix** (via the heading-triggered call to `computeAndApplyHeadwind()`), the energy model is always operating with the most current aerodynamic context — even during turns, U-turns, or complex urban routes where the vehicle's heading relative to the wind changes frequently.
+
+---
+
+### ⚠️ Edge Cases & Guards
+
+| 🚦 Condition | 🔒 Guard | 📋 Behavior |
+|---|---|---|
+| No weather data yet | `lastWeatherWindDir === null` | Function returns immediately; `#windSpeed` is not modified |
+| No GPS heading yet | `lastHeading = 0` (default) | Computation proceeds using 0° (North); may be inaccurate until the first valid GPS segment |
+| Wind speed = 0 | `lastWeatherWindSpeed = 0` | Output is always 0 regardless of heading; `#windSpeed` is set to 0 |
+| Crosswind (90° / 270°) | $\cos(90°) = 0$ | Output is 0; no aerodynamic penalty or benefit |
+
+---
+
+### 🔗 Related Sections
+
+- ⚙️ [Configuration Parameters — Headwind Speed](#️-configuration-parameters) — manual override field
+- ⚙️ [Physics Engine — Resistance Energy](#️-physics-engine) — where $v_w$ is consumed
+- 🌡️ [Weather Integration](#️-weather-integration) — source of `lastWeatherWindSpeed` and `lastWeatherWindDir`
+- 🧭 [Heading Mode](#-heading-mode) — source of `lastHeading`
+
+---
 
 ### ⚡️ Electricity Price
 
@@ -859,9 +1057,9 @@ In the Profiles modal, each profile card renders the enabled POI layers as label
 │  🚗 My EV Profile                           │
 │  Weight: 1850 Kg  Battery: 75 kWh           │
 │  kWh Price: 0.30 €/kWh                      │
-│  GPS: 5 s  Map: 🌍 / 🧭  Weather: On       │
+│  GPS: 5 s  Map: 🌍 / 🧭  Weather: On         │
 │  POI: 🚧 Road Closures                      │  ← only enabled layers shown
-│  POI: ⚡ EV Charging                        │
+│  POI: ⚡ EV Charging                         │
 │  Theme: 🌙 Dark                             │
 └─────────────────────────────────────────────┘
 ```
@@ -979,7 +1177,7 @@ This guarantees that the **final state** of all settings at the exact moment the
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
-│                        initializeSystem()                           │
+│                        initializeSystem()                        │
 │   autosaveInterval = setInterval(saveLastSettings, 60 000 ms)    │
 │                            │                                     │
 │                     every 60 seconds                             │
@@ -1140,7 +1338,7 @@ The MapLibre GL map style is switched per theme at initialization time (see [Map
 
 ```
 ┌─────────────────────── HEADER ─────────────────────────┐
-│  🔴 TRIP MASTER          [🚘][🧮] [☀️/🌙] [⭐]      │
+│  🔴 TRIP MASTER                     [🚘][🧮] [☀️/🌙] [⭐] │
 ├──────────────── CONFIG GRID (4 cols) ──────────────────┤
 │  Weight │ Temp Efficiency │ Headwind │ GPS Polling     │
 ├──────────────── STAT CARDS (8 cols) ───────────────────┤
@@ -1148,7 +1346,7 @@ The MapLibre GL map style is switched per theme at initialization time (see [Map
 ├──────────────── RANGE ESTIMATOR ───────────────────────┤
 │  [kWh ±] [SOC% ±] [═══ Battery Bar ═══] [Range] [Rem.] │
 ├───────────── MAP ──────────┬───── CHARTS PANEL ────────┤
-│ [−][🧿][+]  [🔺][🌍][⛈️][📌][↕️]                    │
+│ [−][🧿][+]  [🔺][🌍][⛈️][📌][↕️]                          │
 │                            │  Elevation Profile        │
 │                            │  Consumption Profile      │
 │                            │  Speed Profile            │
@@ -1372,7 +1570,7 @@ Both markers are created by `createTripEndpointMarker(label, bgColor)`, which bu
 
 ```
   ┌──────────┐           ┌──────────┐
-  │  🟢  S   │          │  🔴  E   │
+  │  🟢  S   │            │  🔴  E   │
   └──────────┘           └──────────┘
   Start of route         End of route
 ```
@@ -1573,7 +1771,7 @@ A set of three floating **zoom and re-center buttons** is overlaid in the **top-
 ```
 ┌─────────── MAP WRAPPER ─────────────────┐
 │  ┌───┐ ┌───┐ ┌───┐                      │
-│  │ − │ │🧿 │ │ + │    (map content)    │
+│  │ − │ │ 🧿 │ │ + │    (map content)    │
 │  └───┘ └───┘ └───┘                      │
 └─────────────────────────────────────────┘
 ```
@@ -1601,7 +1799,7 @@ A floating **`↕️` button** is permanently overlaid in the **top-right corner
 ```
 ┌─────────────────────────── MAP WRAPPER ────────────────────────────────┐
 │    ┌───┐  ┌───┐  ┌───┐      ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐    │
-│    │ − │  │🧿 │ │ + │      │  🔺 │ │  🌍 │ │ 📌 │ │ ⛈️  │ │ ↕️ │    │
+│    │ − │  │ 🧿 │  │ + │      │  🔺 │  │ 🌍  │ │  📌 │ │  ⛈️  │ │  ↕ ️ │    │
 │    └───┘  └───┘  └───┘      └─────┘ └─────┘ └─────┘ └─────┘ └─────┘    │
 └────────────────────────────────────────────────────────────────────────┘
 ```
@@ -1647,7 +1845,7 @@ A floating **`🔺` / `🧭` button** is permanently overlaid in the **top-right
 ```
 ┌─────────────────────────── MAP WRAPPER ────────────────────────────────┐
 │    ┌───┐  ┌───┐  ┌───┐      ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐    │
-│    │ − │  │🧿 │ │ + │      │  🔺 │ │  🌍 │ │ 📌 │ │ ⛈️  │ │ ↕️ │    │
+│    │ − │  │ 🧿 │  │ + │      │  🔺 │  │ 🌍  │ │  📌 │ │  ⛈️  │ │  ↕ ️ │    │
 │    └───┘  └───┘  └───┘      └─────┘ └─────┘ └─────┘ └─────┘ └─────┘    │
 └────────────────────────────────────────────────────────────────────────┘
 ```
@@ -1705,7 +1903,7 @@ A floating **`📌` button** is permanently overlaid in the **top-right area of 
 ```
 ┌─────────────────────────── MAP WRAPPER ────────────────────────────────┐
 │    ┌───┐  ┌───┐  ┌───┐      ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐    │
-│    │ − │  │🧿 │ │ + │      │  🔺 │ │  🌍 │ │ 📌 │ │ ⛈️  │ │ ↕️ │    │
+│    │ − │  │ 🧿 │  │ + │      │  🔺 │  │ 🌍  │ │  📌 │ │  ⛈️  │ │  ↕ ️ │    │
 │    └───┘  └───┘  └───┘      └─────┘ └─────┘ └─────┘ └─────┘ └─────┘    │
 └────────────────────────────────────────────────────────────────────────┘
 ```
@@ -1728,8 +1926,8 @@ The POI Panel (`#poiPanel`) slides into view whenever the overlay is active. It 
 │  🚧  Road Closures    [ ]   │
 │  👮  Mobile Patrols   [ ]   │
 │  📷  Speed Cameras    [ ]   │
-│  ⚡  EV Charging      [ ]   │
-│  ⌛ Fetching data…          │  ← visible only during fetch
+│  ⚡  EV Charging       [ ]   │
+│  ⌛ Fetching data…           │  ← visible only during fetch
 └─────────────────────────────┘
 ```
 
@@ -2367,7 +2565,7 @@ localStorage.removeItem('tripmaster_poi_prefs');
 
 ## 🔋 Battery SOC Auto-Update
 
-During an active trip, the **Current SoC (%)** input and the visual battery bar are **automatically updated in real time** at every GPS fix by `updateBatterySoC()`.
+During an active trip, the **Current SoC (%)** input and the visual battery bar are **automatically updated in real time** at every GPS fix by `updateBatterySoC()`, showing consumption percentage (%), too.
 
 ### ⚙️ How It Works
 
