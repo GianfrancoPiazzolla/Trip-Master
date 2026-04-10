@@ -1068,7 +1068,7 @@
                 <div class="battery-body">
                     <div class="battery-fill" id="batteryFill" style="width:80%;"></div>
                     <span class="battery-soc-remaining-label" id="socRemainingLabel">100 %</span>
-                    <span class="battery-soc-consumed-label" id="socConsumedLabel">-- %</span>
+                    <span class="battery-soc-consumed-label" id="socConsumedLabel"></span>
                 </div>
             </div>
             <div class="range-section">
@@ -1709,8 +1709,8 @@
         const consumedLabel = document.getElementById('socConsumedLabel');
         fill.style.width = soc + '%';
 
-        let remainingLabelText = soc + ' %';
-        let consumedLabelText = '-- %';
+        let remainingLabelText = soc + '%';
+        let consumedLabelText = '';
         const netConsumedWh = totalConsumedWh - totalRegenWh;
         const consumedPercent = (netConsumedWh / (cap * 1000)) * 100;
 
@@ -1721,7 +1721,7 @@
         }
 
         if (consumedPercent > 0) {
-            consumedLabelText = consumedPercent.toFixed(0) + ' %';
+            consumedLabelText = consumedPercent.toFixed(0) + '%';
         }
         consumedLabel.innerText = consumedLabelText;    
         
@@ -1846,6 +1846,7 @@
         document.body.setAttribute('data-theme', currentTheme === 'dark' ? 'dark' : '');
         document.getElementById('themeBtn').innerText = currentTheme === 'dark' ? '☀️' : '🌙';
         updateChartTheme();
+        updateBattery();
 
         // Update 2D map style
         const lightStyle = 'https://tiles.openfreemap.org/styles/liberty';
