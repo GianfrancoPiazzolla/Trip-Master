@@ -1026,7 +1026,7 @@
         </div>
         <div style="display:flex; flex-direction:column;">
             <label>Headwind (Km/h)</label>
-            <input type="number" id="windSpeed" value="0">
+            <input type="number" id="windSpeed" value="0" oninput="updateHeadwindColor(this.value)">
         </div>
         <div style="display:flex; flex-direction:column;">
             <label>Electricity Price (€/kWh)</label>
@@ -1376,6 +1376,8 @@
     let positionMarker3d = null;
     let powerBreakdown = { drag: 0, gravity: 0, aero: 0, regen: 0, samples: 0 };
     let prevWeather = { temp: null, min: null, max: null, hum: null, windSpd: null, press: null };
+    let lastWeatherWindSpeed = 0;
+    let lastWeatherWindDir = null;
     let energyFlowAnim = null;
     let drivingStyle = { accelScore: 100, brakeScore: 100, smoothScore: 100, accelEvents: 0, brakeEvents: 0, speedVarSum: 0, speedSamples: 0, lastSpeedForAccel: 0 };
     let iceFuelPrice = 1.80;
@@ -1792,6 +1794,10 @@
 
             prevWeather = { temp: currentTemp, min: minTemp, max: maxTemp, hum: humidity, windSpd: windSpeed, press: pressure };
 
+            lastWeatherWindSpeed = windSpeed;
+            lastWeatherWindDir = windDir;
+            computeAndApplyHeadwind();
+
             updateEfficiencyByTemp(currentTemp);
         } catch (error) {
             console.error("Weather update failed", error);
@@ -1818,6 +1824,22 @@
                 document.getElementById('tempEfficiency').value = valueToSelect;
             }
         });
+    }
+
+    function updateHeadwindColor(value) {
+        const el = document.getElementById('windSpeed');
+        if (el) el.style.color = parseFloat(value) > 0 ? 'var(--danger)' : 'var(--primary)';
+    }
+
+    function computeAndApplyHeadwind() {
+        if (lastWeatherWindDir === null) return;
+        const windVectorDir = (lastWeatherWindDir + 180) % 360;
+        const angleDiff = (lastHeading - windVectorDir + 360) % 360;
+        const angleRad = angleDiff * Math.PI / 180;
+        const headwindComponent = lastWeatherWindSpeed * Math.cos(angleRad);
+        const headwindKmh = Math.round(headwindComponent * 10) / 10;
+        document.getElementById('windSpeed').value = headwindKmh.toFixed(1);
+        updateHeadwindColor(headwindKmh);
     }
 
     function getWeatherPictogram(code) {
@@ -2487,7 +2509,7 @@
         try { s = JSON.parse(raw); } catch(e) { return; }
 
         if (s.vehicleWeight !== undefined) document.getElementById('vehicleWeight').value = s.vehicleWeight;
-        if (s.windSpeed !== undefined) document.getElementById('windSpeed').value = s.windSpeed;
+        if (s.windSpeed !== undefined) { document.getElementById('windSpeed').value = s.windSpeed; updateHeadwindColor(s.windSpeed); }
         if (s.batteryCapacity !== undefined) document.getElementById('batteryCapacity').value = s.batteryCapacity;
         if (s.currentSoc !== undefined) {
             document.getElementById('socInput').value = s.currentSoc;
@@ -2553,6 +2575,7 @@
                     const dLon = longitude - prev[0];
                     const dLat = latitude - prev[1];
                     lastHeading = (Math.atan2(dLon, dLat) * 180 / Math.PI + 360) % 360;
+                    computeAndApplyHeadwind();
                 }
 
                 const mapBearing = isHeadingUp ? lastHeading : 0;
@@ -3858,6 +3881,10 @@
                 }
             });
             ro.observe(wrapper);
+        });
+        window.addEventListener('DOMContentLoaded', function() {
+            var ws = document.getElementById('windSpeed');
+            if (ws) updateHeadwindColor(ws.value);
         });
     })();
 </script>
