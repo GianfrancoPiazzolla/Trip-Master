@@ -1338,7 +1338,7 @@ The MapLibre GL map style is switched per theme at initialization time (see [Map
 
 ```
 ┌─────────────────────── HEADER ─────────────────────────┐
-│  🔴 TRIP MASTER                     [🚘][🧮] [☀️/🌙] [⭐] │
+│  🔴 TRIP MASTER               [🚘][🧮] [☀️/🌙] [⭐] │
 ├──────────────── CONFIG GRID (4 cols) ──────────────────┤
 │  Weight │ Temp Efficiency │ Headwind │ GPS Polling     │
 ├──────────────── STAT CARDS (8 cols) ───────────────────┤
@@ -1346,7 +1346,7 @@ The MapLibre GL map style is switched per theme at initialization time (see [Map
 ├──────────────── RANGE ESTIMATOR ───────────────────────┤
 │  [kWh ±] [SOC% ±] [═══ Battery Bar ═══] [Range] [Rem.] │
 ├───────────── MAP ──────────┬───── CHARTS PANEL ────────┤
-│ [−][🧿][+]  [🔺][🌍][⛈️][📌][↕️]                          │
+│ [−][🧿][+]                │    [🔺][🌍][⛈️][📌][↕️] │
 │                            │  Elevation Profile        │
 │                            │  Consumption Profile      │
 │                            │  Speed Profile            │
@@ -1356,7 +1356,7 @@ The MapLibre GL map style is switched per theme at initialization time (see [Map
 │                            │  Driving Style Analyzer   │
 │                            │  Weather Panel            │
 ├─────────────────────── CONTROLS ───────────────────────┤
-│           [▶ Start Trip]    [⏹ Stop Trip]             │
+│  [▶ Start Trip]    [⏹ Stop Trip]    [↺ Reset Trip]    │
 └────────────────────────────────────────────────────────┘
 ```
 
@@ -1821,7 +1821,7 @@ When `body.map-fullscreen` is active, the following elements are hidden via CSS:
 - `.config-grid` (vehicle configuration row)
 - `.range-card` (battery / range estimator)
 - `.grid-stats` (8 stat cards)
-- `.controls` (Start / Stop buttons)
+- `.controls` (Start / Stop / Reset buttons)
 - `.charts-panel` (all charts and weather panel)
 
 The map wrapper and its content expand to fill the remaining available space with `border-radius: 0` to eliminate rounded corners at viewport edges.
@@ -2714,7 +2714,7 @@ The helper respects the `min`/`max` HTML attributes and clamps the result, preve
 
 ## ✨ Action Button Shine Effect
 
-The **Start Trip** and **Stop Trip** buttons feature a **sweeping shine animation** on hover:
+The **Start Trip**, **Stop Trip** and **Reset Trip** buttons feature a **sweeping shine animation** on hover:
 
 ```css
 .action-btn::after {
@@ -2729,6 +2729,7 @@ The **Start Trip** and **Stop Trip** buttons feature a **sweeping shine animatio
 A semi-transparent white gradient sweeps across the button from left to right over 400ms. Additionally:
 - **Start button** has a 3D push-down effect (`box-shadow: 0 4px 0 #00912a`) that compresses on hover
 - **Stop button** has a matching red push-down effect (`box-shadow: 0 4px 0 #9b0000`)
+- **Reset button** has a matching violet push-down effect (`box-shadow: 0 4px 0 #7e57c2`)
 - When **active/disabled**, buttons dim to 60% opacity with a dark background and `cursor: not-allowed`
 
 ---
