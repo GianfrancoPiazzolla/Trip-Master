@@ -1274,10 +1274,10 @@
       transition: color 0.3s ease;
     }
 
-    /* === CONTROLS === */
+/* === CONTROLS === */
     .controls {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 1fr 1fr 1fr;
       gap: 10px;
       padding-bottom: 4px;
       flex-shrink: 0;
@@ -1344,6 +1344,25 @@
     }
 
     .btn-stop:disabled {
+      background: #2a2e35;
+      color: #4a5568;
+      box-shadow: 0 2px 0 #1a1e25;
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
+    .btn-reset {
+      background: linear-gradient(135deg, #b39ddb, #7e57c2);
+      color: #fff;
+      box-shadow: 0 4px 0 #512da8, 0 6px 20px rgba(179, 157, 219, 0.25);
+    }
+
+    .btn-reset:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 0 #512da8, 0 10px 28px rgba(179, 157, 219, 0.4);
+    }
+
+    .btn-reset:disabled {
       background: #2a2e35;
       color: #4a5568;
       box-shadow: 0 2px 0 #1a1e25;
@@ -2460,6 +2479,7 @@
     <div class="controls">
       <button id="btnStart" class="action-btn btn-start" onclick="startTracking()">▶ Start Trip</button>
       <button id="btnStop" class="action-btn btn-stop" onclick="stopTracking()" disabled>⏹ Stop Trip</button>
+      <button id="btnReset" class="action-btn btn-reset" onclick="resetTrip()" disabled>↺ Reset Trip</button>
     </div>
 
   </div>
@@ -2487,6 +2507,7 @@
       is3DMode = false;
     let isMapFullscreen = false;
     let map3dCoords = [];
+    let currentTripStartIndex = 0;
     let isHeadingUp = false;
     let lastHeading = 0;
     let isWeatherOverlayOn = false;
@@ -2538,7 +2559,6 @@
       fetchIceFuelPrice();
       fetchIceEfficiency();
       updateFeatures(0, 0, 0, 0);
-
 
       autosaveInterval = setInterval(saveLastSettings, 60000);
 
@@ -3253,7 +3273,7 @@
             type: 'Feature',
             geometry: {
               type: 'LineString',
-              coordinates: map3dCoords
+              coordinates: map3dCoords.slice(currentTripStartIndex)
             }
           }
         });
@@ -3315,7 +3335,7 @@
               type: 'Feature',
               geometry: {
                 type: 'LineString',
-                coordinates: map3dCoords
+                coordinates: map3dCoords.slice(currentTripStartIndex)
               }
             });
           }
@@ -3772,10 +3792,11 @@
     }
 
     function startTracking() {
-      map3dCoords = [];
+      currentTripStartIndex = map3dCoords.length;
       document.getElementById('btnStart').disabled = true;
       document.getElementById('btnStart').classList.add('active');
       document.getElementById('btnStop').disabled = false;
+      document.getElementById('btnReset').disabled = true;
       document.querySelector('.header-btns button[title="EV Profiles"]').classList.add('trip-locked');
       document.getElementById('vehicleWeight').parentElement.classList.add('trip-locked');
       document.getElementById('elecPrice').parentElement.classList.add('trip-locked');
@@ -3807,7 +3828,6 @@
       }
 
       resetDrivingStyle();
-      resetRouteHeatMap();
     }
 
     function stopTracking() {
@@ -3816,18 +3836,109 @@
       document.getElementById('btnStart').disabled = false;
       document.getElementById('btnStart').classList.remove('active');
       document.getElementById('btnStop').disabled = true;
+      document.getElementById('btnReset').disabled = false;
       document.querySelector('.header-btns button[title="EV Profiles"]').classList.remove('trip-locked');
       document.getElementById('vehicleWeight').parentElement.classList.remove('trip-locked');
       document.getElementById('elecPrice').parentElement.classList.remove('trip-locked');
       document.getElementById('gpsPollingGroup').classList.remove('trip-locked');
       document.getElementById('batteryCapacity').parentElement.classList.remove('trip-locked');
+      saveLastSettings();
+    }
+
+    function resetTrip() {
+      if (pollInterval && navigator.geolocation) navigator.geolocation.clearWatch(pollInterval);
+      if (tripTimer) clearInterval(tripTimer);
+      pollInterval = null;
+      tripTimer = null;
+      totalDistance = 0;
+      totalRegenWh = 0;
+      totalConsumedWh = 0;
+      lastPoint = null;
+      startTime = null;
+      tripSeconds = 0;
+      currentTripStartIndex = 0;
       map3dCoords = [];
-      if (pathLine) {
-        pathLine.setData({ type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: [] } });
+      lastSpeedKmh = 0;
+      lastInstantPowerW = 0;
+      consumedAtRecalibration = 0;
+      powerBreakdown = { drag: 0, gravity: 0, aero: 0, regen: 0, samples: 0 };
+      drivingStyle = { accelScore: 100, brakeScore: 100, smoothScore: 100, accelEvents: 0, brakeEvents: 0, speedVarSum: 0, speedSamples: 0, lastSpeedForAccel: 0 };
+      document.getElementById('btnStart').disabled = false;
+      document.getElementById('btnStart').classList.remove('active');
+      document.getElementById('btnStop').disabled = true;
+      document.getElementById('btnReset').disabled = true;
+      document.getElementById('distDisplay').innerText = '-- Km';
+      document.getElementById('avgSpeedDisplay').innerText = '-- Km/h';
+      document.getElementById('consDisplay').innerText = '-- Wh/Km';
+      document.getElementById('regenDisplay').innerText = '-- Wh';
+      document.getElementById('altDisplay').innerText = '-- m';
+      document.getElementById('gradeDisplay').innerText = '-- %';
+      document.getElementById('powerDisplay').innerText = '-- W';
+      document.getElementById('tripTimeDisplay').innerText = '--:--:--';
+      document.getElementById('cmSpent').innerText = '-- €';
+      document.getElementById('cmPerKm').innerText = '-- €';
+      document.getElementById('cmSaved').innerText = '-- €';
+      document.getElementById('energyConsumedLabel').innerText = '0 Wh';
+      document.getElementById('energyRegenLabel').innerText = '0 Wh';
+      document.getElementById('regenEffLabel').innerText = '-- %';
+      document.getElementById('dragBar').style.width = '0%';
+      document.getElementById('gravBar').style.width = '0%';
+      document.getElementById('windBar').style.width = '0%';
+      document.getElementById('regenBar').style.width = '0%';
+      document.getElementById('dragVal').innerText = '0 W';
+      document.getElementById('gravVal').innerText = '0 W';
+      document.getElementById('windVal').innerText = '0 W';
+      document.getElementById('regenBarVal').innerText = '0 W';
+      document.getElementById('dsAccelBar').style.width = '100%';
+      document.getElementById('dsBrakeBar').style.width = '100%';
+      document.getElementById('dsSmoothBar').style.width = '100%';
+      document.getElementById('dsAccelVal').innerText = '100';
+      document.getElementById('dsBrakeVal').innerText = '100';
+      document.getElementById('dsSmoothVal').innerText = '100';
+      document.getElementById('dsBadge').innerText = '--';
+      document.getElementById('socConsumedLabel').innerText = '';
+      if (map && map.getSource('trip-path-2d')) {
+        map.getSource('trip-path-2d').setData({ type: 'Feature', geometry: { type: 'LineString', coordinates: [] } });
       }
-      if (pathLine3d) {
-        pathLine3d.setData({ type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: [] } });
+      if (map3d && map3d.getSource('trip-path')) {
+        map3d.getSource('trip-path').setData({ type: 'Feature', geometry: { type: 'LineString', coordinates: [] } });
       }
+      if (positionMarker) {
+        positionMarker.remove();
+        positionMarker = null;
+      }
+      if (positionMarker3d) {
+        positionMarker3d.remove();
+        positionMarker3d = null;
+      }
+      if (window._importStartMarker) {
+        window._importStartMarker.remove();
+        window._importStartMarker = null;
+      }
+      if (window._importEndMarker) {
+        window._importEndMarker.remove();
+        window._importEndMarker = null;
+      }
+      if (window._importStartMarker3d) {
+        window._importStartMarker3d.remove();
+        window._importStartMarker3d = null;
+      }
+      if (window._importEndMarker3d) {
+        window._importEndMarker3d.remove();
+        window._importEndMarker3d = null;
+      }
+      weatherOverlayTimestamp = null;
+      if (altChart) { altChart.destroy(); altChart = null; }
+      if (consChart) { consChart.destroy(); consChart = null; }
+      if (speedChart) { speedChart.destroy(); speedChart = null; }
+      if (energyChart) { energyChart.destroy(); energyChart = null; }
+
+      initializeSystem();
+      setupCharts();
+      updateEnergyFlow(0, 0, 22);
+      updateBattery();
+      computeRangeEstimate();
+      updateFeatures(0, 0, 0, 0);
       saveLastSettings();
     }
 
@@ -3935,7 +4046,7 @@
               type: 'Feature',
               geometry: {
                 type: 'LineString',
-                coordinates: map3dCoords
+                coordinates: map3dCoords.slice(currentTripStartIndex)
               }
             });
           }
@@ -3962,7 +4073,7 @@
               type: 'Feature',
               geometry: {
                 type: 'LineString',
-                coordinates: map3dCoords
+                coordinates: map3dCoords.slice(currentTripStartIndex)
               }
             });
           }
@@ -4200,6 +4311,7 @@ function updateBatterySoC() {
             return;
           }
           map3dCoords = coords;
+          currentTripStartIndex = 0;
 
           if (pathLine) {
             pathLine.setData({
