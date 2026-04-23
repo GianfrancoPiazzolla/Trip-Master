@@ -3772,6 +3772,7 @@
     }
 
     function startTracking() {
+      map3dCoords = [];
       document.getElementById('btnStart').disabled = true;
       document.getElementById('btnStart').classList.add('active');
       document.getElementById('btnStop').disabled = false;
@@ -3820,6 +3821,13 @@
       document.getElementById('elecPrice').parentElement.classList.remove('trip-locked');
       document.getElementById('gpsPollingGroup').classList.remove('trip-locked');
       document.getElementById('batteryCapacity').parentElement.classList.remove('trip-locked');
+      map3dCoords = [];
+      if (pathLine) {
+        pathLine.setData({ type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: [] } });
+      }
+      if (pathLine3d) {
+        pathLine3d.setData({ type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: [] } });
+      }
       saveLastSettings();
     }
 
