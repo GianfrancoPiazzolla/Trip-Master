@@ -1356,7 +1356,7 @@ The MapLibre GL map style is switched per theme at initialization time (see [Map
 │                            │  Driving Style Analyzer   │
 │                            │  Weather Panel            │
 ├─────────────────────── CONTROLS ───────────────────────┤
-│  [▶ Start Trip]    [⏹ Stop Trip]    [↺ Reset Trip]    │
+│  [▶ Start Trip]    [⏹ Stop Trip]    [↺ Reset Trip]   │
 └────────────────────────────────────────────────────────┘
 ```
 
