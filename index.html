@@ -5087,7 +5087,7 @@ function updateBatterySoC() {
 
             <!-- Flow Lines -->
             <line x1="65" y1="42" x2="170" y2="27" stroke="url(#flowDrive)" stroke-width="${Math.max(2, motorW/totalDraw*6)}" stroke-linecap="round" opacity="0.8"/>
-            <line x1="65" y1="55" x2="170" y2="80" stroke="url(#flowHvac)" stroke-width="${Math.max(1, hvacW/totalDraw*4)}" stroke-linecap="round" opacity="0.6"/>
+            <line x1="65" y1="55" x2="170" y2="80" stroke="url(#flowHvac)" stroke-width="${instantPowerW > 0 ? Math.max(1, hvacW/totalDraw*4) : 1}" stroke-linecap="round" opacity="0.6"/>
             <line x1="225" y1="27" x2="320" y2="27" stroke="url(#flowDrive)" stroke-width="${Math.max(2, motorW/totalDraw*6)}" stroke-linecap="round" opacity="0.8"/>
             <line x1="225" y1="80" x2="320" y2="80" stroke="${lineColor}" stroke-width="2" stroke-linecap="round" opacity="0.4"/>
 
