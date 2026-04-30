@@ -3792,6 +3792,7 @@
     }
 
     function startTracking() {
+      lastPoint = null;
       currentTripStartIndex = map3dCoords.length;
       document.getElementById('btnStart').disabled = true;
       document.getElementById('btnStart').classList.add('active');
@@ -3827,7 +3828,6 @@
         });
       }
 
-      resetDrivingStyle();
     }
 
     function stopTracking() {
@@ -4023,6 +4023,10 @@
       } = pos.coords;
       const currentAlt = altitude || 0;
 
+      if (!lastPoint) {
+        map3dCoords.push([longitude, latitude]);
+      }
+
       if (lastPoint) {
         const step = computeDistance(lastPoint.lat, lastPoint.lon, latitude, longitude);
         if (step > 5) {
@@ -4041,12 +4045,13 @@
           refreshUI(totalDistance, currentAlt, grade, instantCons, avgSpeed, lastSpeedKmh);
 
           map3dCoords.push([longitude, latitude]);
+          const currentTripCoords = map3dCoords.slice(currentTripStartIndex);
           if (pathLine) {
             pathLine.setData({
               type: 'Feature',
               geometry: {
                 type: 'LineString',
-                coordinates: map3dCoords.slice(currentTripStartIndex)
+                coordinates: currentTripCoords
               }
             });
           }
@@ -4073,7 +4078,7 @@
               type: 'Feature',
               geometry: {
                 type: 'LineString',
-                coordinates: map3dCoords.slice(currentTripStartIndex)
+                coordinates: currentTripCoords
               }
             });
           }
@@ -5107,6 +5112,8 @@ function updateBatterySoC() {
     function updateRouteHeatMap(distKm, consWhKm) {
       if (map3dCoords.length < 2) return;
 
+      const isFirst = routeSegments.length === 0;
+      const i = routeSegments.length;
       routeSegments.push({
         dist: distKm,
         cons: consWhKm
@@ -5114,28 +5121,43 @@ function updateBatterySoC() {
 
       if (!map || !pathLine) return;
 
-      for (let i = 0; i < routeSegments.length; i++) {
-        const srcId = 'route-seg-' + i;
-        const lyrId = 'route-seg-lyr-' + i;
-        if (map.getLayer(lyrId)) map.removeLayer(lyrId);
-        if (map.getSource(srcId)) map.removeSource(srcId);
+      const lastIdx = map3dCoords.length - 1;
+      const coords = [map3dCoords[lastIdx - 1], map3dCoords[lastIdx]];
+      if (!coords[0] || !coords[1]) return;
+
+      const color = getHeatColor(consWhKm);
+      const srcId = 'route-seg-' + i;
+      const lyrId = 'route-seg-lyr-' + i;
+
+      map.addSource(srcId, {
+        type: 'geojson',
+        data: {
+          type: 'Feature',
+          geometry: {
+            type: 'LineString',
+            coordinates: coords
+          }
+        }
+      });
+      map.addLayer({
+        id: lyrId,
+        type: 'line',
+        source: srcId,
+        layout: {
+          'line-join': 'round',
+          'line-cap': 'round'
+        },
+        paint: {
+          'line-color': color,
+          'line-width': 6,
+          'line-opacity': 1
+        }
+      });
+
+      if (map3d) {
         const srcId3d = 'route-seg-3d-' + i;
         const lyrId3d = 'route-seg-3d-lyr-' + i;
-        if (map3d && map3d.getLayer(lyrId3d)) map3d.removeLayer(lyrId3d);
-        if (map3d && map3d.getSource(srcId3d)) map3d.removeSource(srcId3d);
-      }
-
-      for (let i = 0; i < routeSegments.length; i++) {
-        const seg = routeSegments[i];
-        const coords = [map3dCoords[i], map3dCoords[i + 1]];
-        if (!coords[0] || !coords[1]) continue;
-
-        const color = getHeatColor(seg.cons);
-
-        const srcId = 'route-seg-' + i;
-        const lyrId = 'route-seg-lyr-' + i;
-
-        map.addSource(srcId, {
+        map3d.addSource(srcId3d, {
           type: 'geojson',
           data: {
             type: 'Feature',
@@ -5145,11 +5167,10 @@ function updateBatterySoC() {
             }
           }
         });
-
-        map.addLayer({
-          id: lyrId,
+        map3d.addLayer({
+          id: lyrId3d,
           type: 'line',
-          source: srcId,
+          source: srcId3d,
           layout: {
             'line-join': 'round',
             'line-cap': 'round'
@@ -5160,42 +5181,15 @@ function updateBatterySoC() {
             'line-opacity': 1
           }
         });
+      }
 
-        if (map3d) {
-          const srcId3d = 'route-seg-3d-' + i;
-          const lyrId3d = 'route-seg-3d-lyr-' + i;
-          map3d.addSource(srcId3d, {
-            type: 'geojson',
-            data: {
-              type: 'Feature',
-              geometry: {
-                type: 'LineString',
-                coordinates: coords
-              }
-            }
-          });
-          map3d.addLayer({
-            id: lyrId3d,
-            type: 'line',
-            source: srcId3d,
-            layout: {
-              'line-join': 'round',
-              'line-cap': 'round'
-            },
-            paint: {
-              'line-color': color,
-              'line-width': 6,
-              'line-opacity': 1
-            }
-          });
+      if (isFirst) {
+        if (map.getLayer('trip-path-2d-layer')) {
+          map.setLayoutProperty('trip-path-2d-layer', 'visibility', 'none');
         }
-      }
-
-      if (map.getLayer('trip-path-2d-layer')) {
-        map.setLayoutProperty('trip-path-2d-layer', 'visibility', 'none');
-      }
-      if (map3d && map3d.getLayer('trip-path-layer')) {
-        map3d.setLayoutProperty('trip-path-layer', 'visibility', 'none');
+        if (map3d && map3d.getLayer('trip-path-layer')) {
+          map3d.setLayoutProperty('trip-path-layer', 'visibility', 'none');
+        }
       }
     }
 
