@@ -331,8 +331,8 @@ A **SVG-based live diagram** renders the instantaneous power flow between the ba
 │                                                   │
 │   ┌─────────┐                      ┌─────────┐    │
 │   │    🔋   │                      │   🛞     │    │
-│   │ Battery │═══════⚡ Motor ══════►│ Wheels  │    │
-│   │         │   (⚡ Motor Power W)  │         │    │
+│   │ Battery │═════ ⚡ Motor ══════►│ Wheels  │    │
+│   │         │  (⚡ Motor Power W)  │         │    │
 │   │         │                      │         │    │
 │   └────╬────┘                      └─────────┘    │
 │        ║                                          │
@@ -340,12 +340,12 @@ A **SVG-based live diagram** renders the instantaneous power flow between the ba
 │        ║ (❄️ HVAC Power W)                        │
 │        ▼                                          │
 │   ┌─────────┐                      ┌─────────┐    │
-│   │   ❄️    │                       │   💡    │    │
+│   │   ❄️    │                      │   💡    │    │
 │   │ HVAC    │══════════════════════│  Aux    │    │
 │   │         │                      │  300W   │    │
 │   └─────────┘                      └─────────┘    │
 │                                                   │
-│   ↩ Regen (green arrow, when braking)             │
+│   ↩ Regen (green arrow, when braking)            │
 │                                                   │
 └───────────────────────────────────────────────────┘
 ```
@@ -428,7 +428,7 @@ The original uniform route polyline (`trip-path-layer`) is **hidden** while the 
 | < 0 | 🔵 Blue | `#29b6f6` | Regenerative braking active |
 | 0 – 120 | 🟢 Green | `#00e676` | Highly efficient |
 | 120 – 180 | 🟢 Light green | `#69f0ae` | Efficient |
-| 180 – 250 | 🟡 Yellow | `#ffd740` | Moderate consumption |
+| 180 – 250 | 🟡 Yellow | `#ffff00` | Moderate consumption |
 | 250 – 350 | 🟠 Orange | `#ff9100` | High consumption |
 | > 350 | 🔴 Red | `#ff1744` | Very high consumption |
 
@@ -437,7 +437,7 @@ function getHeatColor(consWhKm) {
     if (consWhKm < 0)   return '#29b6f6';  // 🔵 Regen
     if (consWhKm < 120) return '#00e676';  // 🟢 Excellent
     if (consWhKm < 180) return '#69f0ae';  // 🟢 Good
-    if (consWhKm < 250) return '#ffd740';  // 🟡 Moderate
+    if (consWhKm < 250) return '#ffff00';  // 🟡 Moderate
     if (consWhKm < 350) return '#ff9100';  // 🟠 High
     return '#ff1744';                      // 🔴 Very high
 }
