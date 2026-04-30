@@ -3211,6 +3211,21 @@
             'line-opacity': 1
           }
         });
+        map.addSource('route-heatmap', {
+          type: 'geojson',
+          data: { type: 'FeatureCollection', features: [] }
+        });
+        map.addLayer({
+          id: 'route-heatmap-layer',
+          type: 'line',
+          source: 'route-heatmap',
+          layout: { 'line-join': 'round', 'line-cap': 'round' },
+          paint: {
+            'line-color': ['get', 'color'],
+            'line-width': 6,
+            'line-opacity': 1
+          }
+        });
 
         if (navigator.geolocation) {
           navigator.geolocation.getCurrentPosition(
@@ -3289,6 +3304,21 @@
           },
           paint: {
             'line-color': '#e21017',
+            'line-width': 6,
+            'line-opacity': 1
+          }
+        });
+        map3d.addSource('route-heatmap-3d', {
+          type: 'geojson',
+          data: { type: 'FeatureCollection', features: [] }
+        });
+        map3d.addLayer({
+          id: 'route-heatmap-3d-layer',
+          type: 'line',
+          source: 'route-heatmap-3d',
+          layout: { 'line-join': 'round', 'line-cap': 'round' },
+          paint: {
+            'line-color': ['get', 'color'],
             'line-width': 6,
             'line-opacity': 1
           }
@@ -3792,6 +3822,7 @@
     }
 
     function startTracking() {
+      lastPoint = null;
       currentTripStartIndex = map3dCoords.length;
       document.getElementById('btnStart').disabled = true;
       document.getElementById('btnStart').classList.add('active');
@@ -3827,7 +3858,6 @@
         });
       }
 
-      resetDrivingStyle();
     }
 
     function stopTracking() {
@@ -3933,6 +3963,7 @@
       if (speedChart) { speedChart.destroy(); speedChart = null; }
       if (energyChart) { energyChart.destroy(); energyChart = null; }
 
+      resetRouteHeatMap();
       initializeSystem();
       setupCharts();
       updateEnergyFlow(0, 0, 22);
@@ -4023,6 +4054,10 @@
       } = pos.coords;
       const currentAlt = altitude || 0;
 
+      if (!lastPoint) {
+        map3dCoords.push([longitude, latitude]);
+      }
+
       if (lastPoint) {
         const step = computeDistance(lastPoint.lat, lastPoint.lon, latitude, longitude);
         if (step > 5) {
@@ -4041,12 +4076,13 @@
           refreshUI(totalDistance, currentAlt, grade, instantCons, avgSpeed, lastSpeedKmh);
 
           map3dCoords.push([longitude, latitude]);
+          const currentTripCoords = map3dCoords.slice(currentTripStartIndex);
           if (pathLine) {
             pathLine.setData({
               type: 'Feature',
               geometry: {
                 type: 'LineString',
-                coordinates: map3dCoords.slice(currentTripStartIndex)
+                coordinates: currentTripCoords
               }
             });
           }
@@ -4073,7 +4109,7 @@
               type: 'Feature',
               geometry: {
                 type: 'LineString',
-                coordinates: map3dCoords.slice(currentTripStartIndex)
+                coordinates: currentTripCoords
               }
             });
           }
@@ -5102,100 +5138,41 @@ function updateBatterySoC() {
     }
 
     /* ===== FEATURE 2: CONSUMPTION HEAT MAP ON ROUTE ===== */
-    let routeSegments = [];
+    let heatmapFeatures = [];
 
     function updateRouteHeatMap(distKm, consWhKm) {
       if (map3dCoords.length < 2) return;
+      if (!map || !map.getSource('route-heatmap')) return;
 
-      routeSegments.push({
-        dist: distKm,
-        cons: consWhKm
+      const lastIdx = map3dCoords.length - 1;
+      const coords = [map3dCoords[lastIdx - 1], map3dCoords[lastIdx]];
+      if (!coords[0] || !coords[1]) return;
+
+      const color = getHeatColor(consWhKm);
+
+      heatmapFeatures.push({
+        type: 'Feature',
+        properties: { color: color },
+        geometry: { type: 'LineString', coordinates: coords }
       });
 
-      if (!map || !pathLine) return;
+      map.getSource('route-heatmap').setData({
+        type: 'FeatureCollection',
+        features: heatmapFeatures
+      });
 
-      for (let i = 0; i < routeSegments.length; i++) {
-        const srcId = 'route-seg-' + i;
-        const lyrId = 'route-seg-lyr-' + i;
-        if (map.getLayer(lyrId)) map.removeLayer(lyrId);
-        if (map.getSource(srcId)) map.removeSource(srcId);
-        const srcId3d = 'route-seg-3d-' + i;
-        const lyrId3d = 'route-seg-3d-lyr-' + i;
-        if (map3d && map3d.getLayer(lyrId3d)) map3d.removeLayer(lyrId3d);
-        if (map3d && map3d.getSource(srcId3d)) map3d.removeSource(srcId3d);
-      }
-
-      for (let i = 0; i < routeSegments.length; i++) {
-        const seg = routeSegments[i];
-        const coords = [map3dCoords[i], map3dCoords[i + 1]];
-        if (!coords[0] || !coords[1]) continue;
-
-        const color = getHeatColor(seg.cons);
-
-        const srcId = 'route-seg-' + i;
-        const lyrId = 'route-seg-lyr-' + i;
-
-        map.addSource(srcId, {
-          type: 'geojson',
-          data: {
-            type: 'Feature',
-            geometry: {
-              type: 'LineString',
-              coordinates: coords
-            }
-          }
+      if (map3d && map3d.getSource('route-heatmap-3d')) {
+        map3d.getSource('route-heatmap-3d').setData({
+          type: 'FeatureCollection',
+          features: heatmapFeatures
         });
-
-        map.addLayer({
-          id: lyrId,
-          type: 'line',
-          source: srcId,
-          layout: {
-            'line-join': 'round',
-            'line-cap': 'round'
-          },
-          paint: {
-            'line-color': color,
-            'line-width': 6,
-            'line-opacity': 1
-          }
-        });
-
-        if (map3d) {
-          const srcId3d = 'route-seg-3d-' + i;
-          const lyrId3d = 'route-seg-3d-lyr-' + i;
-          map3d.addSource(srcId3d, {
-            type: 'geojson',
-            data: {
-              type: 'Feature',
-              geometry: {
-                type: 'LineString',
-                coordinates: coords
-              }
-            }
-          });
-          map3d.addLayer({
-            id: lyrId3d,
-            type: 'line',
-            source: srcId3d,
-            layout: {
-              'line-join': 'round',
-              'line-cap': 'round'
-            },
-            paint: {
-              'line-color': color,
-              'line-width': 6,
-              'line-opacity': 1
-            }
-          });
-        }
       }
 
-      if (map.getLayer('trip-path-2d-layer')) {
-        map.setLayoutProperty('trip-path-2d-layer', 'visibility', 'none');
-      }
-      if (map3d && map3d.getLayer('trip-path-layer')) {
-        map3d.setLayoutProperty('trip-path-layer', 'visibility', 'none');
+      if (heatmapFeatures.length === 1) {
+        if (map.getLayer('trip-path-2d-layer'))
+          map.setLayoutProperty('trip-path-2d-layer', 'visibility', 'none');
+        if (map3d && map3d.getLayer('trip-path-layer'))
+          map3d.setLayoutProperty('trip-path-layer', 'visibility', 'none');
       }
     }
 
@@ -5203,32 +5180,23 @@ function updateBatterySoC() {
       if (consWhKm < 0) return '#29b6f6';
       if (consWhKm < 120) return '#00e676';
       if (consWhKm < 180) return '#69f0ae';
-      if (consWhKm < 250) return '#ffff00';
+      if (consWhKm < 250) return '#ffd740';
       if (consWhKm < 350) return '#ff9100';
       return '#ff1744';
     }
 
     function resetRouteHeatMap() {
-      if (!map) return;
-      routeSegments = [];
-
-      for (let i = 0; i < 2000; i++) {
-        const srcId = 'route-seg-' + i;
-        const lyrId = 'route-seg-lyr-' + i;
-        if (map.getLayer(lyrId)) map.removeLayer(lyrId);
-        if (map.getSource(srcId)) map.removeSource(srcId);
-        const srcId3d = 'route-seg-3d-' + i;
-        const lyrId3d = 'route-seg-3d-lyr-' + i;
-        if (map3d && map3d.getLayer(lyrId3d)) map3d.removeLayer(lyrId3d);
-        if (map3d && map3d.getSource(srcId3d)) map3d.removeSource(srcId3d);
+      heatmapFeatures = [];
+      if (map && map.getSource('route-heatmap')) {
+        map.getSource('route-heatmap').setData({ type: 'FeatureCollection', features: [] });
       }
-
-      if (map.getLayer('trip-path-2d-layer')) {
+      if (map3d && map3d.getSource('route-heatmap-3d')) {
+        map3d.getSource('route-heatmap-3d').setData({ type: 'FeatureCollection', features: [] });
+      }
+      if (map && map.getLayer('trip-path-2d-layer'))
         map.setLayoutProperty('trip-path-2d-layer', 'visibility', 'visible');
-      }
-      if (map3d && map3d.getLayer('trip-path-layer')) {
+      if (map3d && map3d.getLayer('trip-path-layer'))
         map3d.setLayoutProperty('trip-path-layer', 'visibility', 'visible');
-      }
     }
 
     /* ===== FEATURE 3: DRIVING STYLE ANALYZER ===== */
