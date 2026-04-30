@@ -404,23 +404,6 @@ All SVG colors adapt to the active UI theme:
 
 Each GPS segment is **individually colored** on the 2D/3D map based on its instantaneous energy consumption, creating a continuous gradient that highlights efficient vs. energy-intensive segments at a glance.
 
-#### 🛠️ Implementation
-
-`updateRouteHeatMap(distKm, consWhKm)` adds each new segment as a separate GeoJSON LineString layer:
-
-```javascript
-// Each segment becomes its own source/layer pair
-map|map3d.addSource('route-seg-' + i, { type: 'geojson', data: { ... } });
-map|map3d.addLayer({
-    id: 'route-seg-lyr-' + i,
-    type: 'line',
-    source: 'route-seg-' + i,
-    paint: { 'line-color': color, 'line-width': 5, 'line-opacity': 0.9 }
-});
-```
-
-The original uniform route polyline (`trip-path-layer`) is **hidden** while the heat map is active.
-
 #### 🎨 Heat Color Scale
 
 | Consumption (Wh/Km) | Color | Hex | Meaning |
