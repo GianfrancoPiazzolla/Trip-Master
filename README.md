@@ -61,9 +61,10 @@
 39. [Driving Style Analyzer](#-driving-style-analyzer)
 40. [Real-Time Cost Meter](#-real-time-cost-meter)
 41. [Responsive Layout Adaptations](#-responsive-layout-adaptations)
-42. [Dependencies](#-dependencies)
-43. [Getting Started](#-getting-started)
-44. [Mathematical Reference](#-mathematical-reference)
+42. [Card Folding & Maximized Map View](#-card-folding--maximized-map-view)
+43. [Dependencies](#-dependencies)
+44. [Getting Started](#-getting-started)
+45. [Mathematical Reference](#-mathematical-reference)
 
 ---
 
@@ -2879,6 +2880,48 @@ function updateBatteryLayout() {
 ```
 
 A `ResizeObserver` on `.range-card` re-evaluates the layout breakpoint on every resize, making the battery widget fluid across all viewport sizes.
+
+---
+
+## 📂 Card Folding & Maximized Map View
+
+To maximize the screen real estate dedicated to the map view without entering full-screen mode, Trip Master implements a **collapsible card system** 📁. This allows users to hide non-essential charts and panels dynamically.
+
+### ↕️ Interaction Mechanism
+
+- 🖱️ **Clickable Headers**: All cards in the **Charts Panel** (Elevation, Consumption, Speed, Energy Balance, Energy Flow, Driving Style, and Weather) feature interactive headers.
+- 🔼 **Visual Indicators**: A dynamic arrow (`▴` for expanded, `▾` for collapsed) provides immediate feedback on the card's state.
+- 📏 **Vertical Compression**: Collapsed cards are reduced to a fixed height of **32px**, hiding all internal content while keeping the title visible.
+
+### ⚙️ Logic Implementation
+
+The folding logic is handled by a unified CSS class and a JavaScript toggle:
+
+```javascript
+function toggleCardCollapse(header) {
+    const card = header.parentElement;
+    card.classList.toggle('collapsed');
+    const arrow = header.querySelector('.collapse-arrow');
+    if (arrow) {
+        arrow.textContent = card.classList.contains('collapsed') ? '▾' : '▴';
+    }
+}
+```
+
+```css
+.collapsed {
+    height: 32px !important;
+    overflow: hidden !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+}
+```
+
+### 🔍 Focus Mode
+
+By folding all side cards, the map area expands to fill the available width, creating a **Map-Centric Focus Mode** 🗺️ without losing the ability to quickly peek at data by unfolding a single card.
+
+> 💡 **Note**: Primary system cards (System Configuration, Battery & Range, Trip Costs, and Trip Statistics) are excluded from the folding system to ensure critical mission data is always visible.
 
 ---
 
