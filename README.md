@@ -59,10 +59,11 @@
 37. [Energy Balance Chart Gradient Bars](#-energy-balance-chart-gradient-bars)
 38. [Energy Flow Dashboard](#️-energy-flow-dashboard)
 39. [Driving Style Analyzer](#-driving-style-analyzer)
-40. [Responsive Layout Adaptations](#-responsive-layout-adaptations)
-41. [Dependencies](#-dependencies)
-40. [Getting Started](#-getting-started)
-41. [Mathematical Reference](#-mathematical-reference)
+40. [Real-Time Cost Meter](#-real-time-cost-meter)
+41. [Responsive Layout Adaptations](#-responsive-layout-adaptations)
+42. [Dependencies](#-dependencies)
+43. [Getting Started](#-getting-started)
+44. [Mathematical Reference](#-mathematical-reference)
 
 ---
 
@@ -100,6 +101,7 @@ The app runs entirely client-side. There is no server, no database, and no build
 | 🔁 **POI Map Sync** | Synchronizes POI markers from one map instance to the other when switching between 2D and 3D modes |
 | 🌙 **Dark / Light Theme** | Full dual-theme UI with smooth CSS variable transitions |
 | 📱 **PWA / Installable** | Service Worker + Web Manifest for offline use and home-screen install |
+| 💰 **Real-time Cost Meter** | Tracks electricity costs and compares savings against ICE vehicles using live fuel prices |
 | 🔒 **Wake Lock** | Prevents device screen from sleeping during active tracking |
 | 🏁 **Trip Summary Modal** | Post-trip analytics with efficiency scoring badge |
 
@@ -356,7 +358,7 @@ A **SVG-based live diagram** renders the instantaneous power flow between the ba
 |---|---|---|---|
 | 🔋 Battery | 🔋 | — | Source/sink node |
 | ⚡ Motor | ⚡ | `motorW = max(0, instantPowerW)` | Instantaneous power to motor [W] |
-| 🛞 Wheels | 🛞 | — | Output/mechanical node |
+| 🎡 Wheels | 🎡 | — | Output/mechanical node |
 | ❄️ HVAC | ❄️ | `hvacW = max(0, abs(tempC - 22) × 50)` | HVAC load — 50W per °C deviation from 22°C |
 | 💡 Aux | 💡 | `auxW = 300` | Fixed auxiliary load [W] (infotainment, lights, etc.) |
 | ↩ Regen | ↩ | `regenW = lastInstantPowerW < 0 ? abs(lastInstantPowerW) × 0.7 : 0` | Regenerative braking power [W] |
@@ -374,7 +376,6 @@ stroke-width = max(1, (hvacW / totalDraw) × 4)
 
 // Regen arrow (Wheels → Battery, when braking)
 stroke-width = max(2, (regenW / totalDraw) × 6)
-// Includes SVG glow filter: <feGaussianBlur stdDeviation="2">
 ```
 
 | Line | Gradient | Direction | Width Factor |
@@ -429,10 +430,18 @@ function getHeatColor(consWhKm) {
 #### 📍 Visual Pattern
 
 The heat map reveals driving patterns instantly:
-- **Downhill stretches** → blue segments (energy recovered)
-- **Uphill climbs** → red/orange segments (high drain)
-- **Flat cruise** → green segments (efficient steady-state)
-- **City traffic** → mixed green/yellow (frequent stops, regen bursts)
+- **Downhill stretches** → 🔵 blue segments (energy recovered)
+- **Uphill climbs** → 🔴 red/🟠 orange segments (high drain)
+- **Flat cruise** → 🟢 green segments (efficient steady-state)
+- **City traffic** → 🟢 mixed green/🟡 yellow (frequent stops, regen bursts)
+
+#### 🚄 Tiered Rendering Architecture (Optimized)
+
+Unlike standard implementations that re-render the entire path on every update, Trip Master uses a **high-performance tiered rendering strategy** to ensure 60 FPS fluid performance even on long trips:
+
+- ⚡ **Live Source (`route-heatmap-live`):** Stores only the most recent **10 segments**. This source is updated on every GPS fix. Since it is extremely small, `setData()` operations are near-instantaneous.
+- 🏗️ **Static Source (`route-heatmap-static`):** Once the live buffer reaches its limit (**Batch Size = 10**), segments are consolidated into the static source. This source is updated 10x less frequently, drastically reducing CPU overhead and battery drain.
+- 🚀 **Hardware Acceleration:** By splitting the data, we minimize the time spent in GeoJSON serialization and WebGL tessellation, preventing UI "stuttering" during active tracking.
 
 > 💡 **Note:** Segments accumulate for the entire trip duration. The heat map is not reset between GPS fixes — each segment is permanent and layered sequentially on the map.
 
@@ -537,6 +546,39 @@ The gauge includes a **glow filter** (`#gaugeGlow`) for the score arc and uses `
 `updateDrivingStyle(speedKmh)` is called from `updateFeatures()` at every valid GPS fix:
 
 ---
+## 💰 Real-Time Cost Meter
+
+Trip Master features a **dynamic financial analytics engine** that calculates the real-time cost of your trip and provides a direct comparison with equivalent internal combustion engine (ICE) vehicle costs.
+
+### 📉 Live Fuel Price Integration ⛽
+
+To provide accurate comparisons, the app automatically fetches the latest **average diesel prices** (Italy) from external APIs:
+- **Source:** `fuel-prices.eu` 📡
+- **Update Frequency:** Every 6 hours (cached in `localStorage`) ⏱️
+- **Fallback:** Uses a baseline of **1.80 €/L** if the API is unreachable 🛠️
+
+### 🏎️ ICE Efficiency Calibration 🧪
+
+The app derives a "typical" ICE efficiency based on official **EEA (European Environment Agency)** CO2 performance data:
+- **Source:** EEA CO2 emissions reports 📄
+- **Logic:** Converts average $g\text{CO}_2/\text{km}$ targets into a real-world adjusted **Km/L** figure (defaulting to ~17.2 Km/L for modern diesel fleets) 📉
+
+### 🔢 Financial Formulas 🧮
+
+| Metric | Formula | Description |
+|---|---|---|
+| 💶 **Trip Cost** | $E_{\text{kWh}} \times \text{ElecPrice}$ | Total cost of electricity consumed so far |
+| 🛣️ **Cost per Km** | $\text{Trip Cost} / \text{Distance}$ | Real-time unit cost of travel |
+| ⛽ **Equivalent ICE Cost** | $(\text{Distance} / \text{ICE Efficiency}) \times \text{Fuel Price}$ | Estimated cost for a diesel vehicle |
+| 🤑 **Money Saved** | $\text{ICE Cost} - \text{Trip Cost}$ | Financial gain of driving electric |
+
+### 🎨 Visual Indicators 📈
+
+The cost data is displayed in a dedicated panel and in the final trip summary, using **dynamic coloring**:
+- 🟢 **Green:** Positive savings (Electric is cheaper)
+- 🔴 **Red:** Higher cost than ICE (Rare, but possible with high electricity prices)
+
+---
 
 ## 🌡️ Weather Integration
 
@@ -606,7 +648,7 @@ A floating **`⛈️` button** is permanently overlaid in the **top-right area o
 ```
 ┌─────────────────────────── MAP WRAPPER ────────────────────────────────┐
 │    ┌───┐  ┌───┐  ┌───┐      ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐    │
-│    │ − │  │ 🧿 │  │ + │      │  🔺  │ │ 🌍  │ │  📌 │ │ ⛈  │ │  ↕️  │    │
+│    │ − │  │🧿 │  │ + │      │  🔺│ │ 🌍  │ │ 📌 │ │ ⛈  │ │  ↕️  │   │
 │    └───┘  └───┘  └───┘      └─────┘ └─────┘ └─────┘ └─────┘ └─────┘    │
 └────────────────────────────────────────────────────────────────────────┘
 ```
@@ -1040,9 +1082,9 @@ In the Profiles modal, each profile card renders the enabled POI layers as label
 │  🚗 My EV Profile                           │
 │  Weight: 1850 Kg  Battery: 75 kWh           │
 │  kWh Price: 0.30 €/kWh                      │
-│  GPS: 5 s  Map: 🌍 / 🧭  Weather: On         │
-│  POI: 🚧 Road Closures                      │  ← only enabled layers shown
-│  POI: ⚡ EV Charging                         │
+│  GPS: 5 s  Map: 🌍 / 🧭  Weather: On       │
+│  POI: 🚧 Road Closures                     │  ← only enabled layers shown
+│  POI: ⚡ EV Charging                        │
 │  Theme: 🌙 Dark                             │
 └─────────────────────────────────────────────┘
 ```
@@ -1553,7 +1595,7 @@ Both markers are created by `createTripEndpointMarker(label, bgColor)`, which bu
 
 ```
   ┌──────────┐           ┌──────────┐
-  │  🟢  S   │            │  🔴  E   │
+  │  🟢  S  │           │  🔴  E   │
   └──────────┘           └──────────┘
   Start of route         End of route
 ```
@@ -1754,7 +1796,7 @@ A set of three floating **zoom and re-center buttons** is overlaid in the **top-
 ```
 ┌─────────── MAP WRAPPER ─────────────────┐
 │  ┌───┐ ┌───┐ ┌───┐                      │
-│  │ − │ │ 🧿 │ │ + │    (map content)    │
+│  │ − │ │🧿│ │ + │    (map content)     │
 │  └───┘ └───┘ └───┘                      │
 └─────────────────────────────────────────┘
 ```
@@ -1782,7 +1824,7 @@ A floating **`↕️` button** is permanently overlaid in the **top-right corner
 ```
 ┌─────────────────────────── MAP WRAPPER ────────────────────────────────┐
 │    ┌───┐  ┌───┐  ┌───┐      ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐    │
-│    │ − │  │ 🧿 │  │ + │      │  🔺 │  │ 🌍  │ │  📌 │ │  ⛈️  │ │  ↕ ️ │    │
+│    │ − │  │🧿 │  │ + │     │  🔺 │ │ 🌍  │ │ 📌 │ │ ⛈️  │ │  ↕ ️ │    │
 │    └───┘  └───┘  └───┘      └─────┘ └─────┘ └─────┘ └─────┘ └─────┘    │
 └────────────────────────────────────────────────────────────────────────┘
 ```
@@ -1828,7 +1870,7 @@ A floating **`🔺` / `🧭` button** is permanently overlaid in the **top-right
 ```
 ┌─────────────────────────── MAP WRAPPER ────────────────────────────────┐
 │    ┌───┐  ┌───┐  ┌───┐      ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐    │
-│    │ − │  │ 🧿 │  │ + │      │  🔺 │  │ 🌍  │ │  📌 │ │  ⛈️  │ │  ↕ ️ │    │
+│    │ − │  │🧿 │  │ + │     │  🔺 │ │ 🌍  │ │ 📌 │ │ ⛈️  │ │  ↕ ️ │    │
 │    └───┘  └───┘  └───┘      └─────┘ └─────┘ └─────┘ └─────┘ └─────┘    │
 └────────────────────────────────────────────────────────────────────────┘
 ```
@@ -1886,7 +1928,7 @@ A floating **`📌` button** is permanently overlaid in the **top-right area of 
 ```
 ┌─────────────────────────── MAP WRAPPER ────────────────────────────────┐
 │    ┌───┐  ┌───┐  ┌───┐      ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐    │
-│    │ − │  │ 🧿 │  │ + │      │  🔺 │  │ 🌍  │ │  📌 │ │  ⛈️  │ │  ↕ ️ │    │
+│    │ − │  │🧿 │  │ + │     │  🔺 │ │ 🌍  │ │ 📌 │ │ ⛈️  │ │  ↕ ️ │    │
 │    └───┘  └───┘  └───┘      └─────┘ └─────┘ └─────┘ └─────┘ └─────┘    │
 └────────────────────────────────────────────────────────────────────────┘
 ```
@@ -1909,8 +1951,8 @@ The POI Panel (`#poiPanel`) slides into view whenever the overlay is active. It 
 │  🚧  Road Closures    [ ]   │
 │  👮  Mobile Patrols   [ ]   │
 │  📷  Speed Cameras    [ ]   │
-│  ⚡  EV Charging       [ ]   │
-│  ⌛ Fetching data…           │  ← visible only during fetch
+│  ⚡  EV Charging       [ ]  │
+│  ⌛ Fetching data…          │  ← visible only during fetch
 └─────────────────────────────┘
 ```
 
