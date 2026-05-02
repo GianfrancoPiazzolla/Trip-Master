@@ -636,6 +636,8 @@ On every weather sync (every ~2 km of travel), `updateEfficiencyByTemp()` auto-s
 | $0\ °C \leq T < 10\ °C$ | $0.70$ | 🟠 Cold |
 | $T < 0\ °C$ | $0.55$ | 🔴 Extreme Cold |
 
+> ⚠️ **Manual Override Priority**: If the driver manually selects an efficiency value via the UI segmented control during a trip, the automatic calibration logic is **permanently bypassed** for the remainder of that session. The user's choice is treated as an intentional override (managed via the `isEfficiencyManualOverride` flag) and will persist until the trip is concluded with a **Stop Trip** command.
+
 ---
 
 ### 🌧️ Weather Radar Overlay
