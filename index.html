@@ -2616,6 +2616,7 @@
     let iceEfficiency = 15;
     let iceEfficiencyLoading = false;
     const ICE_EFFICIENCY_CACHE_KEY = 'tripmaster_ice_efficiency';
+    let isEfficiencyManualOverride = false;
 
     function initializeSystem() {
       setupMap();
@@ -2953,6 +2954,9 @@
             this.classList.add('active');
             const hiddenInputId = groupId.replace('Group', '').replace('#', '');
             document.getElementById(hiddenInputId).value = this.getAttribute('data-value');
+            if (groupId === '#tempEfficiencyGroup') {
+              isEfficiencyManualOverride = true;
+            }
           });
         });
       });
@@ -3068,6 +3072,7 @@
     }
 
     function updateEfficiencyByTemp(temp) {
+      if (isEfficiencyManualOverride) return;
       let valueToSelect = "1.0";
       if (temp < 0) {
         valueToSelect = "0.55";
@@ -3993,6 +3998,7 @@
       document.getElementById('elecPrice').parentElement.classList.remove('trip-locked');
       document.getElementById('gpsPollingGroup').classList.remove('trip-locked');
       document.getElementById('batteryCapacity').parentElement.classList.remove('trip-locked');
+      isEfficiencyManualOverride = false;
       saveLastSettings();
     }
 
