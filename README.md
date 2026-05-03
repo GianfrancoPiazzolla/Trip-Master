@@ -333,7 +333,7 @@ A **SVG-based live diagram** renders the instantaneous power flow between the ba
 ┌───────────────────────────────────────────────────┐
 │                                                   │
 │   ┌─────────┐                      ┌─────────┐    │
-│   │    🔋   │                      │   🛞     │    │
+│   │    🔋   │                      │   🛞    │    │
 │   │ Battery │═════ ⚡ Motor ══════►│ Wheels  │    │
 │   │         │  (⚡ Motor Power W)  │         │    │
 │   │         │                      │         │    │
@@ -348,7 +348,7 @@ A **SVG-based live diagram** renders the instantaneous power flow between the ba
 │   │         │                      │  300W   │    │
 │   └─────────┘                      └─────────┘    │
 │                                                   │
-│   ↩ Regen (green arrow, when braking)            │
+│   ↩ Regen (green arrow, when braking)             │
 │                                                   │
 └───────────────────────────────────────────────────┘
 ```
@@ -357,12 +357,12 @@ A **SVG-based live diagram** renders the instantaneous power flow between the ba
 
 | Component | Emoji | Formula | Description |
 |---|---|---|---|
-| 🔋 Battery | 🔋 | — | Source/sink node |
-| ⚡ Motor | ⚡ | `motorW = max(0, instantPowerW)` | Instantaneous power to motor [W] |
-| 🎡 Wheels | 🎡 | — | Output/mechanical node |
-| ❄️ HVAC | ❄️ | `hvacW = max(0, abs(tempC - 22) × 50)` | HVAC load — 50W per °C deviation from 22°C |
-| 💡 Aux | 💡 | `auxW = 300` | Fixed auxiliary load [W] (infotainment, lights, etc.) |
-| ↩ Regen | ↩ | `regenW = lastInstantPowerW < 0 ? abs(lastInstantPowerW) × 0.7 : 0` | Regenerative braking power [W] |
+| Battery | 🔋 | — | Source/sink node |
+| Motor | ⚡ | `motorW = max(0, instantPowerW)` | Instantaneous power to motor [W] |
+| Wheels | 🛞 | — | Output/mechanical node |
+| HVAC | ❄️ | `hvacW = max(0, abs(tempC - 22) × 50)` | HVAC load — 50W per °C deviation from 22°C |
+| Aux | 💡 | `auxW = 300` | Fixed auxiliary load [W] (infotainment, lights, etc.) |
+| Regen | ↩ | `regenW = lastInstantPowerW < 0 ? abs(lastInstantPowerW) × 0.7 : 0` | Regenerative braking power [W] |
 
 #### 🎨 Flow Line Styling
 
@@ -651,7 +651,7 @@ A floating **`⛈️` button** is permanently overlaid in the **top-right area o
 ```
 ┌─────────────────────────── MAP WRAPPER ────────────────────────────────┐
 │    ┌───┐  ┌───┐  ┌───┐      ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐    │
-│    │ − │  │🧿 │  │ + │      │  🔺│ │ 🌍  │ │ 📌 │ │ ⛈  │ │  ↕️  │   │
+│    │ − │  │🧿 │  │ + │      │  🔺 │ │ 🌍  │ │ 📌  │ │ ⛈  │ │  ↕️ │    │
 │    └───┘  └───┘  └───┘      └─────┘ └─────┘ └─────┘ └─────┘ └─────┘    │
 └────────────────────────────────────────────────────────────────────────┘
 ```
@@ -1085,8 +1085,8 @@ In the Profiles modal, each profile card renders the enabled POI layers as label
 │  🚗 My EV Profile                           │
 │  Weight: 1850 Kg  Battery: 75 kWh           │
 │  kWh Price: 0.30 €/kWh                      │
-│  GPS: 5 s  Map: 🌍 / 🧭  Weather: On       │
-│  POI: 🚧 Road Closures                     │  ← only enabled layers shown
+│  GPS: 5 s  Map: 🌍 / 🧭  Weather: On        │
+│  POI: 🚧 Road Closures                      │  ← only enabled layers shown
 │  POI: ⚡ EV Charging                        │
 │  Theme: 🌙 Dark                             │
 └─────────────────────────────────────────────┘
@@ -1366,15 +1366,15 @@ The MapLibre GL map style is switched per theme at initialization time (see [Map
 
 ```
 ┌─────────────────────── HEADER ─────────────────────────┐
-│  🔴 TRIP MASTER               [🚘][🧮] [☀️/🌙] [⭐] │
+│  🔴 TRIP MASTER                  [🚘][🧮] [☀️/🌙] [⭐] │
 ├──────────────── CONFIG GRID (4 cols) ──────────────────┤
 │  Weight │ Temp Efficiency │ Headwind │ GPS Polling     │
 ├──────────────── STAT CARDS (8 cols) ───────────────────┤
-│ Dist │ Avg Spd │ Cons │ Regen │ Alt │ Grade │ Pwr │ ⏱ │
+│ Dist │ Avg Spd │ Cons │ Regen │ Alt │ Grade │ Pwr │  ⏱ │
 ├──────────────── RANGE ESTIMATOR ───────────────────────┤
 │  [kWh ±] [SOC% ±] [═══ Battery Bar ═══] [Range] [Rem.] │
 ├───────────── MAP ──────────┬───── CHARTS PANEL ────────┤
-│ [−][🧿][+]                │    [🔺][🌍][⛈️][📌][↕️] │
+│ [−][🧿][+]                 │     [🔺][🌍][⛈️][📌][↕️] │
 │                            │  Elevation Profile        │
 │                            │  Consumption Profile      │
 │                            │  Speed Profile            │
@@ -1384,7 +1384,7 @@ The MapLibre GL map style is switched per theme at initialization time (see [Map
 │                            │  Driving Style Analyzer   │
 │                            │  Weather Panel            │
 ├─────────────────────── CONTROLS ───────────────────────┤
-│  [▶ Start Trip]    [⏹ Stop Trip]    [↺ Reset Trip]   │
+│   [▶ Start Trip]    [⏹ Stop Trip]    [↺ Reset Trip]   │
 └────────────────────────────────────────────────────────┘
 ```
 
@@ -1598,7 +1598,7 @@ Both markers are created by `createTripEndpointMarker(label, bgColor)`, which bu
 
 ```
   ┌──────────┐           ┌──────────┐
-  │  🟢  S  │           │  🔴  E   │
+  │  🟢  S   │           │  🔴  E   │
   └──────────┘           └──────────┘
   Start of route         End of route
 ```
@@ -1799,7 +1799,7 @@ A set of three floating **zoom and re-center buttons** is overlaid in the **top-
 ```
 ┌─────────── MAP WRAPPER ─────────────────┐
 │  ┌───┐ ┌───┐ ┌───┐                      │
-│  │ − │ │🧿│ │ + │    (map content)     │
+│  │ − │ │ 🧿│ │ + │    (map content)     │
 │  └───┘ └───┘ └───┘                      │
 └─────────────────────────────────────────┘
 ```
@@ -1827,7 +1827,7 @@ A floating **`↕️` button** is permanently overlaid in the **top-right corner
 ```
 ┌─────────────────────────── MAP WRAPPER ────────────────────────────────┐
 │    ┌───┐  ┌───┐  ┌───┐      ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐    │
-│    │ − │  │🧿 │  │ + │     │  🔺 │ │ 🌍  │ │ 📌 │ │ ⛈️  │ │  ↕ ️ │    │
+│    │ − │  │🧿 │  │ + │      │  🔺 │ │ 🌍  │ │ 📌  │ │ ⛈️  │ │  ↕ ️ │    │
 │    └───┘  └───┘  └───┘      └─────┘ └─────┘ └─────┘ └─────┘ └─────┘    │
 └────────────────────────────────────────────────────────────────────────┘
 ```
@@ -1873,7 +1873,7 @@ A floating **`🔺` / `🧭` button** is permanently overlaid in the **top-right
 ```
 ┌─────────────────────────── MAP WRAPPER ────────────────────────────────┐
 │    ┌───┐  ┌───┐  ┌───┐      ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐    │
-│    │ − │  │🧿 │  │ + │     │  🔺 │ │ 🌍  │ │ 📌 │ │ ⛈️  │ │  ↕ ️ │    │
+│    │ − │  │🧿 │  │ + │      │  🔺 │ │ 🌍  │ │ 📌  │ │ ⛈️  │ │  ↕ ️ │    │
 │    └───┘  └───┘  └───┘      └─────┘ └─────┘ └─────┘ └─────┘ └─────┘    │
 └────────────────────────────────────────────────────────────────────────┘
 ```
@@ -1931,7 +1931,7 @@ A floating **`📌` button** is permanently overlaid in the **top-right area of 
 ```
 ┌─────────────────────────── MAP WRAPPER ────────────────────────────────┐
 │    ┌───┐  ┌───┐  ┌───┐      ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐    │
-│    │ − │  │🧿 │  │ + │     │  🔺 │ │ 🌍  │ │ 📌 │ │ ⛈️  │ │  ↕ ️ │    │
+│    │ − │  │🧿 │  │ + │      │  🔺 │ │ 🌍  │ │ 📌  │ │ ⛈️  │ │  ↕ ️ │    │
 │    └───┘  └───┘  └───┘      └─────┘ └─────┘ └─────┘ └─────┘ └─────┘    │
 └────────────────────────────────────────────────────────────────────────┘
 ```
@@ -2768,15 +2768,15 @@ The `getWeatherPictogram(code)` function maps **WMO weather codes** to emoji pic
 
 | WMO Code(s) | Emoji | Condition |
 |---|---|---|
-| 0 | ☀️ | Clear sky |
-| 1 | 🌤️ | Mainly clear |
-| 2 | ⛅ | Partly cloudy |
+| 0 | ☀️/🌙 | Clear sky |
+| 1 | 🌤️/🌙☁️ | Mainly clear |
+| 2 | ⛅/🌙☁️ | Partly cloudy |
 | 3 | ☁️ | Overcast |
 | 45 | 🌫️ | Fog |
 | 48 | 🌫️ | Depositing rime fog |
-| 51 | 🌦️ | Light drizzle |
-| 53 | 🌦️ | Moderate drizzle |
-| 55 | 🌦️ | Dense drizzle |
+| 51 | 🌦️/🌙🌧️ | Light drizzle |
+| 53 | 🌦️/🌙🌧️ | Moderate drizzle |
+| 55 | 🌦️/🌙🌧️ | Dense drizzle |
 | 56 | ❄️💧 | Light freezing drizzle |
 | 57 | ❄️💧 | Dense freezing drizzle |
 | 61 | 🌧️ | Slight rain |
@@ -2788,15 +2788,15 @@ The `getWeatherPictogram(code)` function maps **WMO weather codes** to emoji pic
 | 73 | ❄️ | Moderate snow fall |
 | 75 | ❄️ | Heavy snow fall |
 | 77 | ❄️ | Snow grains |
-| 80 | 🌦️ | Slight rain showers |
-| 81 | 🌦️ | Moderate rain showers |
+| 80 | 🌦️/🌙🌧️ | Slight rain showers |
+| 81 | 🌦️/🌙🌧️ | Moderate rain showers |
 | 82 | 🌧️ | Violent rain showers |
 | 85 | 🌨️ | Slight snow showers |
 | 86 | 🌨️ | Heavy snow showers |
-| 95 | ⛈️ | Thunderstorm |
-| 96 | ⛈️⚡ | Thunderstorm with slight hail |
+| 95 | 🌩️ | Thunderstorm |
+| 96 | ⛈️ | Thunderstorm with slight hail |
 | 99 | ⛈️⚡ | Thunderstorm with heavy hail |
-| *(other)* | 🌡️ | Fallback for unmapped codes |
+| *(other)* | N/A | Fallback for unmapped codes |
 
 ---
 
