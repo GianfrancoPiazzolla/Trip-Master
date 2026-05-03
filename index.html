@@ -12,10 +12,13 @@
   <link rel="manifest" href="manifest.json">
   <title>Trip Master</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+  <script
+    src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
   <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet">
   <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;800&display=swap"
+    rel="stylesheet">
   <style>
     :root {
       --primary: #00e676;
@@ -69,7 +72,7 @@
       padding-bottom: 0 !important;
     }
 
-    .collapsed > *:not(.chart-header) {
+    .collapsed>*:not(.chart-header) {
       display: none !important;
     }
 
@@ -1290,6 +1293,12 @@
       display: block;
       line-height: 1;
       padding-top: 5px;
+      padding-bottom: 5px;
+    }
+
+    .weather-icon.small {
+      font-size: 2.8rem;
+      padding-bottom: 10px;
     }
 
     .weather-temp {
@@ -2144,7 +2153,8 @@
       <h2>🚘 EV Profiles</h2>
       <div id="profilesList" class="profiles-list"></div>
       <div class="profile-save-row">
-        <input type="text" id="profileNameInput" class="profile-name-input" placeholder="New profile name" maxlength="40">
+        <input type="text" id="profileNameInput" class="profile-name-input" placeholder="New profile name"
+          maxlength="40">
         <button class="profile-save-btn" onclick="saveProfile()">💾 Save</button>
       </div>
     </div>
@@ -2157,11 +2167,14 @@
       <h2>About Trip Master</h2>
       <p><strong>Synopsis:</strong> High-performance, real-time EV trip tracking and energy analysis dashboard</p>
       <p><strong>Author:</strong> Gianfranco Piazzolla</p>
-      <p><strong>GitHub repository:</strong> <a href="https://github.com/gianfrancopiazzolla/Trip-Master" target="_blank" style="color:var(--secondary); text-decoration:none;">Trip Master</a></p>
-      <p><strong>More Apps:</strong> <a href="https://github.com/gianfrancopiazzolla" target="_blank" style="color:var(--secondary); text-decoration:none;">GitHub</a></p>
+      <p><strong>GitHub repository:</strong> <a href="https://github.com/gianfrancopiazzolla/Trip-Master"
+          target="_blank" style="color:var(--secondary); text-decoration:none;">Trip Master</a></p>
+      <p><strong>More Apps:</strong> <a href="https://github.com/gianfrancopiazzolla" target="_blank"
+          style="color:var(--secondary); text-decoration:none;">GitHub</a></p>
       <p><strong>License:</strong> Distributed under the MIT License. Feel free to use, modify, and share.</p>
       <hr style="border:0; border-top:1px solid var(--border-color); margin:20px 0;">
-      <p style="font-style:italic; font-size:0.9rem; color:var(--label-color);">Developed for the sustainable mobility community. If you find this tool helpful, please leave a ⭐ on GitHub!</p>
+      <p style="font-style:italic; font-size:0.9rem; color:var(--label-color);">Developed for the sustainable mobility
+        community. If you find this tool helpful, please leave a ⭐ on GitHub!</p>
     </div>
   </div>
 
@@ -2174,8 +2187,14 @@
         <p style="color:var(--label-color); font-style:italic;">No trip data yet. Start a trip to see the summary.</p>
       </div>
       <div style="display:flex; gap:10px; margin-top:16px; padding-top:14px; border-top:1px solid var(--border-color);">
-        <button onclick="exportTrip()" style="flex:1; border:none; padding:10px; border-radius:8px; font-size:0.82rem; font-weight:800; cursor:pointer; text-transform:uppercase; font-family:'Syne',sans-serif; letter-spacing:1.5px; background:linear-gradient(135deg,var(--secondary),#0288d1); color:#000; transition:all 0.18s ease;" onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform=''">⬇ Export Trip</button>
-        <button onclick="document.getElementById('importTripInput').click()" style="flex:1; border:none; padding:10px; border-radius:8px; font-size:0.82rem; font-weight:800; cursor:pointer; text-transform:uppercase; font-family:'Syne',sans-serif; letter-spacing:1.5px; background:linear-gradient(135deg,var(--primary),#00c853); color:#000; transition:all 0.18s ease;" onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform=''">⬆ Import Trip</button>
+        <button onclick="exportTrip()"
+          style="flex:1; border:none; padding:10px; border-radius:8px; font-size:0.82rem; font-weight:800; cursor:pointer; text-transform:uppercase; font-family:'Syne',sans-serif; letter-spacing:1.5px; background:linear-gradient(135deg,var(--secondary),#0288d1); color:#000; transition:all 0.18s ease;"
+          onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform=''">⬇ Export
+          Trip</button>
+        <button onclick="document.getElementById('importTripInput').click()"
+          style="flex:1; border:none; padding:10px; border-radius:8px; font-size:0.82rem; font-weight:800; cursor:pointer; text-transform:uppercase; font-family:'Syne',sans-serif; letter-spacing:1.5px; background:linear-gradient(135deg,var(--primary),#00c853); color:#000; transition:all 0.18s ease;"
+          onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform=''">⬆ Import
+          Trip</button>
       </div>
       <input type="file" id="importTripInput" accept=".json" style="display:none;" onchange="importTrip(event)">
     </div>
@@ -2226,7 +2245,8 @@
         <span class="range-label">Battery (kWh)</span>
         <div class="stepper-wrap" style="width:140px;">
           <button class="stepper-btn" onclick="stepValue('batteryCapacity', -0.5)">−</button>
-          <input type="number" id="batteryCapacity" value="100" step="0.5" style="font-size:13px !important; padding: 6px 8px; text-align:center;">
+          <input type="number" id="batteryCapacity" value="100" step="0.5"
+            style="font-size:13px !important; padding: 6px 8px; text-align:center;">
           <button class="stepper-btn" onclick="stepValue('batteryCapacity', 0.5)">+</button>
         </div>
       </div>
@@ -2234,7 +2254,9 @@
         <span class="range-label">Current SoC (%)</span>
         <div class="stepper-wrap" style="width:140px;">
           <button class="stepper-btn" onclick="stepValue('socInput', -1)">−</button>
-          <input type="number" id="socInput" value="100" min="0" max="100" step="1" style="font-size:13px !important; padding:6px 8px; text-align:center;" onchange="recalibrateSoc(this.value)">
+          <input type="number" id="socInput" value="100" min="0" max="100" step="1"
+            style="font-size:13px !important; padding:6px 8px; text-align:center;"
+            onchange="recalibrateSoc(this.value)">
           <button class="stepper-btn" onclick="stepValue('socInput', 1)">+</button>
         </div>
       </div>
@@ -2282,26 +2304,38 @@
       <div class="cm-section">
         <div class="cm-label">ICE Fuel Price</div>
         <div class="cm-value" id="cmDieselPrice" style="color:var(--label-color); font-size: 0.82rem;">-- €</div>
-        <div style="font-size: 0.52rem; color: var(--label-color); margin-top: 2px; font-family: 'JetBrains Mono', monospace;" id="cmDieselStatus">loading...</div>
+        <div
+          style="font-size: 0.52rem; color: var(--label-color); margin-top: 2px; font-family: 'JetBrains Mono', monospace;"
+          id="cmDieselStatus">loading...</div>
       </div>
       <div class="cm-divider"></div>
       <div class="cm-section">
         <div class="cm-label">ICE Efficiency</div>
         <div class="cm-value" id="cmIceEfficiency" style="color:var(--label-color); font-size: 0.82rem;">-- Km/L</div>
-        <div style="font-size: 0.52rem; color: var(--label-color); margin-top: 2px; font-family: 'JetBrains Mono', monospace;" id="cmIceEfficiencyStatus">loading...</div>
+        <div
+          style="font-size: 0.52rem; color: var(--label-color); margin-top: 2px; font-family: 'JetBrains Mono', monospace;"
+          id="cmIceEfficiencyStatus">loading...</div>
       </div>
     </div>
 
     <!-- STAT CARDS -->
     <div class="grid-stats">
-      <div class="stat-card" style="--accent-color: var(--secondary);"><span class="stat-label">Trip Distance</span><span class="stat-value" id="distDisplay">-- Km</span></div>
-      <div class="stat-card" style="--accent-color: var(--secondary);"><span class="stat-label">Average Speed</span><span class="stat-value" id="avgSpeedDisplay">-- Km/h</span></div>
-      <div class="stat-card" style="--accent-color: var(--danger);"><span class="stat-label">Run Consumption</span><span class="stat-value" id="consDisplay">-- Wh/Km</span></div>
-      <div class="stat-card" style="--accent-color: var(--primary);"><span class="stat-label">Brake Regen</span><span class="stat-value" id="regenDisplay">-- Wh</span></div>
-      <div class="stat-card" style="--accent-color: var(--warning);"><span class="stat-label">Route Altitude</span><span class="stat-value" id="altDisplay">-- m</span></div>
-      <div class="stat-card" style="--accent-color: var(--warning);"><span class="stat-label">Road Grade</span><span class="stat-value" id="gradeDisplay">-- %</span></div>
-      <div class="stat-card" style="--accent-color: #ff9100;"><span class="stat-label">Instantaneous Power</span><span class="stat-value" id="powerDisplay">-- W</span></div>
-      <div class="stat-card" style="--accent-color: #b39ddb;"><span class="stat-label">Trip Time</span><span class="stat-value" id="tripTimeDisplay">--:--:--</span></div>
+      <div class="stat-card" style="--accent-color: var(--secondary);"><span class="stat-label">Trip
+          Distance</span><span class="stat-value" id="distDisplay">-- Km</span></div>
+      <div class="stat-card" style="--accent-color: var(--secondary);"><span class="stat-label">Average
+          Speed</span><span class="stat-value" id="avgSpeedDisplay">-- Km/h</span></div>
+      <div class="stat-card" style="--accent-color: var(--danger);"><span class="stat-label">Run Consumption</span><span
+          class="stat-value" id="consDisplay">-- Wh/Km</span></div>
+      <div class="stat-card" style="--accent-color: var(--primary);"><span class="stat-label">Brake Regen</span><span
+          class="stat-value" id="regenDisplay">-- Wh</span></div>
+      <div class="stat-card" style="--accent-color: var(--warning);"><span class="stat-label">Route Altitude</span><span
+          class="stat-value" id="altDisplay">-- m</span></div>
+      <div class="stat-card" style="--accent-color: var(--warning);"><span class="stat-label">Road Grade</span><span
+          class="stat-value" id="gradeDisplay">-- %</span></div>
+      <div class="stat-card" style="--accent-color: #ff9100;"><span class="stat-label">Instantaneous Power</span><span
+          class="stat-value" id="powerDisplay">-- W</span></div>
+      <div class="stat-card" style="--accent-color: #b39ddb;"><span class="stat-label">Trip Time</span><span
+          class="stat-value" id="tripTimeDisplay">--:--:--</span></div>
     </div>
 
     <!-- MAP + CHARTS SIDE BY SIDE -->
@@ -2314,10 +2348,13 @@
           <button class="map-zoom-btn" onclick="mapCenterOnGPS()" title="Center on current GPS position">🧿</button>
           <button class="map-zoom-btn" onclick="mapZoomIn()" title="Zoom In">+</button>
         </div>
-        <button class="map-heading-btn" id="btnHeadingToggle" onclick="toggleHeadingMode()" title="Toggle North Up / Heading Up">🔺</button>
+        <button class="map-heading-btn" id="btnHeadingToggle" onclick="toggleHeadingMode()"
+          title="Toggle North Up / Heading Up">🔺</button>
         <button class="map3d-toggle-btn" id="btn3DToggle" onclick="toggle3DMap()" title="Toggle 2D/3D Map">🌍</button>
-        <button class="map-weather-btn" id="btnWeatherOverlay" onclick="toggleWeatherOverlay()" title="Toggle Weather Overlay">⛈️</button>
-        <button class="map-poi-btn" id="btnPoiOverlay" onclick="togglePoiOverlay()" title="Toggle Points of Interest">📌</button>
+        <button class="map-weather-btn" id="btnWeatherOverlay" onclick="toggleWeatherOverlay()"
+          title="Toggle Weather Overlay">⛈️</button>
+        <button class="map-poi-btn" id="btnPoiOverlay" onclick="togglePoiOverlay()"
+          title="Toggle Points of Interest">📌</button>
         <div class="poi-panel" id="poiPanel">
           <div class="poi-panel-title">POI Layers</div>
           <div class="poi-panel-item" data-poi="mobile_patrol" onclick="togglePoiType('mobile_patrol')">
@@ -2342,7 +2379,8 @@
           </div>
           <div class="poi-panel-loading" id="poiLoadingLabel" style="display:none;">⏳ Fetching data…</div>
         </div>
-        <button class="map-fullscreen-btn" id="btnFullscreen" onclick="toggleMapFullscreen()" title="Toggle Fullscreen Map">↕️</button>
+        <button class="map-fullscreen-btn" id="btnFullscreen" onclick="toggleMapFullscreen()"
+          title="Toggle Fullscreen Map">↕️</button>
       </div>
 
       <div class="charts-panel">
@@ -2625,14 +2663,14 @@
 
       autosaveInterval = setInterval(saveLastSettings, 60000);
 
-      window.onclick = function(event) {
+      window.onclick = function (event) {
         if (event.target == document.getElementById('infoModal')) toggleModal(false);
         if (event.target == document.getElementById('summaryModal')) document.getElementById('summaryModal').style.display = 'none';
         if (event.target == document.getElementById('profilesModal')) closeProfilesModal();
       };
 
       if ('wakeLock' in navigator) {
-        navigator.wakeLock.request('screen').catch(() => {});
+        navigator.wakeLock.request('screen').catch(() => { });
       }
     }
 
@@ -2666,12 +2704,12 @@
 
     function loadPoiPrefs() {
       var prefs = getPoiPrefs();
-      Object.keys(poiTypeEnabled).forEach(function(key) {
+      Object.keys(poiTypeEnabled).forEach(function (key) {
         if (typeof prefs[key] === 'boolean') {
           poiTypeEnabled[key] = prefs[key];
         }
       });
-      Object.keys(poiTypeEnabled).forEach(function(key) {
+      Object.keys(poiTypeEnabled).forEach(function (key) {
         var item = document.querySelector('.poi-panel-item[data-poi="' + key + '"]');
         if (item) item.classList.toggle('active', poiTypeEnabled[key]);
       });
@@ -2813,15 +2851,15 @@
       }
 
       if (p.poiTypeEnabled && typeof p.poiTypeEnabled === 'object') {
-        var profileHasEnabledPoi = Object.keys(p.poiTypeEnabled).some(function(key) {
+        var profileHasEnabledPoi = Object.keys(p.poiTypeEnabled).some(function (key) {
           return p.poiTypeEnabled[key] === true;
         });
-        Object.keys(poiTypeEnabled).forEach(function(key) {
+        Object.keys(poiTypeEnabled).forEach(function (key) {
           if (typeof p.poiTypeEnabled[key] === 'boolean') {
             poiTypeEnabled[key] = p.poiTypeEnabled[key];
           }
         });
-        Object.keys(poiTypeEnabled).forEach(function(key) {
+        Object.keys(poiTypeEnabled).forEach(function (key) {
           var item = document.querySelector('.poi-panel-item[data-poi="' + key + '"]');
           if (item) item.classList.toggle('active', poiTypeEnabled[key]);
         });
@@ -2831,7 +2869,7 @@
           poiBtn.classList.add('active');
           poiPanel.classList.add('visible');
           poiPanel.classList.remove('minimized');
-          poiPanel.addEventListener('click', function(e) {
+          poiPanel.addEventListener('click', function (e) {
             if (poiPanel.classList.contains('minimized')) {
               e.stopPropagation();
               expandPoiPanel();
@@ -2839,7 +2877,7 @@
           });
           startPoiMinimizeTimer();
           startPoiWatchdog();
-          (async function() {
+          (async function () {
             var refMap = (is3DMode && map3d && map3d.isStyleLoaded()) ? map3d : map;
             if (!refMap || !refMap.isStyleLoaded()) return;
             setPoiLoading(true, false);
@@ -2869,7 +2907,7 @@
             } finally {
               if (rateLimitHit) {
                 setPoiLoading(true, true);
-                setTimeout(function() {
+                setTimeout(function () {
                   setPoiLoading(false);
                 }, 3000);
               } else {
@@ -2943,7 +2981,7 @@
       const groups = ['#tempEfficiencyGroup', '#gpsPollingGroup'];
       groups.forEach(groupId => {
         document.querySelectorAll(groupId + ' .segment').forEach(button => {
-          button.addEventListener('click', function() {
+          button.addEventListener('click', function () {
             document.querySelectorAll(groupId + ' .segment').forEach(b => b.classList.remove('active'));
             this.classList.add('active');
             const hiddenInputId = groupId.replace('Group', '').replace('#', '');
@@ -3031,7 +3069,14 @@
         const windDir = data.current.wind_direction_10m;
 
         document.getElementById('weatherTemp').innerText = currentTemp.toFixed(1);
-        document.getElementById('weatherIcon').innerText = getWeatherPictogram(code);
+        const pict = getWeatherPictogram(code);
+        const wIconEl = document.getElementById('weatherIcon');
+        wIconEl.innerText = pict;
+        if (Array.from(pict).length > 2) {
+          wIconEl.classList.add('small');
+        } else {
+          wIconEl.classList.remove('small');
+        }
         document.getElementById('tempMin').innerText = minTemp.toFixed(1);
         document.getElementById('tempMax').innerText = maxTemp.toFixed(1);
         document.getElementById('pressure').innerText = pressure.toFixed(1);
@@ -3105,37 +3150,39 @@
     }
 
     function getWeatherPictogram(code) {
+      const hour = new Date().getHours();
+      const isNight = hour >= 18 || hour < 6;
       const mapping = {
-        0: "☀️",
-        1: "🌤️",
-        2: "⛅",
+        0: isNight ? "🌙" : "☀️",
+        1: isNight ? "🌙" : "🌤️",
+        2: isNight ? "🌙☁️" : "⛅",
         3: "☁️",
         45: "🌫️",
         48: "🌫️",
-        51: "🌦️",
-        53: "🌦️",
-        55: "🌦️",
-        56: "❄️💧",
-        57: "❄️💧",
+        51: isNight ? "🌙🌧️" : "🌦️",
+        53: isNight ? "🌙🌧️" : "🌦️",
+        55: isNight ? "🌙🌧️" : "🌦️",
+        56: "💧❄️",
+        57: "💧❄️",
         61: "🌧️",
         63: "🌧️",
         65: "🌧️",
-        66: "❄️🌧️",
-        67: "❄️🌧️",
+        66: "🌧️❄️",
+        67: "🌧️❄️",
         71: "❄️",
         73: "❄️",
         75: "❄️",
         77: "❄️",
-        80: "🌦️",
-        81: "🌦️",
+        80: isNight ? "🌙🌧️" : "🌦️",
+        81: isNight ? "🌙🌧️" : "🌦️",
         82: "🌧️",
         85: "🌨️",
         86: "🌨️",
-        95: "⛈️",
-        96: "⛈️⚡",
+        95: "🌩️",
+        96: "⛈️",
         99: "⛈️⚡"
       };
-      return mapping[code] || "🌡️";
+      return mapping[code] || "N/A";
     }
 
     function getWindDirection(degree) {
@@ -3472,7 +3519,7 @@
         if (!map3d) {
           setup3DMap(center.lat, center.lng);
           if (isWeatherOverlayOn && weatherOverlayTimestamp) {
-            const applyAfterLoad = function() {
+            const applyAfterLoad = function () {
               addWeatherOverlayToMap(map3d, weatherOverlayTimestamp);
               map3d.off('load', applyAfterLoad);
             };
@@ -3493,7 +3540,7 @@
             if (map3d.isStyleLoaded()) {
               addWeatherOverlayToMap(map3d, weatherOverlayTimestamp);
             } else {
-              map3d.once('styledata', function() {
+              map3d.once('styledata', function () {
                 addWeatherOverlayToMap(map3d, weatherOverlayTimestamp);
               });
             }
@@ -3513,7 +3560,7 @@
           if (map.isStyleLoaded()) {
             addWeatherOverlayToMap(map, weatherOverlayTimestamp);
           } else {
-            map.once('styledata', function() {
+            map.once('styledata', function () {
               addWeatherOverlayToMap(map, weatherOverlayTimestamp);
             });
           }
@@ -3542,7 +3589,7 @@
 
     function mapCenterOnGPS() {
       if (!navigator.geolocation) return;
-      navigator.geolocation.getCurrentPosition(function(pos) {
+      navigator.geolocation.getCurrentPosition(function (pos) {
         const {
           latitude,
           longitude
@@ -3552,7 +3599,7 @@
           center: [longitude, latitude],
           duration: 400
         });
-      }, function() {}, {
+      }, function () { }, {
         enableHighAccuracy: true
       });
     }
@@ -3589,7 +3636,7 @@
         if (frames && frames.length > 0) {
           return frames[frames.length - 1];
         }
-      } catch (e) {}
+      } catch (e) { }
       return null;
     }
 
@@ -3634,7 +3681,7 @@
         if (activeMap && activeMap.isStyleLoaded()) {
           addWeatherOverlayToMap(activeMap, weatherOverlayTimestamp);
         } else if (activeMap) {
-          activeMap.once('styledata', function() {
+          activeMap.once('styledata', function () {
             addWeatherOverlayToMap(activeMap, weatherOverlayTimestamp);
           });
         }
@@ -3856,7 +3903,7 @@
               padding: 10,
               cornerRadius: 8,
               callbacks: {
-                label: function(ctx) {
+                label: function (ctx) {
                   return ' ' + ctx.parsed.x.toFixed(1) + ' Wh';
                 }
               }
@@ -4182,7 +4229,7 @@
       }
 
       if (s.gpsPolling !== undefined) {
-        document.querySelectorAll('#gpsPollingGroup .segment').forEach(function(btn) {
+        document.querySelectorAll('#gpsPollingGroup .segment').forEach(function (btn) {
           btn.classList.remove('active');
           if (btn.getAttribute('data-value') === String(s.gpsPolling)) btn.classList.add('active');
         });
@@ -4198,10 +4245,10 @@
       if (typeof s.isWeatherOverlayOn === 'boolean' && s.isWeatherOverlayOn !== isWeatherOverlayOn) toggleWeatherOverlay();
 
       if (s.poiTypeEnabled && typeof s.poiTypeEnabled === 'object') {
-        Object.keys(poiTypeEnabled).forEach(function(key) {
+        Object.keys(poiTypeEnabled).forEach(function (key) {
           if (typeof s.poiTypeEnabled[key] === 'boolean') poiTypeEnabled[key] = s.poiTypeEnabled[key];
         });
-        Object.keys(poiTypeEnabled).forEach(function(key) {
+        Object.keys(poiTypeEnabled).forEach(function (key) {
           var item = document.querySelector('.poi-panel-item[data-poi="' + key + '"]');
           if (item) item.classList.toggle('active', poiTypeEnabled[key]);
         });
@@ -4280,7 +4327,7 @@
               computeDistance(lastPoiRefreshPoint.lat, lastPoiRefreshPoint.lon, latitude, longitude) :
               POI_REFRESH_DISTANCE_M;
             if (distFromLastPoi >= POI_REFRESH_DISTANCE_M) {
-              (async function() {
+              (async function () {
                 var refMap = (is3DMode && map3d && map3d.isStyleLoaded()) ? map3d : map;
                 if (!refMap || !refMap.isStyleLoaded()) return;
                 setPoiLoading(true, false);
@@ -4484,7 +4531,7 @@
       const file = event.target.files[0];
       if (!file) return;
       const reader = new FileReader();
-      reader.onload = function(e) {
+      reader.onload = function (e) {
         try {
           const coords = JSON.parse(e.target.result);
           if (!Array.isArray(coords) || coords.length < 2 || !Array.isArray(coords[0]) || coords[0].length < 2) {
@@ -4518,7 +4565,7 @@
           const activeMap = is3DMode ? map3d : map;
           if (activeMap) {
             activeMap.fitBounds(
-              map3dCoords.reduce(function(bounds, c) {
+              map3dCoords.reduce(function (bounds, c) {
                 return [
                   [Math.min(bounds[0][0], c[0]), Math.min(bounds[0][1], c[1])],
                   [Math.max(bounds[1][0], c[0]), Math.max(bounds[1][1], c[1])]
@@ -4527,9 +4574,9 @@
                 [first[0], first[1]],
                 [first[0], first[1]]
               ]), {
-                padding: 40,
-                duration: 600
-              }
+              padding: 40,
+              duration: 600
+            }
             );
           }
 
@@ -4573,7 +4620,7 @@
       emoji: '📷',
       color: '#c62828',
       source: 'osm',
-      overpassQuery: function(bbox) {
+      overpassQuery: function (bbox) {
         return '[out:json][timeout:25];(' +
           'node["highway"="speed_camera"](' + bbox + ');' +
           'node["enforcement"="maxspeed"](' + bbox + ');' +
@@ -4587,7 +4634,7 @@
       emoji: '🚧',
       color: '#ff6f00',
       source: 'osm',
-      overpassQuery: function(bbox) {
+      overpassQuery: function (bbox) {
         return '[out:json][timeout:25];(' +
           'node["barrier"="block"](' + bbox + ');' +
           'node["barrier"="jersey_barrier"](' + bbox + ');' +
@@ -4603,7 +4650,7 @@
       emoji: '⚡',
       color: '#2e7d32',
       source: 'osm',
-      overpassQuery: function(bbox) {
+      overpassQuery: function (bbox) {
         return '[out:json][timeout:25];(' +
           'node["amenity"="charging_station"](' + bbox + ');' +
           'way["amenity"="charging_station"](' + bbox + ');' +
@@ -4649,13 +4696,13 @@
         }
         if (!res.ok) throw new Error('Overpass HTTP ' + res.status);
         var data = await res.json();
-        return (data.elements || []).map(function(el) {
+        return (data.elements || []).map(function (el) {
           return {
             lat: el.lat !== undefined ? el.lat : (el.center ? el.center.lat : null),
             lon: el.lon !== undefined ? el.lon : (el.center ? el.center.lon : null),
             name: (el.tags && (el.tags.name || el.tags['name:en'] || el.tags.description)) || null
           };
-        }).filter(function(p) {
+        }).filter(function (p) {
           return p.lat !== null && p.lon !== null;
         });
       } catch (e) {
@@ -4686,20 +4733,20 @@
         var data = await res.json();
         var alerts = data.alerts || [];
         return alerts
-          .filter(function(a) {
+          .filter(function (a) {
             return a.type === 'POLICE' || (a.subtype && a.subtype.indexOf('POLICE') === 0);
           })
-          .map(function(a) {
+          .map(function (a) {
             return {
               lat: a.location ? a.location.y : null,
               lon: a.location ? a.location.x : null,
               name: a.subtype ?
-                a.subtype.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, function(c) {
+                a.subtype.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, function (c) {
                   return c.toUpperCase();
                 }) : 'Mobile Patrol'
             };
           })
-          .filter(function(p) {
+          .filter(function (p) {
             return p.lat !== null && p.lon !== null;
           });
       } catch (e) {
@@ -4726,7 +4773,7 @@
     function placePoiMarkersOnMap(targetMap, poi, points) {
       if (!targetMap) return;
       if (!targetMap.isStyleLoaded()) {
-        targetMap.once('load', function() {
+        targetMap.once('load', function () {
           if (isPoiOverlayOn && poiTypeEnabled[poi.id]) {
             placePoiMarkersOnMap(targetMap, poi, points);
           }
@@ -4736,7 +4783,7 @@
       var store = getPoiStore(targetMap);
       if (!store) return;
       if (!store[poi.id]) store[poi.id] = [];
-      points.forEach(function(p) {
+      points.forEach(function (p) {
         var markerEl = createPoiMarkerElement(poi.emoji, poi.color);
         var popupHtml =
           '<div style="font-family:\'JetBrains Mono\',monospace;font-size:0.75rem;' +
@@ -4764,7 +4811,7 @@
     function removePoiMarkersForType(targetMap, poiId) {
       var store = getPoiStore(targetMap);
       if (!store || !store[poiId]) return;
-      store[poiId].forEach(function(m) {
+      store[poiId].forEach(function (m) {
         m.remove();
       });
       store[poiId] = [];
@@ -4772,7 +4819,7 @@
 
     function removeAllPoiMarkers(targetMap) {
       if (!targetMap) return;
-      POI_TYPES.forEach(function(poi) {
+      POI_TYPES.forEach(function (poi) {
         removePoiMarkersForType(targetMap, poi.id);
       });
     }
@@ -4781,11 +4828,11 @@
       if (!isPoiOverlayOn || !sourceMap || !targetMap) return;
       var sourceStore = getPoiStore(sourceMap);
       if (!sourceStore) return;
-      POI_TYPES.forEach(function(poi) {
+      POI_TYPES.forEach(function (poi) {
         if (!poiTypeEnabled[poi.id]) return;
         var sourceMarkers = sourceStore[poi.id];
         if (!sourceMarkers || sourceMarkers.length === 0) return;
-        var points = sourceMarkers.map(function(m) {
+        var points = sourceMarkers.map(function (m) {
           var ll = m.getLngLat();
           var popup = m.getPopup();
           var popupHtml = popup ? popup.getHTML() : '';
@@ -4826,7 +4873,7 @@
       savePoiPrefs();
 
       if (poiTypeEnabled[poiId]) {
-        var poi = POI_TYPES.find(function(p) {
+        var poi = POI_TYPES.find(function (p) {
           return p.id === poiId;
         });
         if (!poi) return;
@@ -4842,7 +4889,7 @@
         } finally {
           if (rateLimitHit) {
             setPoiLoading(true, true);
-            setTimeout(function() {
+            setTimeout(function () {
               setPoiLoading(false);
             }, 3000);
           } else {
@@ -4915,7 +4962,7 @@
       } finally {
         if (rateLimitHit) {
           setPoiLoading(true, true);
-          setTimeout(function() {
+          setTimeout(function () {
             setPoiLoading(false);
           }, 3000);
         } else {
@@ -4946,7 +4993,7 @@
 
     function startPoiMinimizeTimer() {
       clearTimeout(poiMinimizeTimer);
-      poiMinimizeTimer = setTimeout(function() {
+      poiMinimizeTimer = setTimeout(function () {
         var panel = document.getElementById('poiPanel');
         if (panel && panel.classList.contains('visible')) {
           panel.classList.add('minimized');
@@ -4973,7 +5020,7 @@
         btn.classList.add('active');
         panel.classList.add('visible');
         panel.classList.remove('minimized');
-        panel.addEventListener('click', function(e) {
+        panel.addEventListener('click', function (e) {
           if (panel.classList.contains('minimized')) {
             e.stopPropagation();
             expandPoiPanel();
@@ -5012,7 +5059,7 @@
         } finally {
           if (rateLimitHit) {
             setPoiLoading(true, true);
-            setTimeout(function() {
+            setTimeout(function () {
               setPoiLoading(false);
             }, 3000);
           } else {
@@ -5063,7 +5110,7 @@
         } finally {
           if (rateLimitHit) {
             setPoiLoading(true, true);
-            setTimeout(function() {
+            setTimeout(function () {
               setPoiLoading(false);
             }, 3000);
           } else {
@@ -5086,7 +5133,7 @@
         btn.title = 'Toggle Fullscreen Map';
       }
 
-      setTimeout(function() {
+      setTimeout(function () {
         if (map) map.resize();
         if (map3d) map3d.resize();
       }, 50);
@@ -5652,7 +5699,7 @@
   </script>
   <script>
     // Hide map overlay buttons when the map wrapper height drops below 50px
-    (function() {
+    (function () {
       function updateMapBtnVisibility(height) {
         var toggle = document.querySelector('.map3d-toggle-btn');
         var heading = document.querySelector('.map-heading-btn');
@@ -5670,26 +5717,26 @@
         if (poi) poi.style.display = hidden ? 'none' : '';
         if (poiLegend && hidden) poiLegend.classList.remove('visible');
       }
-      window.addEventListener('DOMContentLoaded', function() {
+      window.addEventListener('DOMContentLoaded', function () {
         var wrapper = document.querySelector('.map-wrapper');
         if (!wrapper) return;
         updateMapBtnVisibility(wrapper.offsetHeight);
-        var ro = new ResizeObserver(function(entries) {
+        var ro = new ResizeObserver(function (entries) {
           for (var i = 0; i < entries.length; i++) {
             updateMapBtnVisibility(entries[i].contentRect.height);
           }
         });
         ro.observe(wrapper);
       });
-      window.addEventListener('DOMContentLoaded', function() {
+      window.addEventListener('DOMContentLoaded', function () {
         var ws = document.getElementById('windSpeed');
         if (ws) updateHeadwindColor(ws.value);
       });
     })();
   </script>
   <script>
-    (function() {
-      window.addEventListener('DOMContentLoaded', function() {
+    (function () {
+      window.addEventListener('DOMContentLoaded', function () {
         var batteryGroup = document.querySelector('.battery-range-group');
         var rangeCard = document.querySelector('.range-card');
         if (!batteryGroup || !rangeCard) return;
@@ -5703,7 +5750,7 @@
           }
         }
         updateBatteryLayout();
-        var ro = new ResizeObserver(function() {
+        var ro = new ResizeObserver(function () {
           updateBatteryLayout();
         });
         ro.observe(rangeCard);
@@ -5711,12 +5758,12 @@
     })();
 
     if ('serviceWorker' in navigator) {
-      window.addEventListener('load', function() {
+      window.addEventListener('load', function () {
         navigator.serviceWorker.register('/sw.js', {
           updateViaCache: 'none'
-        }).then(function(registration) {
+        }).then(function (registration) {
           console.log('ServiceWorker registration successful with scope: ', registration.scope);
-        }, function(err) {
+        }, function (err) {
           console.log('ServiceWorker registration failed: ', err);
         });
       });
