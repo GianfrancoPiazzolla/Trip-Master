@@ -93,7 +93,7 @@ The app runs entirely client-side. There is no server, no database, and no build
 | 🔍 **Map Zoom Controls** | Floating `−` / `⊕` / `+` buttons to zoom out, re-center on GPS, or zoom in on the active map |
 | 📍 **Live GPS Position Marker** | Custom blue dot marker tracking real-time position on both 2D and 3D maps |
 | 🟢 **Start & End Markers** | Green `S` and red `E` circular markers placed automatically at the first and last coordinate of any imported trip file |
-| 📊 **4 Live Charts** | Elevation profile, consumption vs. distance, speed profile, energy balance |
+| 📊 **4 Live Charts** | Elevation profile, heat-map style consumption profile, speed profile, energy balance |
 | 🌡️ **Live Weather Panel** | Auto-fetches Open-Meteo for temperature, humidity, wind, and pressure |
 | 🌧️ **Weather Radar Overlay** | One-click RainViewer precipitation radar projected on both 2D and 3D maps |
 | 📌 **POI Overlay** | One-click overlay showing Road Closures, Mobile Patrols, Speed Cameras, and EV Charging stations on both 2D and 3D maps, sourced from OpenStreetMap Overpass API and Waze Live Map |
@@ -252,11 +252,13 @@ All charts are rendered via **Chart.js v4** with `animation: false` for zero-lat
 
 ### ⚡ Consumption Profile
 
-- **Type:** Line chart
-- **X-axis:** Distance [Km]
-- **Y-axis:** Instantaneous consumption [Wh/Km]
-- **Color:** `#ff1744` (danger red) — high consumption is immediately visible
-- A **zero-baseline annotation** is drawn at $y = 0$ via `chartjs-plugin-annotation` (v3.0.1), making it easy to visually distinguish energy-consuming segments (above the line) from energy-recovering segments (below the line)
+- **Type:** Line chart with **Heat-Map Style** segment coloring 🌈
+- **X-axis:** Distance traveled [Km] 🏁
+- **Y-axis:** Instantaneous consumption [Wh/Km] ⚡
+- **Dynamic Segment Coloring:** The chart line uses a **real-time segment engine**. Each individual line segment is dynamically colored to match the **exact same color scale** used by the map's route heat map (see [Heat Color Scale](#-heat-color-scale)). 🎨
+- **Visual Synchronization:** This creates a unified visual language across the dashboard, allowing the driver to instantly correlate geographical peaks on the map with telemetry peaks on the chart using identical colors. 🔗
+- **Adaptive Area Fill:** The area under the line is also dynamically filled with a matching translucent version of the segment color (20% opacity), providing a rich, multi-colored area chart effect. 🌊
+- **Zero-baseline annotation:** A horizontal line is drawn at $y = 0$ (via `chartjs-plugin-annotation`), making it easy to distinguish between energy consumption (above the line) and regenerative braking / energy recovery (below the line). ♻️
 
 ### 🏎️ Speed Profile
 
@@ -333,18 +335,18 @@ A **SVG-based live diagram** renders the instantaneous power flow between the ba
 ┌───────────────────────────────────────────────────┐
 │                                                   │
 │   ┌─────────┐                      ┌─────────┐    │
-│   │    🔋   │                      │   🛞    │    │
+│   │    🔋   │                      │    🧿   │    │
 │   │ Battery │═════ ⚡ Motor ══════►│ Wheels  │    │
 │   │         │  (⚡ Motor Power W)  │         │    │
 │   │         │                      │         │    │
 │   └────╬────┘                      └─────────┘    │
 │        ║                                          │
 │        ║ ❄️ HVAC                                  │
-│        ║ (❄️ HVAC Power W)                        │
+│        ║ (HVAC Power W)                           │
 │        ▼                                          │
 │   ┌─────────┐                      ┌─────────┐    │
 │   │   ❄️    │                      │   💡    │    │
-│   │ HVAC    │══════════════════════│  Aux    │    │
+│   │  HVAC   │══════════════════════│  Aux    │    │
 │   │         │                      │  300W   │    │
 │   └─────────┘                      └─────────┘    │
 │                                                   │
@@ -359,7 +361,7 @@ A **SVG-based live diagram** renders the instantaneous power flow between the ba
 |---|---|---|---|
 | Battery | 🔋 | — | Source/sink node |
 | Motor | ⚡ | `motorW = max(0, instantPowerW)` | Instantaneous power to motor [W] |
-| Wheels | 🛞 | — | Output/mechanical node |
+| Wheels | 🧿 | — | Output/mechanical node |
 | HVAC | ❄️ | `hvacW = max(0, abs(tempC - 22) × 50)` | HVAC load — 50W per °C deviation from 22°C |
 | Aux | 💡 | `auxW = 300` | Fixed auxiliary load [W] (infotainment, lights, etc.) |
 | Regen | ↩ | `regenW = lastInstantPowerW < 0 ? abs(lastInstantPowerW) × 0.7 : 0` | Regenerative braking power [W] |
@@ -651,7 +653,7 @@ A floating **`⛈️` button** is permanently overlaid in the **top-right area o
 ```
 ┌─────────────────────────── MAP WRAPPER ────────────────────────────────┐
 │    ┌───┐  ┌───┐  ┌───┐      ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐    │
-│    │ − │  │🧿 │  │ + │      │  🔺 │ │ 🌍  │ │ 📌  │ │ ⛈  │ │  ↕️ │    │
+│    │ − │  │🧿 │  │ + │      │ 🔺 │ │ 🌍  │ │ 📌 │ │ ⛈  │ │  ↕️ │    │
 │    └───┘  └───┘  └───┘      └─────┘ └─────┘ └─────┘ └─────┘ └─────┘    │
 └────────────────────────────────────────────────────────────────────────┘
 ```
@@ -1366,15 +1368,15 @@ The MapLibre GL map style is switched per theme at initialization time (see [Map
 
 ```
 ┌─────────────────────── HEADER ─────────────────────────┐
-│  🔴 TRIP MASTER                  [🚘][🧮] [☀️/🌙] [⭐] │
+│  🔴 TRIP MASTER               [🚘][🧮] [☀️/🌙] [⭐] │
 ├──────────────── CONFIG GRID (4 cols) ──────────────────┤
 │  Weight │ Temp Efficiency │ Headwind │ GPS Polling     │
 ├──────────────── STAT CARDS (8 cols) ───────────────────┤
-│ Dist │ Avg Spd │ Cons │ Regen │ Alt │ Grade │ Pwr │  ⏱ │
+│ Dist │ Avg Spd │ Cons │ Regen │ Alt │ Grade │ Pwr │ ⏱ │
 ├──────────────── RANGE ESTIMATOR ───────────────────────┤
 │  [kWh ±] [SOC% ±] [═══ Battery Bar ═══] [Range] [Rem.] │
 ├───────────── MAP ──────────┬───── CHARTS PANEL ────────┤
-│ [−][🧿][+]                 │     [🔺][🌍][⛈️][📌][↕️] │
+│ [−][🧿][+]                 │   [🔺][🌍][⛈️][📌][↕️] │
 │                            │  Elevation Profile        │
 │                            │  Consumption Profile      │
 │                            │  Speed Profile            │
@@ -1384,7 +1386,7 @@ The MapLibre GL map style is switched per theme at initialization time (see [Map
 │                            │  Driving Style Analyzer   │
 │                            │  Weather Panel            │
 ├─────────────────────── CONTROLS ───────────────────────┤
-│   [▶ Start Trip]    [⏹ Stop Trip]    [↺ Reset Trip]   │
+│   [▶ Start Trip]    [⏹ Stop Trip]    [↺ Reset Trip]  │
 └────────────────────────────────────────────────────────┘
 ```
 
@@ -1598,7 +1600,7 @@ Both markers are created by `createTripEndpointMarker(label, bgColor)`, which bu
 
 ```
   ┌──────────┐           ┌──────────┐
-  │  🟢  S   │           │  🔴  E   │
+  │  🟢  S   │          │  🔴  E   │
   └──────────┘           └──────────┘
   Start of route         End of route
 ```
@@ -1827,7 +1829,7 @@ A floating **`↕️` button** is permanently overlaid in the **top-right corner
 ```
 ┌─────────────────────────── MAP WRAPPER ────────────────────────────────┐
 │    ┌───┐  ┌───┐  ┌───┐      ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐    │
-│    │ − │  │🧿 │  │ + │      │  🔺 │ │ 🌍  │ │ 📌  │ │ ⛈️  │ │  ↕ ️ │    │
+│    │ − │  │🧿 │ │ + │      │  🔺 │ │ 🌍  │ │ 📌 │ │ ⛈️  │ │  ↕ ️ │    │
 │    └───┘  └───┘  └───┘      └─────┘ └─────┘ └─────┘ └─────┘ └─────┘    │
 └────────────────────────────────────────────────────────────────────────┘
 ```
@@ -1873,7 +1875,7 @@ A floating **`🔺` / `🧭` button** is permanently overlaid in the **top-right
 ```
 ┌─────────────────────────── MAP WRAPPER ────────────────────────────────┐
 │    ┌───┐  ┌───┐  ┌───┐      ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐    │
-│    │ − │  │🧿 │  │ + │      │  🔺 │ │ 🌍  │ │ 📌  │ │ ⛈️  │ │  ↕ ️ │    │
+│    │ − │  │🧿 │ │ + │      │  🔺 │ │ 🌍  │ │ 📌 │ │ ⛈️  │ │  ↕ ️ │    │
 │    └───┘  └───┘  └───┘      └─────┘ └─────┘ └─────┘ └─────┘ └─────┘    │
 └────────────────────────────────────────────────────────────────────────┘
 ```
@@ -1931,7 +1933,7 @@ A floating **`📌` button** is permanently overlaid in the **top-right area of 
 ```
 ┌─────────────────────────── MAP WRAPPER ────────────────────────────────┐
 │    ┌───┐  ┌───┐  ┌───┐      ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐    │
-│    │ − │  │🧿 │  │ + │      │  🔺 │ │ 🌍  │ │ 📌  │ │ ⛈️  │ │  ↕ ️ │    │
+│    │ − │  │🧿 │ │ + │      │  🔺 │ │ 🌍  │ │ 📌 │ │ ⛈️  │ │  ↕ ️ │    │
 │    └───┘  └───┘  └───┘      └─────┘ └─────┘ └─────┘ └─────┘ └─────┘    │
 └────────────────────────────────────────────────────────────────────────┘
 ```
@@ -1951,10 +1953,10 @@ The POI Panel (`#poiPanel`) slides into view whenever the overlay is active. It 
 ```
 ┌─────────────────────────────┐
 │  POI Layers                 │
-│  🚧  Road Closures    [ ]   │
+│  🚧  Road Closures    [ ]  │
 │  👮  Mobile Patrols   [ ]   │
-│  📷  Speed Cameras    [ ]   │
-│  ⚡  EV Charging       [ ]  │
+│  📷  Speed Cameras    [ ]  │
+│  ⚡  EV Charging      [ ]  │
 │  ⌛ Fetching data…          │  ← visible only during fetch
 └─────────────────────────────┘
 ```
