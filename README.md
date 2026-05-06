@@ -62,9 +62,10 @@
 40. [Real-Time Cost Meter](#-real-time-cost-meter)
 41. [Responsive Layout Adaptations](#-responsive-layout-adaptations)
 42. [Card Folding & Maximized Map View](#-card-folding--maximized-map-view)
-43. [Dependencies](#-dependencies)
-44. [Getting Started](#-getting-started)
-45. [Mathematical Reference](#-mathematical-reference)
+43. [Interactive Card Enlargement](#-interactive-card-enlargement)
+44. [Dependencies](#-dependencies)
+45. [Getting Started](#-getting-started)
+46. [Mathematical Reference](#-mathematical-reference)
 
 ---
 
@@ -2929,7 +2930,29 @@ By folding all side cards, the map area expands to fill the available width, cre
 
 ---
 
-## 📦 Dependencies
+## 🔍 Interactive Card Enlargement 🃏
+
+Trip Master features an advanced **interactive card enlargement system** 🚀 that allows drivers to focus on specific telemetry data with a single tap 👆. When a card's information area is touched, it expands to a **premium fullscreen-style view** 📺, ensuring maximum legibility while driving 🏎️.
+
+### ✨ Key Features:
+- **👆 One-Tap Expansion**: Tap any data area (charts, energy flow, driving style, weather) to instantly enlarge the card.
+- **📏 Adaptive Aspect Ratio**:
+  - **📊 Line Charts**: The **Elevation**, **Consumption**, and **Speed Profile** cards expand to occupy exactly **50% of the vertical screen space** ↕️, providing a high-resolution view of the trip's trends.
+  - **🃏 Other Cards**: **Energy Balance**, **Power Breakdown**, **Energy Flow**, **Driving Style**, and **Weather** cards expand maintaining their **original aspect ratio** 📐 to avoid distortion while filling the horizontal width.
+- **🎨 Premium Visuals**: A **blurred backdrop** 🌫️ (backdrop-filter) and a dimmed overlay 🌑 focus your attention on the active data.
+- **📈 Proportional Scaling**: Text 🔠, icons 🎭, and axis values 🔢 are automatically scaled up for perfect readability 👓 at a distance.
+- **🔄 Instant Toggle**: Simply tap the enlarged card or the background to dismiss it 🚪 and return to the dashboard view.
+- **📱 Responsive Design**: Maintains a **50px courtesy margin** 🏁 on all sides to ensure a premium look on any device.
+
+### 🛠️ Visual Enhancements per Card:
+- **🎢 Elevation/Consumption/Speed**: 50% vertical height 📏 with enlarged axis fonts 🔢 and titles.
+- **🔋 Power Breakdown**: Thicker bars 📊, larger labels 🏷️, and bigger icons 🔄.
+- **🎯 Driving Style**: Enlarged score gauge 🧭 and performance bars 🏆.
+- **🌤️ Weather**: Huge weather icons ⛈️, clear temperature text 🌡️, and optimized 3-column layout 📋.
+
+---
+
+## 📦 44. Dependencies
 
 All dependencies are loaded from CDN — no `npm install` required.
 
@@ -2945,7 +2968,7 @@ All dependencies are loaded from CDN — no `npm install` required.
 
 ---
 
-## 🚀 Getting Started
+## 🚀 45. Getting Started
 
 ### 🛠️ Prerequisites
 
@@ -2985,7 +3008,7 @@ trip-master/
 
 ---
 
-## 📐 Mathematical Reference
+## 📐 46. Mathematical Reference
 
 A consolidated reference of all formulas used in the application.
 
