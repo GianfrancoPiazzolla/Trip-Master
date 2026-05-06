@@ -3808,14 +3808,11 @@
             borderColor: '#ff1744',
             borderWidth: 2,
             segment: {
-              borderColor: ctx => ctx.p1.parsed.y < 0 ? '#00e676' : '#ff1744',
-              backgroundColor: ctx => ctx.p1.parsed.y < 0 ? 'rgba(0,230,118,0.1)' : 'rgba(255,23,68,0.1)'
-            },
-            backgroundColor: (ctx) => {
-              const g = ctx.chart.ctx.createLinearGradient(0, 0, 0, ctx.chart.height);
-              g.addColorStop(0, 'rgba(255,23,68,0.25)');
-              g.addColorStop(1, 'rgba(255,23,68,0.0)');
-              return g;
+              borderColor: ctx => getHeatColor(ctx.p1.parsed.y),
+              backgroundColor: ctx => {
+                const color = getHeatColor(ctx.p1.parsed.y);
+                return color + '33';
+              }
             },
             fill: true,
             pointRadius: 0,
