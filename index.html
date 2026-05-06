@@ -2131,6 +2131,177 @@
         width: 100%;
       }
     }
+
+    .card-maximized {
+      position: fixed !important;
+      top: 50% !important;
+      left: 50% !important;
+      transform: translate(-50%, -50%) !important;
+      width: calc(100vw - 100px) !important;
+      height: auto !important;
+      z-index: 10001 !important;
+      margin: 0 !important;
+      box-shadow: 0 0 100px rgba(0, 0, 0, 0.8) !important;
+      cursor: zoom-out !important;
+      background: var(--card-bg) !important;
+      border-radius: 12px !important;
+      overflow: hidden !important;
+    }
+    
+    .card-maximized.v-50 {
+      height: 50vh !important;
+    }
+
+    .card-maximized .chart-canvas-area,
+    .card-maximized .energy-flow-svg,
+    .card-maximized .ds-gauge-wrap,
+    .card-maximized .powerflow-wrap {
+      flex: 1 !important;
+      height: auto !important;
+    }
+
+    .card-maximized-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(10px);
+      z-index: 10000;
+      display: none;
+    }
+
+    /* Proportional scaling for maximized cards */
+    .card-maximized .pf-row {
+      gap: 16px;
+    }
+
+    .card-maximized .pf-icon {
+      font-size: 1.5rem;
+      width: 35px;
+    }
+
+    .card-maximized .pf-label {
+      font-size: 1rem;
+      width: 110px;
+    }
+
+    .card-maximized .pf-bar-bg {
+      height: 16px;
+      border-radius: 8px;
+    }
+
+    .card-maximized .pf-bar-fill {
+      border-radius: 8px;
+    }
+
+    .card-maximized .pf-val {
+      font-size: 1.1rem;
+      width: 70px;
+    }
+
+    .card-maximized .powerflow-wrap {
+      gap: 15px;
+      padding: 20px;
+    }
+
+    .card-maximized .ds-gauge-wrap {
+      gap: 30px;
+      padding: 30px;
+    }
+
+    .card-maximized .ds-gauge-svg {
+      width: 320px;
+      height: 200px;
+    }
+
+    .card-maximized .ds-score-label {
+      font-size: 1rem;
+      width: 150px;
+      padding: 12px;
+    }
+
+    .card-maximized .ds-score-bar-bg {
+      height: 14px;
+      border-radius: 7px;
+    }
+
+    .card-maximized .ds-score-bar-fill {
+      border-radius: 7px;
+    }
+
+    .card-maximized .ds-score-val {
+      font-size: 1.1rem;
+      width: 50px;
+    }
+
+    .card-maximized .ds-scores {
+      gap: 10px;
+    }
+
+    .card-maximized .weather-display {
+      padding: 30px;
+      gap: 30px;
+    }
+
+    .card-maximized .weather-icon {
+      font-size: 9rem;
+    }
+
+    .card-maximized .weather-icon.small {
+      font-size: 5.5rem;
+    }
+
+    .card-maximized .weather-temp {
+      font-size: 2.8rem;
+    }
+
+    .card-maximized .weather-item span.wlabel {
+      font-size: 0.9rem;
+      margin-bottom: 6px;
+    }
+
+    .card-maximized .weather-item b {
+      font-size: 1.6rem;
+    }
+
+    .card-maximized .weather-column {
+      gap: 20px;
+    }
+
+    .card-maximized .energy-stats-row {
+      padding: 15px 25px;
+      gap: 40px;
+    }
+
+    .card-maximized .energy-stat-label {
+      font-size: 1rem;
+      margin-bottom: 8px;
+    }
+
+    .card-maximized .energy-stat-value {
+      font-size: 1.6rem;
+    }
+
+    .card-maximized .chart-badge {
+      font-size: 1rem;
+      padding: 6px 12px;
+      height: auto;
+    }
+
+    .card-maximized .chart-title {
+      font-size: 1.2rem;
+    }
+
+    .card-maximized .chart-header {
+      padding: 15px 20px;
+    }
+
+    .card-maximized .collapse-arrow {
+      font-size: 1.5rem;
+      margin-left: 12px;
+    }
   </style>
 </head>
 
@@ -2391,7 +2562,7 @@
             <span class="chart-title">Elevation Profile <span class="collapse-arrow">▴</span></span>
             <span class="chart-badge alt">m a.s.l.</span>
           </div>
-          <div class="chart-canvas-area">
+          <div class="chart-canvas-area" onclick="maximizeCard(this, event)">
             <canvas id="altitudeChart"></canvas>
           </div>
         </div>
@@ -2402,7 +2573,7 @@
             <span class="chart-title">Consumption Profile <span class="collapse-arrow">▴</span></span>
             <span class="chart-badge cons">Wh/Km</span>
           </div>
-          <div class="chart-canvas-area">
+          <div class="chart-canvas-area" onclick="maximizeCard(this, event)">
             <canvas id="consumptionChart"></canvas>
           </div>
         </div>
@@ -2413,7 +2584,7 @@
             <span class="chart-title">Speed Profile <span class="collapse-arrow">▴</span></span>
             <span class="chart-badge speed">Km/h</span>
           </div>
-          <div class="chart-canvas-area">
+          <div class="chart-canvas-area" onclick="maximizeCard(this, event)">
             <canvas id="speedChart"></canvas>
           </div>
         </div>
@@ -2424,7 +2595,7 @@
             <span class="chart-title">Energy Balance <span class="collapse-arrow">▴</span></span>
             <span class="chart-badge energy">Wh</span>
           </div>
-          <div class="chart-canvas-area">
+          <div class="chart-canvas-area" onclick="maximizeCard(this, event)">
             <canvas id="energyBalanceChart"></canvas>
           </div>
           <div class="energy-stats-row">
@@ -2449,7 +2620,7 @@
             <span class="chart-title">Power Breakdown <span class="collapse-arrow">▴</span></span>
             <span class="chart-badge power">Live</span>
           </div>
-          <div class="powerflow-wrap">
+          <div class="powerflow-wrap" onclick="maximizeCard(this, event)">
             <div class="pf-row">
               <span class="pf-icon">🔄</span>
               <span class="pf-label">Rolling</span>
@@ -2491,7 +2662,8 @@
             <span class="chart-title">Energy Flow <span class="collapse-arrow">▴</span></span>
             <span class="chart-badge regen">Live</span>
           </div>
-          <svg class="energy-flow-svg" id="energyFlowSvg" viewBox="0 0 400 120"></svg>
+          <svg class="energy-flow-svg" id="energyFlowSvg" viewBox="0 0 400 120"
+            onclick="maximizeCard(this, event)"></svg>
         </div>
 
         <!-- DRIVING STYLE ANALYZER -->
@@ -2500,7 +2672,7 @@
             <span class="chart-title">Driving Style Analyzer <span class="collapse-arrow">▴</span></span>
             <span class="chart-badge speed" id="dsBadge">--</span>
           </div>
-          <div class="ds-gauge-wrap">
+          <div class="ds-gauge-wrap" onclick="maximizeCard(this, event)">
             <div class="ds-scores">
               <div class="ds-score-row">
                 <span class="ds-score-label">Acceleration</span>
@@ -2534,7 +2706,7 @@
             <span class="chart-title">Weather Condition <span class="collapse-arrow">▴</span></span>
             <span class="chart-badge weather">Live</span>
           </div>
-          <div class="chart-canvas-area" style="padding:4px 6px;">
+          <div class="chart-canvas-area" style="padding:4px 6px;" onclick="maximizeCard(this, event)">
             <div class="weather-display">
               <div class="weather-column" style="text-align:right;">
                 <div class="weather-item">
@@ -5773,7 +5945,80 @@
         arrow.textContent = isCollapsed ? '▾' : '▴';
       }
     }
+    let maximizedCard = null;
+
+    function maximizeCard(contentArea, event) {
+      if (event) event.stopPropagation();
+      const card = contentArea.closest('.chart-container, .energy-flow-card, .driving-style-card');
+      if (!card) return;
+
+      if (card.classList.contains('card-maximized')) {
+        closeMaximizedCard();
+        return;
+      }
+
+      const isBigChart = card.querySelector('#altitudeChart, #consumptionChart, #speedChart');
+      let ratio;
+      if (isBigChart) {
+        card.classList.add('v-50');
+        ratio = (window.innerWidth - 100) / (window.innerHeight * 0.5);
+      } else {
+        const rect = card.getBoundingClientRect();
+        ratio = rect.width / rect.height;
+      }
+
+      maximizedCard = card;
+      card.classList.add('card-maximized');
+      card.style.aspectRatio = ratio.toString();
+      card.setAttribute('onclick', 'closeMaximizedCard()');
+      document.getElementById('maxOverlay').style.display = 'block';
+
+      const canvas = card.querySelector('canvas');
+      if (canvas) {
+        const chart = Chart.getChart(canvas);
+        if (chart) {
+          updateChartFontSize(chart, 14);
+          chart.resize();
+        }
+      }
+    }
+
+    function updateChartFontSize(chart, size) {
+      if (!chart.options.scales) return;
+      if (chart.options.scales.x) {
+        if (chart.options.scales.x.ticks && chart.options.scales.x.ticks.font) chart.options.scales.x.ticks.font.size = size;
+        if (chart.options.scales.x.title && chart.options.scales.x.title.font) chart.options.scales.x.title.font.size = size + 2;
+      }
+      if (chart.options.scales.y) {
+        if (chart.options.scales.y.ticks && chart.options.scales.y.ticks.font) chart.options.scales.y.ticks.font.size = size;
+        if (chart.options.scales.y.title && chart.options.scales.y.title.font) chart.options.scales.y.title.font.size = size + 2;
+      }
+      if (chart.options.plugins && chart.options.plugins.tooltip) {
+        if (chart.options.plugins.tooltip.titleFont) chart.options.plugins.tooltip.titleFont.size = size + 2;
+        if (chart.options.plugins.tooltip.bodyFont) chart.options.plugins.tooltip.bodyFont.size = size;
+      }
+      chart.update('none');
+    }
+
+    function closeMaximizedCard() {
+      if (!maximizedCard) return;
+      maximizedCard.classList.remove('card-maximized', 'v-50');
+      maximizedCard.style.aspectRatio = '';
+      maximizedCard.removeAttribute('onclick');
+      document.getElementById('maxOverlay').style.display = 'none';
+
+      const canvas = maximizedCard.querySelector('canvas');
+      if (canvas) {
+        const chart = Chart.getChart(canvas);
+        if (chart) {
+          updateChartFontSize(chart, 8);
+          chart.resize();
+        }
+      }
+      maximizedCard = null;
+    }
   </script>
+  <div id="maxOverlay" class="card-maximized-overlay" onclick="closeMaximizedCard()"></div>
 </body>
 
 </html>
