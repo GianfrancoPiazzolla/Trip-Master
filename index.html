@@ -2137,7 +2137,7 @@
       top: 50% !important;
       left: 50% !important;
       transform: translate(-50%, -50%) !important;
-      width: calc(100vw - 100px) !important;
+      width: 95% !important;
       height: auto !important;
       z-index: 10001 !important;
       margin: 0 !important;
@@ -2147,9 +2147,10 @@
       border-radius: 12px !important;
       overflow: hidden !important;
     }
-    
-    .card-maximized.v-50 {
-      height: 50vh !important;
+
+    .card-maximized.v-80 {
+      width: 95% !important;
+      height: 80vh !important;
     }
 
     .card-maximized .chart-canvas-area,
@@ -5948,6 +5949,7 @@
     let maximizedCard = null;
 
     function maximizeCard(contentArea, event) {
+      if (window.innerWidth < 800) return;
       if (event) event.stopPropagation();
       const card = contentArea.closest('.chart-container, .energy-flow-card, .driving-style-card');
       if (!card) return;
@@ -5960,8 +5962,8 @@
       const isBigChart = card.querySelector('#altitudeChart, #consumptionChart, #speedChart');
       let ratio;
       if (isBigChart) {
-        card.classList.add('v-50');
-        ratio = (window.innerWidth - 100) / (window.innerHeight * 0.5);
+        card.classList.add('v-80');
+        ratio = (window.innerWidth * 0.95) / (window.innerHeight * 0.8);
       } else {
         const rect = card.getBoundingClientRect();
         ratio = rect.width / rect.height;
@@ -6002,7 +6004,7 @@
 
     function closeMaximizedCard() {
       if (!maximizedCard) return;
-      maximizedCard.classList.remove('card-maximized', 'v-50');
+      maximizedCard.classList.remove('card-maximized', 'v-80');
       maximizedCard.style.aspectRatio = '';
       maximizedCard.removeAttribute('onclick');
       document.getElementById('maxOverlay').style.display = 'none';
