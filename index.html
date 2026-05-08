@@ -1109,6 +1109,57 @@
       border: 1px solid rgba(0, 230, 118, 0.3);
     }
 
+    .chart-header-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .maximize-btn {
+      background: none;
+      border: 1px solid var(--border-color);
+      color: var(--label-color);
+      border-radius: 4px;
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 14px;
+      padding: 0;
+      transition: all 0.2s ease;
+      line-height: 1;
+    }
+
+    .maximize-btn:hover {
+      background: var(--input-bg);
+      color: var(--text-color);
+      border-color: var(--label-color);
+    }
+
+    .collapsed .maximize-btn,
+    .card-maximized .maximize-btn {
+      display: none !important;
+    }
+
+    @media (hover: hover) and (min-width: 801px) {
+      .chart-canvas-area:hover,
+      .powerflow-wrap:hover,
+      .energy-flow-svg:hover,
+      .ds-gauge-wrap:hover {
+        cursor: zoom-in;
+      }
+
+      .chart-container:hover,
+      .energy-flow-card:hover,
+      .driving-style-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--card-shadow-hover);
+        transition: all 0.3s ease;
+      }
+    }
+
     /* Canvas area */
     .chart-canvas-area {
       flex: 1;
@@ -1633,6 +1684,10 @@
 
       .cost-meter-card .cm-divider {
         display: none;
+      }
+
+      .maximize-btn {
+        display: none !important;
       }
     }
 
@@ -2561,7 +2616,10 @@
         <div class="chart-container">
           <div class="chart-header" onclick="toggleCardCollapse(this)">
             <span class="chart-title">Elevation Profile <span class="collapse-arrow">▴</span></span>
-            <span class="chart-badge alt">m a.s.l.</span>
+            <div class="chart-header-right">
+              <button class="maximize-btn" onclick="maximizeCard(this, event)">⛶</button>
+              <span class="chart-badge alt">m a.s.l.</span>
+            </div>
           </div>
           <div class="chart-canvas-area" onclick="maximizeCard(this, event)">
             <canvas id="altitudeChart"></canvas>
@@ -2572,7 +2630,10 @@
         <div class="chart-container">
           <div class="chart-header" onclick="toggleCardCollapse(this)">
             <span class="chart-title">Consumption Profile <span class="collapse-arrow">▴</span></span>
-            <span class="chart-badge cons">Wh/Km</span>
+            <div class="chart-header-right">
+              <button class="maximize-btn" onclick="maximizeCard(this, event)">⛶</button>
+              <span class="chart-badge cons">Wh/Km</span>
+            </div>
           </div>
           <div class="chart-canvas-area" onclick="maximizeCard(this, event)">
             <canvas id="consumptionChart"></canvas>
@@ -2583,7 +2644,10 @@
         <div class="chart-container">
           <div class="chart-header" onclick="toggleCardCollapse(this)">
             <span class="chart-title">Speed Profile <span class="collapse-arrow">▴</span></span>
-            <span class="chart-badge speed">Km/h</span>
+            <div class="chart-header-right">
+              <button class="maximize-btn" onclick="maximizeCard(this, event)">⛶</button>
+              <span class="chart-badge speed">Km/h</span>
+            </div>
           </div>
           <div class="chart-canvas-area" onclick="maximizeCard(this, event)">
             <canvas id="speedChart"></canvas>
@@ -2594,7 +2658,10 @@
         <div class="chart-container short" style="height:160px;">
           <div class="chart-header" onclick="toggleCardCollapse(this)">
             <span class="chart-title">Energy Balance <span class="collapse-arrow">▴</span></span>
-            <span class="chart-badge energy">Wh</span>
+            <div class="chart-header-right">
+              <button class="maximize-btn" onclick="maximizeCard(this, event)">⛶</button>
+              <span class="chart-badge energy">Wh</span>
+            </div>
           </div>
           <div class="chart-canvas-area" onclick="maximizeCard(this, event)">
             <canvas id="energyBalanceChart"></canvas>
@@ -2619,7 +2686,10 @@
         <div class="chart-container short" style="height:160px;">
           <div class="chart-header" onclick="toggleCardCollapse(this)">
             <span class="chart-title">Power Breakdown <span class="collapse-arrow">▴</span></span>
-            <span class="chart-badge power">Live</span>
+            <div class="chart-header-right">
+              <button class="maximize-btn" onclick="maximizeCard(this, event)">⛶</button>
+              <span class="chart-badge power">Live</span>
+            </div>
           </div>
           <div class="powerflow-wrap" onclick="maximizeCard(this, event)">
             <div class="pf-row">
@@ -2661,7 +2731,10 @@
         <div class="energy-flow-card" style="height:160px;">
           <div class="chart-header" onclick="toggleCardCollapse(this)">
             <span class="chart-title">Energy Flow <span class="collapse-arrow">▴</span></span>
-            <span class="chart-badge regen">Live</span>
+            <div class="chart-header-right">
+              <button class="maximize-btn" onclick="maximizeCard(this, event)">⛶</button>
+              <span class="chart-badge regen">Live</span>
+            </div>
           </div>
           <svg class="energy-flow-svg" id="energyFlowSvg" viewBox="0 0 400 120"
             onclick="maximizeCard(this, event)"></svg>
@@ -2671,7 +2744,10 @@
         <div class="driving-style-card" style="height:160px;">
           <div class="chart-header" onclick="toggleCardCollapse(this)">
             <span class="chart-title">Driving Style Analyzer <span class="collapse-arrow">▴</span></span>
-            <span class="chart-badge speed" id="dsBadge">--</span>
+            <div class="chart-header-right">
+              <button class="maximize-btn" onclick="maximizeCard(this, event)">⛶</button>
+              <span class="chart-badge speed" id="dsBadge">--</span>
+            </div>
           </div>
           <div class="ds-gauge-wrap" onclick="maximizeCard(this, event)">
             <div class="ds-scores">
@@ -2705,7 +2781,10 @@
         <div class="chart-container" style="height:160px;">
           <div class="chart-header" onclick="toggleCardCollapse(this)">
             <span class="chart-title">Weather Condition <span class="collapse-arrow">▴</span></span>
-            <span class="chart-badge weather">Live</span>
+            <div class="chart-header-right">
+              <button class="maximize-btn" onclick="maximizeCard(this, event)">⛶</button>
+              <span class="chart-badge weather">Live</span>
+            </div>
           </div>
           <div class="chart-canvas-area" style="padding:4px 6px;" onclick="maximizeCard(this, event)">
             <div class="weather-display">
