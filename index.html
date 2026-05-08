@@ -3972,6 +3972,32 @@
       });
 
       // Consumption chart
+      const consOptions = JSON.parse(JSON.stringify(commonOptions));
+      consOptions.plugins.annotation = {
+        annotations: {
+          avgLine: {
+            type: 'line',
+            borderColor: 'rgba(136, 146, 160, 0.7)',
+            borderDash: [6, 4],
+            borderWidth: 2,
+            display: true,
+            label: {
+              display: false,
+              backgroundColor: 'rgba(0, 0, 0, 0.7)',
+              color: '#fff',
+              content: '',
+              position: 'end',
+              font: {
+                family: getChartFont(),
+                size: 10,
+                weight: 'bold'
+              }
+            },
+            yMin: 0,
+            yMax: 0
+          }
+        }
+      };
       consChart = new Chart(document.getElementById('consumptionChart').getContext('2d'), {
         type: 'line',
         data: {
@@ -3992,10 +4018,36 @@
             tension: 0.4
           }]
         },
-        options: JSON.parse(JSON.stringify(commonOptions))
+        options: consOptions
       });
 
       // Speed profile chart
+      const speedOptions = JSON.parse(JSON.stringify(commonOptions));
+      speedOptions.plugins.annotation = {
+        annotations: {
+          avgLine: {
+            type: 'line',
+            borderColor: 'rgba(136, 146, 160, 0.7)',
+            borderDash: [6, 4],
+            borderWidth: 2,
+            display: true,
+            label: {
+              display: false,
+              backgroundColor: 'rgba(0, 0, 0, 0.7)',
+              color: '#fff',
+              content: '',
+              position: 'end',
+              font: {
+                family: getChartFont(),
+                size: 10,
+                weight: 'bold'
+              }
+            },
+            yMin: 0,
+            yMax: 0
+          }
+        }
+      };
       speedChart = new Chart(document.getElementById('speedChart').getContext('2d'), {
         type: 'line',
         data: {
@@ -4015,7 +4067,7 @@
             tension: 0.3
           }]
         },
-        options: JSON.parse(JSON.stringify(commonOptions))
+        options: speedOptions
       });
 
       // Energy balance horizontal bar chart
@@ -4630,7 +4682,19 @@
 
       energyChart.data.datasets[0].data = [totalConsumedWh, totalRegenWh];
 
-      [altChart, consChart, speedChart, energyChart].forEach(c => c.update('none'));
+      [altChart, consChart, speedChart, energyChart].forEach(c => {
+        if (c === consChart || c === speedChart) {
+          const data = c.data.datasets[0].data;
+          if (data.length > 0) {
+            const avg = data.reduce((sum, p) => sum + parseFloat(p.y), 0) / data.length;
+            const anno = c.options.plugins.annotation.annotations.avgLine;
+            anno.yMin = avg;
+            anno.yMax = avg;
+            anno.label.content = 'Avg: ' + avg.toFixed(1);
+          }
+        }
+        c.update('none');
+      });
 
       document.getElementById('energyConsumedLabel').innerText = totalConsumedWh.toFixed(1) + ' Wh';
       document.getElementById('energyRegenLabel').innerText = totalRegenWh.toFixed(1) + ' Wh';
@@ -5998,6 +6062,13 @@
       if (chart.options.plugins && chart.options.plugins.tooltip) {
         if (chart.options.plugins.tooltip.titleFont) chart.options.plugins.tooltip.titleFont.size = size + 2;
         if (chart.options.plugins.tooltip.bodyFont) chart.options.plugins.tooltip.bodyFont.size = size;
+      }
+      if (chart.options.plugins && chart.options.plugins.annotation && chart.options.plugins.annotation.annotations.avgLine) {
+        const isMax = (size === 14);
+        const anno = chart.options.plugins.annotation.annotations.avgLine;
+        anno.display = true;
+        anno.label.display = isMax;
+        anno.label.font.size = isMax ? 12 : 8;
       }
       chart.update('none');
     }
