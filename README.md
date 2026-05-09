@@ -94,7 +94,7 @@ The app runs entirely client-side. There is no server, no database, and no build
 | 🔍 **Map Zoom Controls** | Floating `−` / `⊕` / `+` buttons to zoom out, re-center on GPS, or zoom in on the active map |
 | 📍 **Live GPS Position Marker** | Custom blue dot marker tracking real-time position on both 2D and 3D maps |
 | 🟢 **Start & End Markers** | Green `S` and red `E` circular markers placed automatically at the first and last coordinate of any imported trip file |
-| 📊 **4 Live Charts** | Elevation profile, heat-map style consumption profile, speed profile, energy balance |
+| 📊 **4 Live Charts** | Elevation profile, heat-map style consumption profile with average line tracking, speed profile with 130 km/h warning, energy balance |
 | 🌡️ **Live Weather Panel** | Auto-fetches Open-Meteo for temperature, humidity, wind, and pressure |
 | 🌧️ **Weather Radar Overlay** | One-click RainViewer precipitation radar projected on both 2D and 3D maps |
 | 📌 **POI Overlay** | One-click overlay showing Road Closures, Mobile Patrols, Speed Cameras, and EV Charging stations on both 2D and 3D maps, sourced from OpenStreetMap Overpass API and Waze Live Map |
@@ -260,6 +260,7 @@ All charts are rendered via **Chart.js v4** with `animation: false` for zero-lat
 - **Visual Synchronization:** This creates a unified visual language across the dashboard, allowing the driver to instantly correlate geographical peaks on the map with telemetry peaks on the chart using identical colors. 🔗
 - **Adaptive Area Fill:** The area under the line is also dynamically filled with a matching translucent version of the segment color (20% opacity), providing a rich, multi-colored area chart effect. 🌊
 - **Zero-baseline annotation:** A horizontal line is drawn at $y = 0$ (via `chartjs-plugin-annotation`), making it easy to distinguish between energy consumption (above the line) and regenerative braking / energy recovery (below the line). ♻️
+- **Average Consumption Line 📈:** A dynamic horizontal dashed line tracks the trip's mean consumption. It is **color-coded** using the heat-map logic (e.g., green for efficient, red for high drain) to provide an immediate diagnostic of overall efficiency. 🎨
 
 ### 🏎️ Speed Profile
 
@@ -268,6 +269,7 @@ All charts are rendered via **Chart.js v4** with `animation: false` for zero-lat
 - **Y-axis:** Speed [Km/h]
 - **Color:** `#b39ddb` (accent purple)
 - Plots `lastSpeedKmh` at each GPS-valid segment
+- **Average Speed Line 📊:** A dynamic horizontal line displays the trip's mean speed. For safety and awareness, the line automatically turns **red** 🔴 if the average speed exceeds **130 Km/h**. ⚠️
 
 ### 🔋 Energy Balance
 
@@ -2936,6 +2938,8 @@ Trip Master features an advanced **interactive card enlargement system** 🚀 th
 
 ### ✨ Key Features:
 - **👆 One-Tap Expansion**: Tap any data area (charts, energy flow, driving style, weather) to instantly enlarge the card.
+- **⛶ Maximization Button**: Each card features a dedicated **⛶ button** in the top-right header for direct maximization. The button is context-aware and automatically hides when the card is already maximized or collapsed. 🕵️‍♂️
+- **🛡️ Maximization Lock**: When a card is enlarged, the standard collapse arrow is hidden and the folding interaction is disabled to ensure a stable, high-resolution focus view.
 - **📏 Adaptive Aspect Ratio**:
   - **📊 Line Charts**: The **Elevation**, **Consumption**, and **Speed Profile** cards expand to occupy exactly **80% of the vertical screen space** ↕️, providing a high-resolution view of the trip's trends.
   - **🃏 Other Cards**: **Energy Balance**, **Power Breakdown**, **Energy Flow**, **Driving Style**, and **Weather** cards expand maintaining their **original aspect ratio** 📐 to avoid distortion while filling the horizontal width.
