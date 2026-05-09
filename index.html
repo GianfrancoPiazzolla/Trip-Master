@@ -1144,6 +1144,7 @@
     }
 
     @media (hover: hover) and (min-width: 801px) {
+
       .chart-canvas-area:hover,
       .powerflow-wrap:hover,
       .energy-flow-svg:hover,
@@ -2355,8 +2356,7 @@
     }
 
     .card-maximized .collapse-arrow {
-      font-size: 1.5rem;
-      margin-left: 12px;
+      display: none !important;
     }
   </style>
 </head>
@@ -4769,7 +4769,13 @@
             const anno = c.options.plugins.annotation.annotations.avgLine;
             anno.yMin = avg;
             anno.yMax = avg;
-            anno.label.content = 'Avg: ' + avg.toFixed(1);
+            anno.label.content = avg.toFixed(1);
+
+            if (c === consChart) {
+              anno.borderColor = getHeatColor(avg);
+            } else if (c === speedChart) {
+              anno.borderColor = avg > 130 ? '#ff1744' : 'rgba(136, 146, 160, 0.7)';
+            }
           }
         }
         c.update('none');
@@ -6083,6 +6089,7 @@
     }
     function toggleCardCollapse(header) {
       const card = header.parentElement;
+      if (card.classList.contains('card-maximized')) return;
       const isCollapsed = card.classList.toggle('collapsed');
       const arrow = header.querySelector('.collapse-arrow');
       if (arrow) {
