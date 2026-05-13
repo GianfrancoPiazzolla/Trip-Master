@@ -1074,15 +1074,15 @@
     }
 
     .chart-badge.cons {
-      background: rgba(255, 23, 68, 0.15);
-      color: #ff1744;
-      border: 1px solid rgba(255, 23, 68, 0.3);
-    }
-
-    .chart-badge.energy {
       background: rgba(0, 230, 118, 0.15);
       color: #00e676;
       border: 1px solid rgba(0, 230, 118, 0.3);
+    }
+
+    .chart-badge.energy {
+      background: rgba(255, 23, 68, 0.15);
+      color: #ff1744;
+      border: 1px solid rgba(255, 23, 68, 0.3);
     }
 
     .chart-badge.weather {
@@ -4414,6 +4414,18 @@
       document.getElementById('dsBrakeVal').innerText = '100';
       document.getElementById('dsSmoothVal').innerText = '100';
       document.getElementById('dsBadge').innerText = '--';
+      const cBadge = document.querySelector('.chart-badge.cons');
+      if (cBadge) {
+        cBadge.style.removeProperty('color');
+        cBadge.style.removeProperty('background-color');
+        cBadge.style.removeProperty('border-color');
+      }
+      const sBadge = document.querySelector('.chart-badge.speed');
+      if (sBadge) {
+        sBadge.style.removeProperty('color');
+        sBadge.style.removeProperty('background-color');
+        sBadge.style.removeProperty('border-color');
+      }
       document.getElementById('socConsumedLabel').innerText = '';
       if (map && map.getSource('trip-path-2d')) {
         map.getSource('trip-path-2d').setData({
@@ -4772,9 +4784,29 @@
             anno.label.content = avg.toFixed(1);
 
             if (c === consChart) {
-              anno.borderColor = getHeatColor(avg);
+              const color = getHeatColor(avg);
+              anno.borderColor = color;
+              const badge = document.querySelector('.chart-badge.cons');
+              if (badge) {
+                badge.style.color = color;
+                badge.style.backgroundColor = color + '26';
+                badge.style.borderColor = color + '4D';
+              }
             } else if (c === speedChart) {
-              anno.borderColor = avg > 130 ? '#ff1744' : 'rgba(136, 146, 160, 0.7)';
+              const isOverSpeed = avg > 130;
+              anno.borderColor = isOverSpeed ? '#ff1744' : 'rgba(136, 146, 160, 0.7)';
+              const badge = document.querySelector('.chart-badge.speed');
+              if (badge) {
+                if (isOverSpeed) {
+                  badge.style.color = '#ff1744';
+                  badge.style.backgroundColor = 'rgba(255, 23, 68, 0.15)';
+                  badge.style.borderColor = 'rgba(255, 23, 68, 0.3)';
+                } else {
+                  badge.style.removeProperty('color');
+                  badge.style.removeProperty('background-color');
+                  badge.style.removeProperty('border-color');
+                }
+              }
             }
           }
         }
