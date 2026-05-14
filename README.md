@@ -77,6 +77,8 @@ Both the flat **2D view** and the immersive **3D perspective view** are rendered
 
 The app runs entirely client-side. There is no server, no database, and no build pipeline. Drop the `index.html` file onto any web host and it works immediately.
 
+> 💡 **Note:** This application is optimized for large vertical displays, such as the integrated center touchscreens of the **Tesla Model S/X**, providing a high-performance, edge-to-edge dashboard experience.
+
 ---
 
 ## ✨ Core Features
