@@ -1125,7 +1125,7 @@ const LAST_SETTINGS_KEY = 'tripmaster_last_settings';
 
 ### 📦 Saved Parameters
 
-Each autosave snapshot captures **ten** configuration fields:
+Each autosave snapshot captures **eleven** configuration fields:
 
 | 🔑 Field | 🏷️ Source | 📋 Type | 📖 Description |
 |---|---|---|---|
@@ -1134,6 +1134,7 @@ Each autosave snapshot captures **ten** configuration fields:
 | `gpsPolling` | `#gpsPolling` hidden input value | `string` | GPS polling interval [s] |
 | `batteryCapacity` | `#batteryCapacity` input value | `string` | Total usable battery capacity [kWh] |
 | `currentSoc` | `#socInput` input value | `string` | State of Charge at save time [%] |
+| `elecPrice` | `#elecPrice` input value | `string` | Electricity Price [€/kWh] |
 | `isHeadingUp` | `isHeadingUp` runtime variable | `boolean` | Whether heading-up map orientation was active |
 | `is3DMode` | `is3DMode` runtime variable | `boolean` | Whether the 3D map view was active |
 | `poiTypeEnabled` | `poiTypeEnabled` runtime object | `Object` | Shallow copy (`Object.assign`) of POI layer toggle states |
@@ -1154,6 +1155,7 @@ function saveLastSettings() {
         gpsPolling:         document.getElementById('gpsPolling').value,
         batteryCapacity:    document.getElementById('batteryCapacity').value,
         currentSoc:         document.getElementById('socInput').value,
+        elecPrice:          document.getElementById('elecPrice').value,
         isHeadingUp:        isHeadingUp,
         is3DMode:           is3DMode,
         poiTypeEnabled:     Object.assign({}, poiTypeEnabled),
@@ -1254,12 +1256,13 @@ The restore sequence applies each field conditionally — only if the field is p
 | 2️⃣ | `windSpeed` input value is set directly from `s.windSpeed` |
 | 3️⃣ | `batteryCapacity` input value is set; then `updateBattery()` is called to refresh the SOC bar and recompute the range estimate |
 | 4️⃣ | `socInput` value is set from `s.currentSoc`; then `updateBattery()` is called immediately after |
-| 5️⃣ | The GPS polling segmented control iterates all `.segment` buttons in `#gpsPollingGroup`, removes the `active` class from all, and re-applies it to the button matching `s.gpsPolling`; the hidden `#gpsPolling` input is also updated |
-| 6️⃣ | 🎨 If `s.theme` is a non-empty string that differs from the current `currentTheme`, `toggleTheme()` is called to restore the saved ☀️ Light / 🌙 Dark appearance |
-| 7️⃣ | If `s.isHeadingUp` is a `boolean` that differs from the current `isHeadingUp` state, `toggleHeadingMode()` is called |
-| 8️⃣ | If `s.is3DMode` is a `boolean` that differs from the current `is3DMode` state, `toggle3DMap()` is called |
-| 9️⃣ | If `s.isWeatherOverlayOn` is a `boolean` that differs from the current `isWeatherOverlayOn` state, `toggleWeatherOverlay()` is called |
-| 🔟 | If `s.poiTypeEnabled` is an object, each key is merged into the live `poiTypeEnabled` object (only strict `boolean` values); the `.poi-panel-item` CSS classes are updated accordingly; `savePoiPrefs()` is called to keep the dedicated POI preferences storage in sync |
+| 5️⃣ | `elecPrice` input value is set directly from `s.elecPrice` |
+| 6️⃣ | The GPS polling segmented control iterates all `.segment` buttons in `#gpsPollingGroup`, removes the `active` class from all, and re-applies it to the button matching `s.gpsPolling`; the hidden `#gpsPolling` input is also updated |
+| 7️⃣ | 🎨 If `s.theme` is a non-empty string that differs from the current `currentTheme`, `toggleTheme()` is called to restore the saved ☀️ Light / 🌙 Dark appearance |
+| 8️⃣ | If `s.isHeadingUp` is a `boolean` that differs from the current `isHeadingUp` state, `toggleHeadingMode()` is called |
+| 9️⃣ | If `s.is3DMode` is a `boolean` that differs from the current `is3DMode` state, `toggle3DMap()` is called |
+| 🔟 | If `s.isWeatherOverlayOn` is a `boolean` that differs from the current `isWeatherOverlayOn` state, `toggleWeatherOverlay()` is called |
+| 1️⃣1️⃣ | If `s.poiTypeEnabled` is an object, each key is merged into the live `poiTypeEnabled` object (only strict `boolean` values); the `.poi-panel-item` CSS classes are updated accordingly; `savePoiPrefs()` is called to keep the dedicated POI preferences storage in sync |
 
 > ⚠️ **Note:** Steps 6–9 use **diff-based toggling**: the restore function only calls the toggle function if the stored state differs from the current default — preventing double-invocations that would result in no net change.
 
