@@ -956,7 +956,7 @@ Since $v_w$ is updated at **every GPS fix** (via the heading-triggered call to `
 ### ⚡️ Electricity Price
 
 - **Input:** Numeric field (`id="elecPrice"`)
-- **Default:** 0.20 €/kWh
+- **Default:** 0.30 €/kWh
 - **Role:** Used for calculating trip cost and comparing EV expenses against ICE vehicles. This value is **saved in EV profiles** alongside vehicle weight, battery capacity, and GPS polling interval, allowing users to maintain different electricity pricing assumptions per vehicle profile.
 - **Unit:** €/kWh
 
