@@ -2451,7 +2451,7 @@
       </div>
       <div style="display:flex; flex-direction:column;">
         <label>Electricity Price (€/kWh)</label>
-        <input type="number" id="elecPrice" value="0.20" step="0.01" min="0.00" max="2.00">
+        <input type="number" id="elecPrice" value="0.30" step="0.01" min="0.00" max="2.00">
       </div>
       <div style="display:flex; flex-direction:column;">
         <label>GPS Polling (s)</label>
@@ -4506,6 +4506,7 @@
         gpsPolling: document.getElementById('gpsPolling').value,
         batteryCapacity: document.getElementById('batteryCapacity').value,
         currentSoc: document.getElementById('socInput').value,
+        elecPrice: document.getElementById('elecPrice').value,
         isHeadingUp: isHeadingUp,
         is3DMode: is3DMode,
         poiTypeEnabled: Object.assign({}, poiTypeEnabled),
@@ -4539,6 +4540,9 @@
       if (s.currentSoc !== undefined) {
         document.getElementById('socInput').value = s.currentSoc;
         updateBattery();
+      }
+      if (s.elecPrice !== undefined) {
+        document.getElementById('elecPrice').value = s.elecPrice;
       }
 
       if (s.gpsPolling !== undefined) {
@@ -6108,17 +6112,6 @@
       });
     })();
 
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', function () {
-        navigator.serviceWorker.register('/sw.js', {
-          updateViaCache: 'none'
-        }).then(function (registration) {
-          console.log('ServiceWorker registration successful with scope: ', registration.scope);
-        }, function (err) {
-          console.log('ServiceWorker registration failed: ', err);
-        });
-      });
-    }
     function toggleCardCollapse(header) {
       const card = header.parentElement;
       if (card.classList.contains('card-maximized')) return;
@@ -6208,6 +6201,19 @@
       }
       maximizedCard = null;
     }
+
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('/sw.js', {
+          updateViaCache: 'none'
+        }).then(function (registration) {
+          console.log('ServiceWorker registration successful with scope: ', registration.scope);
+        }, function (err) {
+          console.log('ServiceWorker registration failed: ', err);
+        });
+      });
+    }
+
   </script>
   <div id="maxOverlay" class="card-maximized-overlay" onclick="closeMaximizedCard()"></div>
 </body>
