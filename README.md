@@ -13,6 +13,7 @@
 
 > A **single-file Progressive Web App** that turns any smartphone or browser into a professional-grade electric vehicle trip computer — tracking GPS position, computing physics-based energy consumption in real time, visualizing live charts, and displaying live weather data.
 
+https://trip-master-one.vercel.app/
 </div>
 
 ---
