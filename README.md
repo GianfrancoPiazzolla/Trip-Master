@@ -52,21 +52,22 @@ https://trip-master-one.vercel.app/
 30. [Trip Time Display](#-trip-time-display)
 31. [Dark Theme Map Filter](#-dark-theme-map-filter)
 32. [Stepper Buttons](#-stepper-buttons)
-33. [Action Button Shine Effect](#-action-button-shine-effect)
-34. [Weather Pictogram Mapping](#️-weather-pictogram-mapping)
-35. [Automated Headwind Calculation](#-automated-headwind-calculation)
-36. [Wind Direction Display](#-wind-direction-display)
-36. [Modal Click-Outside-To-Close](#-modal-click-outside-to-close)
-37. [Energy Balance Chart Gradient Bars](#-energy-balance-chart-gradient-bars)
-38. [Energy Flow Dashboard](#️-energy-flow-dashboard)
-39. [Driving Style Analyzer](#-driving-style-analyzer)
-40. [Real-Time Cost Meter](#-real-time-cost-meter)
-41. [Responsive Layout Adaptations](#-responsive-layout-adaptations)
-42. [Card Folding & Maximized Map View](#-card-folding--maximized-map-view)
-43. [Interactive Card Enlargement](#-interactive-card-enlargement)
-44. [Dependencies](#-dependencies)
-45. [Getting Started](#-getting-started)
-46. [Mathematical Reference](#-mathematical-reference)
+33. [Battery Visual Effects (3D + Blink)](#-battery-visual-effects-3d--blink)
+34. [Action Button Shine Effect](#-action-button-shine-effect)
+35. [Weather Pictogram Mapping](#️-weather-pictogram-mapping)
+36. [Automated Headwind Calculation](#-automated-headwind-calculation)
+37. [Wind Direction Display](#-wind-direction-display)
+38. [Modal Click-Outside-To-Close](#-modal-click-outside-to-close)
+39. [Energy Balance Chart Gradient Bars](#-energy-balance-chart-gradient-bars)
+40. [Energy Flow Dashboard](#️-energy-flow-dashboard)
+41. [Driving Style Analyzer](#-driving-style-analyzer)
+42. [Real-Time Cost Meter](#-real-time-cost-meter)
+43. [Responsive Layout Adaptations](#-responsive-layout-adaptations)
+44. [Card Folding & Maximized Map View](#-card-folding--maximized-map-view)
+45. [Interactive Card Enlargement](#-interactive-card-enlargement)
+46. [Dependencies](#-dependencies)
+47. [Getting Started](#-getting-started)
+48. [Mathematical Reference](#-mathematical-reference)
 
 ---
 
@@ -211,13 +212,16 @@ where $t_{\text{elapsed}}$ is measured from trip start via `Date.now()`.
 
 ### 🔌 Battery State-of-Charge Widget
 
-The SOC bar renders visually with three color states driven by CSS classes:
+The SOC bar renders visually with **four color states** driven by CSS classes:
 
-| SOC Range | Visual State | Color |
-|---|---|---|
-| $> 30\%$ | Normal | 🟢 `#00e676` → `#69f0ae` |
-| $15\% < \text{SOC} \leq 30\%$ | Warning | 🟡 `#ffd740` → `#ffee58` |
-| $\leq 15\%$ | Critical | 🔴 `#ff1744` → `#ff5252` |
+| SOC Range | CSS Class | Visual State | Gradient |
+|---|---|---|---|
+| $> 30\%$ | *(none)* | Normal | 🟢 `#00c853` → `#69f0ae` |
+| $15\% < \text{SOC} \leq 30\%$ | `.warn` | Warning | 🟡 `#ffc400` → `#ffee58` |
+| $10\% < \text{SOC} \leq 15\%$ | `.critical` | Critical | 🔴 `#ff1744` → `#ff5252` |
+| $\leq 10\%$ | `.ultra` | Ultra Low | 🟥 `#b71c1c` → `#d32f2f` |
+
+Each low-state class also triggers a **blink animation** (see [Battery Visual Effects](#-battery-visual-effects-3d--blink)): Warning blinks once every 30 s, Critical blinks on a 5 s cycle, and Ultra Low blinks at 1 s intervals for maximum urgency.
 
 ### 📡 Range Estimation Algorithm
 
@@ -975,8 +979,8 @@ A **segmented control** with five options:
 
 ### 🔋 Battery Capacity & SOC
 
-- **Battery kWh:** Numeric field with `−` / `+` stepper buttons — total usable pack energy [kWh]. The stepper calls `stepValue('batteryCapacity', ±0.5)` to increment or decrement by 0.5 kWh while respecting the field's `min`/`max` bounds.
-- **SOC %:** Numeric input (0–100) with `−` / `+` stepper buttons. Each stepper call invokes `stepValue('socInput', ±1)` followed immediately by `updateBattery()` to keep the visual battery bar, the percentage label, and the range estimate in sync. The SOC percentage and the battery bar are **dynamically updated in real time** at every GPS fix by `updateBatterySoC()`: the function computes the net energy drawn (`totalConsumedWh − totalRegenWh`), derives the new SOC from the initial charge level set at trip start (`initialSoc`), writes the result back to `#socInput`, and calls `updateBattery()` to refresh both the bar fill width and the color-coded state, keeping the visual indicator always consistent with the actual energy consumption.
+- **Battery kWh:** Numeric field with `−` / `+` stepper buttons — total usable pack energy [kWh]. The stepper calls `stepValue('batteryCapacity', ±0.5)` to increment or decrement by 0.5 kWh while respecting the field's `min`/`max` bounds. Manual edits are persisted immediately: an `input`/`change` listener on the field calls `updateBattery()` and `saveLastSettings()` in real time (via `persistCapacity()`).
+- **SOC %:** SOC is set by **dragging / swiping horizontally across the battery bar**. The gesture maps the pointer's X position onto the 0–100 % range (`socFromClientX`) and, on release, recalibrates the trip reference via `recalibrateSoc(pct)`. The SOC state lives in the global `currentSoc` variable, and the SOC percentage and the battery bar are **dynamically updated in real time** at every GPS fix by `updateBatterySoC()`: the function computes the net energy drawn (`totalConsumedWh − totalRegenWh`), derives the new SOC from the initial charge level set at trip start (`initialSoc`), writes the result into `currentSoc`, and calls `updateBattery()` to refresh both the bar fill width and the color-coded state, keeping the visual indicator always consistent with the actual energy consumption.
 
 The `stepValue(inputId, delta)` helper respects the `min` and `max` attributes of the target input and clamps the result before writing it back, preventing out-of-range values.
 
@@ -1134,7 +1138,7 @@ Each autosave snapshot captures **eleven** configuration fields:
 | `windSpeed` | `#windSpeed` input value | `string` | Headwind speed [Km/h] |
 | `gpsPolling` | `#gpsPolling` hidden input value | `string` | GPS polling interval [s] |
 | `batteryCapacity` | `#batteryCapacity` input value | `string` | Total usable battery capacity [kWh] |
-| `currentSoc` | `#socInput` input value | `string` | State of Charge at save time [%] |
+| `currentSoc` | `currentSoc` runtime variable | `number` | State of Charge at save time [%] |
 | `elecPrice` | `#elecPrice` input value | `string` | Electricity Price [€/kWh] |
 | `isHeadingUp` | `isHeadingUp` runtime variable | `boolean` | Whether heading-up map orientation was active |
 | `is3DMode` | `is3DMode` runtime variable | `boolean` | Whether the 3D map view was active |
@@ -1155,7 +1159,7 @@ function saveLastSettings() {
         windSpeed:          document.getElementById('windSpeed').value,
         gpsPolling:         document.getElementById('gpsPolling').value,
         batteryCapacity:    document.getElementById('batteryCapacity').value,
-        currentSoc:         document.getElementById('socInput').value,
+        currentSoc:         currentSoc,
         elecPrice:          document.getElementById('elecPrice').value,
         isHeadingUp:        isHeadingUp,
         is3DMode:           is3DMode,
@@ -1256,7 +1260,7 @@ The restore sequence applies each field conditionally — only if the field is p
 | 1️⃣ | `vehicleWeight` input value is set directly from `s.vehicleWeight` |
 | 2️⃣ | `windSpeed` input value is set directly from `s.windSpeed` |
 | 3️⃣ | `batteryCapacity` input value is set; then `updateBattery()` is called to refresh the SOC bar and recompute the range estimate |
-| 4️⃣ | `socInput` value is set from `s.currentSoc`; then `updateBattery()` is called immediately after |
+| 4️⃣ | the global `currentSoc` is set from `s.currentSoc`; then `updateBattery()` is called immediately after |
 | 5️⃣ | `elecPrice` input value is set directly from `s.elecPrice` |
 | 6️⃣ | The GPS polling segmented control iterates all `.segment` buttons in `#gpsPollingGroup`, removes the `active` class from all, and re-applies it to the button matching `s.gpsPolling`; the hidden `#gpsPolling` input is also updated |
 | 7️⃣ | 🎨 If `s.theme` is a non-empty string that differs from the current `currentTheme`, `toggleTheme()` is called to restore the saved ☀️ Light / 🌙 Dark appearance |
@@ -1383,7 +1387,7 @@ The MapLibre GL map style is switched per theme at initialization time (see [Map
 ├──────────────── STAT CARDS (8 cols) ───────────────────┤
 │ Dist │ Avg Spd │ Cons │ Regen │ Alt │ Grade │ Pwr │ ⏱ │
 ├──────────────── RANGE ESTIMATOR ───────────────────────┤
-│  [kWh ±] [SOC% ±] [═══ Battery Bar ═══] [Range] [Rem.] │
+│  [kWh ±] [════════ Battery Bar ═══════] [Range] [Rem.] │
 ├───────────── MAP ──────────┬───── CHARTS PANEL ────────┤
 │ [−][🧿][+]                 │   [🔺][🌍][⛈️][📌][↕️] │
 │                            │  Elevation Profile        │
@@ -2611,7 +2615,7 @@ localStorage.removeItem('tripmaster_poi_prefs');
 
 ## 🔋 Battery SOC Auto-Update
 
-During an active trip, the **Current SoC (%)** input and the visual battery bar are **automatically updated in real time** at every GPS fix by `updateBatterySoC()`, showing consumption percentage (%), too.
+During an active trip, the **SOC value** (held in the global `currentSoc` variable) and the visual battery bar are **automatically updated in real time** at every GPS fix by `updateBatterySoC()`, showing consumption percentage (%), too.
 
 ### ⚙️ How It Works
 
@@ -2620,7 +2624,7 @@ function updateBatterySoC() {
     const cap = parseFloat(document.getElementById('batteryCapacity').value) || 100;
     const netWh = totalConsumedWh - totalRegenWh;
     const newSoc = Math.min(100, Math.max(0, initialSoc - (netWh / (cap * 1000)) * 100));
-    document.getElementById('socInput').value = Math.round(newSoc);
+    currentSoc = Math.round(newSoc);
     updateBattery();
 }
 ```
@@ -2630,38 +2634,47 @@ function updateBatterySoC() {
 | 1️⃣ | **Capture initial SoC** — at trip start (`startTracking()`), the current SOC value is stored in `initialSoc` |
 | 2️⃣ | **Compute net energy** — `netWh = totalConsumedWh − totalRegenWh` (energy consumed minus energy recovered) |
 | 3️⃣ | **Derive new SoC** — subtract the net energy percentage from the initial SoC, clamped to [0, 100] |
-| 4️⃣ | **Update UI** — writes the rounded value back to `#socInput` and calls `updateBattery()` to refresh the visual bar and range estimate |
+| 4️⃣ | **Update UI** — writes the rounded value into the global `currentSoc` variable and calls `updateBattery()` to refresh the visual bar and range estimate |
 
 ### ✏️ Manual SOC Override with Auto-Update
 
-The system supports **manual SOC adjustments** during an active trip. When the user manually modifies the SOC value — either by using the `−` / `+` stepper buttons or by directly typing a value — the `initialSoc` variable is automatically updated to the new value. This ensures that subsequent auto-update calculations in `updateBatterySoC()` are based on the manually set reference point rather than the original trip-start value.
+The system supports **manual SOC adjustments** during an active trip via a **drag / swipe gesture on the battery bar**. The user presses and drags horizontally across the battery body, and the pointer's X coordinate is converted to a 0–100 % value; on release, `endDrag()` recalculates the percentage and calls `recalibrateSoc(pct)`, which updates the `initialSoc` reference point. This ensures that subsequent auto-update calculations in `updateBatterySoC()` are based on the manually set reference point rather than the original trip-start value.
 
 ```javascript
-// Stepper buttons: initialSoc is updated on each +/- click
-function stepValue(inputId, delta) {
-    // ... existing logic ...
-    if (inputId === 'socInput') {
-        initialSoc = val;
-    }
-}
+// Drag / swipe on the battery body to set SoC
+batteryBody.addEventListener('pointerdown', e => {
+    dragging = true;
+    batteryBody.setPointerCapture?.(e.pointerId);
+    socFromClientX(e.clientX);
+});
+batteryBody.addEventListener('pointermove', e => {
+    if (!dragging) return;
+    socFromClientX(e.clientX);          // maps X -> 0..100, updateBattery()
+});
+batteryBody.addEventListener('pointerup', e    => endDrag(e.clientX));
+batteryBody.addEventListener('pointercancel', e => endDrag(e.clientX));
 
-// Direct input: initialSoc is updated on every keystroke
-// oninput="initialSoc = parseFloat(this.value); updateBattery()"
+function endDrag(clientX) {
+    if (!dragging) return;
+    dragging = false;
+    recalibrateSoc(socFromClientX(clientX));   // re-bases initialSoc
+}
 ```
 
-This prevents the auto-update from silently overwriting manual adjustments with the original trip-start SOC value, ensuring that user corrections are preserved throughout the trip.
+The gesture relies on the pointer events attached to `.battery-body` (enabled by its `touch-action: none` and `cursor: ew-resize`). This prevents the auto-update from silently overwriting manual adjustments with the original trip-start SOC value, ensuring that user corrections are preserved throughout the trip.
 
 ### 📊 SOC Bar Color States
 
-The battery fill bar transitions through three visual states based on the current SOC percentage:
+The battery fill bar transitions through **four visual states** based on the current SOC percentage:
 
-| SOC Range | CSS Class | Gradient |
-|---|---|---|
-| $> 30\%$ | *(none)* | 🟢 `#00e676` → `#69f0ae` |
-| $15\% < \text{SOC} \leq 30\%$ | `.warn` | 🟡 `#ffd740` → `#ffee58` |
-| $\leq 15\%$ | `.critical` | 🔴 `#ff1744` → `#ff5252` |
+| SOC Range | CSS Class | Gradient | Blink |
+|---|---|---|---|
+| $> 30\%$ | *(none)* | 🟢 `#00c853` → `#69f0ae` | — |
+| $15\% < \text{SOC} \leq 30\%$ | `.warn` | 🟡 `#ffc400` → `#ffee58` | `batteryWarnBlink` (30 s) |
+| $10\% < \text{SOC} \leq 15\%$ | `.critical` | 🔴 `#ff1744` → `#ff5252` | `batteryCriticalBlink` (5 s) |
+| $\leq 10\%$ | `.ultra` | 🟥 `#b71c1c` → `#d32f2f` | `batteryUltraBlink` (1 s) |
 
-The bar also features a **sheen overlay** (`linear-gradient(180deg, rgba(255,255,255,0.3) → transparent)`) on the top 40% for a glass-like effect, and a **positive terminal nub** on the right side (via `::after` pseudo-element).
+The fill is placed by `updateBattery()`: setting `fill.className = 'battery-fill' + (soc <= 10 ? ' ultra' : soc <= 15 ? ' critical' : soc <= 30 ? ' warn' : '')` applies the matching gradient and blink animation. The bar also features a **cylindrical 3D shading overlay** and a **moving sheen** for a glass-like effect, plus a **positive terminal nub** on the right side (via the `::after` pseudo-element) — see [Battery Visual Effects](#-battery-visual-effects-3d--blink).
 
 ### 🔄 Call Chain
 
@@ -2734,7 +2747,7 @@ This dims the OpenFreeMap `liberty` style tiles by 30%, creating a moody dark ca
 
 ## 🔘 Stepper Buttons
 
-The **Battery Capacity (kWh)** and **Current SoC (%)** inputs feature **− / + stepper buttons** for quick manual adjustment without typing.
+The **Battery Capacity (kWh)** input features **− / + stepper buttons** for quick manual adjustment without typing. *(The former **Current SoC (%)** stepper has been removed — SOC is now adjusted by dragging across the battery bar, see [Manual SOC Override](#-manual-soc-override-with-auto-update).)*
 
 ### ⚙️ `stepValue(inputId, delta)` Helper
 
@@ -2751,10 +2764,34 @@ function stepValue(inputId, delta) {
 
 | Input | Step Delta | Additional Action |
 |---|---|---|
-| `batteryCapacity` | ±0.5 | None |
-| `socInput` | ±1 | Calls `updateBattery()` immediately to sync the visual bar and range estimate |
+| `batteryCapacity` | ±0.5 | Manual edits also trigger `updateBattery()` + `saveLastSettings()` via the `input`/`change` listeners in `persistCapacity()` |
 
 The helper respects the `min`/`max` HTML attributes and clamps the result, preventing out-of-range values. Stepper buttons are 28×28 px with a hover lift effect (`translateY(-1px)`) and an active press effect (`translateY(0)`).
+
+---
+
+## 🔋 Battery Visual Effects (3D + Blink)
+
+The battery widget combines a **cylindrical 3D look** with **urgency blink animations** driven purely by CSS.
+
+### 🧪 Cylindrical 3D Shading
+
+- **`::before` overlay** — a vertical `linear-gradient(180deg, ...)` (white highlight → transparent → dark base) applied over the fill (`inset: 0`) creates the rounded, cylinder-like curvature of the battery body.
+- **`::after` sheen sweep** — a skewed white band (`linear-gradient(105deg, transparent → rgba(255,255,255,0.45) → transparent)`, `skewX(-18deg)`, width 55 %) travels across the fill via the `batterySheen` keyframes (`3.4s ease-in-out infinite`), giving the glass-like shine.
+- **Inset shadows** on `.battery-fill` — `inset 0 1px 2px rgba(255,255,255,.5)`, `inset 0 -3px 5px rgba(0,0,0,.3)`, plus left/right edge accents — add depth.
+- **Positive terminal nub** — the `+` pole on the right side is rendered by the widget's `::after` pseudo-element.
+
+### ⚡ Urgency Blink Animations
+
+Each low-SOC state class applies its own `linear infinite` blink on the fill:
+
+| State Class | Keyframes | Cycle Duration | Behavior |
+|---|---|---|---|
+| `.warn` | `batteryWarnBlink` | 30 s | Dips to 40 % opacity briefly once near the end of each cycle |
+| `.critical` | `batteryCriticalBlink` | 5 s | Double flash — two quick fades to 15 % |
+| `.ultra` | `batteryUltraBlink` | 1 s | Rapid `1 → 0.15` strobing for maximum urgency |
+
+The blink is applied together with the gradient via `updateBattery()` (see [SOC Bar Color States](#-soc-bar-color-states)); the higher-status class takes precedence when SOC drops below the next threshold.
 
 ---
 
