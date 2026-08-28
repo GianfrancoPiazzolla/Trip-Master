@@ -1985,6 +1985,13 @@ Four POI layer types are defined in the `POI_TYPES` constant array:
 
 ### 🌐 Data Sources & API Endpoints
 
+> ⚠️ **Disclaimer — POI availability:** POI markers depend on third-party services that are **outside Trip Master's control** and may fail or degrade without warning:
+>
+> - **Overpass API** (`overpass-api.de`) — public and unauthenticated, but aggressively rate-limited (HTTP 429). Periodic outages or prolonged unavailability across its mirrors can leave the **Speed Cameras**, **Road Closures**, and **EV Charging** layers empty.
+> - **Waze Live Map via `corsproxy.io`** — the free `corsproxy.io` tier now requires authentication and returns **HTTP 403** for unauthenticated requests, which can permanently disable the **Mobile Patrols** layer.
+>
+> Trip Master degrades gracefully in both cases (empty layer + `console.warn`), never crashing. If a POI layer loads no markers, first verify network connectivity and the upstream service status before reporting an issue.
+
 #### 🗺️ OpenStreetMap — Overpass API
 
 Road Closures, Speed Cameras, and EV Charging stations are fetched from the public Overpass API:
