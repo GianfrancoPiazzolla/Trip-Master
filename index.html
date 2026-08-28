@@ -442,6 +442,8 @@
       border-radius: 4px;
       position: relative;
       overflow: hidden;
+      touch-action: none;
+      cursor: ew-resize;
     }
 
     .battery-widget::after {
@@ -466,28 +468,90 @@
 
     .battery-fill {
       height: 100%;
-      background: linear-gradient(90deg, #00e676, #69f0ae);
-      border-radius: 2px;
-      transition: width 0.6s ease, background 0.6s ease;
       position: relative;
+      transition: width 0.6s ease, background 0.6s ease;
+      --fill-c1: #00c853;
+      --fill-c2: #69f0ae;
+      background: linear-gradient(90deg, var(--fill-c1), var(--fill-c2));
+      border-radius: 2px;
+      overflow: hidden;
+      box-shadow:
+        inset 0 1px 2px rgba(255, 255, 255, 0.5),
+        inset 0 -3px 5px rgba(0, 0, 0, 0.3),
+        inset 3px 0 4px rgba(255, 255, 255, 0.2),
+        inset -2px 0 4px rgba(0, 0, 0, 0.12);
     }
 
     .battery-fill.warn {
-      background: linear-gradient(90deg, #ffd740, #ffee58);
+      --fill-c1: #ffc400;
+      --fill-c2: #ffee58;
+      animation: batteryWarnBlink 30s linear infinite;
+    }
+
+    @keyframes batteryWarnBlink {
+      0%, 94% { opacity: 1; }
+      95.5%, 96.5% { opacity: 0.4; }
+      98%, 100% { opacity: 1; }
     }
 
     .battery-fill.critical {
-      background: linear-gradient(90deg, #ff1744, #ff5252);
+      --fill-c1: #ff1744;
+      --fill-c2: #ff5252;
+      animation: batteryCriticalBlink 5s linear infinite;
+    }
+
+    @keyframes batteryCriticalBlink {
+      0%, 28% { opacity: 1; }
+      33%, 38% { opacity: 0.15; }
+      41%, 68% { opacity: 1; }
+      73%, 78% { opacity: 0.15; }
+      81%, 100% { opacity: 1; }
+    }
+
+    .battery-fill.ultra {
+      --fill-c1: #b71c1c;
+      --fill-c2: #d32f2f;
+      animation: batteryUltraBlink 1s linear infinite;
+    }
+
+    @keyframes batteryUltraBlink {
+      0%, 48% { opacity: 1; }
+      52%, 96% { opacity: 0.15; }
+      100% { opacity: 1; }
+    }
+
+    .battery-fill::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 2px;
+      pointer-events: none;
+      /* curvatura cilindrica 3D del corpo */
+      background: linear-gradient(180deg,
+        rgba(255, 255, 255, 0.5) 0%,
+        rgba(255, 255, 255, 0) 16%,
+        rgba(0, 0, 0, 0) 46%,
+        rgba(255, 255, 255, 0.05) 78%,
+        rgba(0, 0, 0, 0.34) 100%);
     }
 
     .battery-fill::after {
       content: '';
       position: absolute;
       top: 0;
-      left: 0;
-      right: 0;
       bottom: 0;
-      background: linear-gradient(180deg, rgba(255, 255, 255, 0.3) 0%, transparent 60%);
+      left: 0;
+      width: 55%;
+      pointer-events: none;
+      background: linear-gradient(105deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.45) 50%, rgba(255, 255, 255, 0) 100%);
+      transform: skewX(-18deg);
+      animation: batterySheen 3.4s ease-in-out infinite;
+    }
+
+    @keyframes batterySheen {
+      0% { transform: translateX(-130%) skewX(-18deg); }
+      55% { transform: translateX(280%) skewX(-18deg); }
+      100% { transform: translateX(280%) skewX(-18deg); }
     }
 
     .battery-soc-remaining-label {
@@ -1745,7 +1809,7 @@
     .stepper-wrap {
       display: flex;
       align-items: center;
-      gap: 2px;
+      gap: 0px;
     }
 
     .stepper-wrap input[type="number"] {
@@ -2502,22 +2566,12 @@
     <!-- RANGE ESTIMATOR + BATTERY SOC BAR -->
     <div class="range-card">
       <div class="range-section">
-        <span class="range-label">Battery (kWh)</span>
-        <div class="stepper-wrap" style="width:95px;">
+        <span class="range-label">Battery Capacity (kWh)</span>
+        <div class="stepper-wrap" style="width:110px;">
           <button class="stepper-btn" onclick="stepValue('batteryCapacity', -0.5)">−</button>
           <input type="number" id="batteryCapacity" value="100" step="0.5"
-            style="font-size:9px !important; padding: 4px 5px; text-align:center;">
+            style="font-size:9px !important; width: 70px; padding: 4px 5px; text-align:center;">
           <button class="stepper-btn" onclick="stepValue('batteryCapacity', 0.5)">+</button>
-        </div>
-      </div>
-      <div class="range-section">
-        <span class="range-label">Current SoC (%)</span>
-        <div class="stepper-wrap" style="width:95px;">
-          <button class="stepper-btn" onclick="stepValue('socInput', -1)">−</button>
-          <input type="number" id="socInput" value="100" min="0" max="100" step="1"
-            style="font-size:9px !important; padding:4px 5px; text-align:center;"
-            onchange="recalibrateSoc(this.value)">
-          <button class="stepper-btn" onclick="stepValue('socInput', 1)">+</button>
         </div>
       </div>
       <div class="battery-range-group">
@@ -2884,6 +2938,7 @@
     let lastSpeedKmh = 0;
     let lastInstantPowerW = 0;
     let initialSoc = 100;
+    let currentSoc = 100;
     let lastManualSocChange = 0;
     const SOC_BLACKOUT_MS = 3000;
     let consumedAtRecalibration = 0;
@@ -3246,9 +3301,9 @@
       let val = (parseFloat(input.value) || 0) + delta;
       val = Math.min(max, Math.max(min, val));
       input.value = val;
-      if (inputId === 'socInput') {
-        recalibrateSoc(val);
-        return;
+      if (inputId === 'batteryCapacity') {
+        updateBattery();
+        saveLastSettings();
       }
     }
 
@@ -3257,7 +3312,7 @@
       initialSoc = userSetSoc;
       consumedAtRecalibration = totalConsumedWh - totalRegenWh;
       lastManualSocChange = Date.now();
-      document.getElementById('socInput').value = userSetSoc;
+      currentSoc = userSetSoc;
       updateBattery();
       saveLastSettings();
     }
@@ -3281,7 +3336,7 @@
 
     function updateBattery() {
       const isDark = currentTheme === 'dark';
-      const soc = Math.min(100, Math.max(0, parseInt(document.getElementById('socInput').value) || 0));
+      const soc = Math.min(100, Math.max(0, parseInt(currentSoc) || 0));
       const cap = parseFloat(document.getElementById('batteryCapacity').value) || 100;
       const fill = document.getElementById('batteryFill');
       const remainingLabel = document.getElementById('socRemainingLabel');
@@ -3304,12 +3359,12 @@
       }
       consumedLabel.innerText = consumedLabelText;
 
-      fill.className = 'battery-fill' + (soc <= 15 ? ' critical' : soc <= 30 ? ' warn' : '');
+      fill.className = 'battery-fill' + (soc <= 10 ? ' ultra' : soc <= 15 ? ' critical' : soc <= 30 ? ' warn' : '');
       computeRangeEstimate();
     }
 
     function computeRangeEstimate() {
-      const soc = parseFloat(document.getElementById('socInput').value) || 100;
+      const soc = parseFloat(currentSoc) || 100;
       const cap = parseFloat(document.getElementById('batteryCapacity').value) || 100;
       const availableWh = cap * 1000 * (soc / 100);
 
@@ -4340,7 +4395,7 @@
       document.getElementById('batteryCapacity').parentElement.classList.add('trip-locked');
       startTime = Date.now();
       tripSeconds = 0;
-      initialSoc = Math.min(100, Math.max(0, parseInt(document.getElementById('socInput').value) || 100));
+      initialSoc = Math.min(100, Math.max(0, parseInt(currentSoc) || 100));
 
       // Trip timer
       tripTimer = setInterval(() => {
@@ -4538,7 +4593,7 @@
         windSpeed: document.getElementById('windSpeed').value,
         gpsPolling: document.getElementById('gpsPolling').value,
         batteryCapacity: document.getElementById('batteryCapacity').value,
-        currentSoc: document.getElementById('socInput').value,
+        currentSoc: currentSoc,
         elecPrice: document.getElementById('elecPrice').value,
         isHeadingUp: isHeadingUp,
         is3DMode: is3DMode,
@@ -4571,7 +4626,7 @@
       }
       if (s.batteryCapacity !== undefined) document.getElementById('batteryCapacity').value = s.batteryCapacity;
       if (s.currentSoc !== undefined) {
-        document.getElementById('socInput').value = s.currentSoc;
+        currentSoc = s.currentSoc;
         updateBattery();
       }
       if (s.elecPrice !== undefined) {
@@ -4741,7 +4796,7 @@
       const cap = parseFloat(document.getElementById('batteryCapacity').value) || 100;
       const netWh = (totalConsumedWh - totalRegenWh) - consumedAtRecalibration;
       const newSoc = Math.min(100, Math.max(0, initialSoc - (netWh / (cap * 1000)) * 100));
-      document.getElementById('socInput').value = Math.round(newSoc);
+      currentSoc = Math.round(newSoc);
       updateBattery();
     }
 
@@ -6142,6 +6197,48 @@
           updateBatteryLayout();
         });
         ro.observe(rangeCard);
+
+        // Drag / swipe on battery body to set SoC
+        var batteryBody = document.querySelector('.battery-body');
+        if (batteryBody) {
+          var dragging = false;
+          function socFromClientX(clientX) {
+            var rect = batteryBody.getBoundingClientRect();
+            var pct = (clientX - rect.left) / rect.width;
+            pct = Math.round(Math.min(100, Math.max(0, pct * 100)));
+            currentSoc = pct;
+            updateBattery();
+            return pct;
+          }
+          function endDrag(clientX) {
+            if (!dragging) return;
+            dragging = false;
+            var pct = socFromClientX(clientX);
+            recalibrateSoc(pct);
+          }
+          batteryBody.addEventListener('pointerdown', function (e) {
+            dragging = true;
+            if (batteryBody.setPointerCapture) batteryBody.setPointerCapture(e.pointerId);
+            socFromClientX(e.clientX);
+          });
+          batteryBody.addEventListener('pointermove', function (e) {
+            if (!dragging) return;
+            socFromClientX(e.clientX);
+          });
+          batteryBody.addEventListener('pointerup', function (e) { endDrag(e.clientX); });
+          batteryBody.addEventListener('pointercancel', function (e) { endDrag(e.clientX); });
+        }
+
+        // Persist battery capacity immediately on manual input
+        var capInput = document.getElementById('batteryCapacity');
+        if (capInput) {
+          function persistCapacity() {
+            updateBattery();
+            saveLastSettings();
+          }
+          capInput.addEventListener('input', persistCapacity);
+          capInput.addEventListener('change', persistCapacity);
+        }
       });
     })();
 
