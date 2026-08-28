@@ -65,9 +65,9 @@
     }
 
     .collapsed {
-      flex: 0 0 22px !important;
-      height: 22px !important;
-      min-height: 22px !important;
+      flex: 0 0 16px !important;
+      height: 16px !important;
+      min-height: 16px !important;
       overflow: hidden !important;
       padding-top: 0 !important;
       padding-bottom: 0 !important;
@@ -343,14 +343,14 @@
     }
 
     .stat-label {
-      font-size: 0.4rem;
+      font-size: 0.48rem;
       color: var(--label-color);
       text-transform: uppercase;
       display: block;
       letter-spacing: 1px;
       font-family: 'JetBrains Mono', monospace;
       font-weight: 600;
-      margin-bottom: 2px;
+      margin-bottom: 0px;
     }
 
     .stat-value {
@@ -410,7 +410,7 @@
     }
 
     .range-label {
-      font-size: 0.42rem;
+      font-size: 0.48rem;
       color: var(--label-color);
       text-transform: uppercase;
       letter-spacing: 1px;
@@ -1107,7 +1107,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 4px 6px 3px;
+      padding: 2px 6px 2px;
       border-bottom: 1px solid var(--border-color);
       flex-shrink: 0;
       cursor: pointer;
@@ -1251,31 +1251,45 @@
     }
 
     /* === ENERGY CHART STATS ROW === */
+    .chart-container.short .chart-canvas-area {
+      min-height: 58px;
+    }
+
     .energy-stats-row {
       display: flex;
-      justify-content: space-around;
-      padding: 2px 5px 3px;
+      justify-content: space-between;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 6px;
       border-top: 1px solid var(--border-color);
       flex-shrink: 0;
     }
 
     .energy-stat {
-      text-align: center;
+      display: flex;
+      align-items: baseline;
+      justify-content: center;
+      gap: 4px;
+      flex: 1 1 0;
+      min-width: 0;
     }
 
     .energy-stat-label {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 0.38rem;
+      font-size: 0.3rem;
       text-transform: uppercase;
-      letter-spacing: 1px;
+      letter-spacing: 0.4px;
       color: var(--label-color);
-      display: block;
+      white-space: nowrap;
+      line-height: 1;
     }
 
     .energy-stat-value {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 0.48rem;
+      font-size: 0.4rem;
       font-weight: 700;
+      line-height: 1;
+      white-space: nowrap;
     }
 
     .energy-stat-value.consumed {
@@ -2096,7 +2110,7 @@
       border-radius: 6px;
       border: 1px solid var(--border-color);
       box-shadow: var(--card-shadow);
-      padding: 5px 8px;
+      padding: 5px 4px;
       flex-shrink: 0;
       display: flex;
       flex-direction: row;
@@ -2137,12 +2151,13 @@
     }
 
     .cm-label {
-      font-size: 0.38rem;
+      font-size: 0.48rem;
       color: var(--label-color);
       text-transform: uppercase;
       letter-spacing: 0.8px;
       font-family: 'JetBrains Mono', monospace;
       font-weight: 600;
+	  margin-bottom: 2px;
     }
 
     .cm-value {
@@ -2429,9 +2444,15 @@
       gap: 40px;
     }
 
+    .card-maximized .energy-stat {
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+
     .card-maximized .energy-stat-label {
-      font-size: 1rem;
-      margin-bottom: 8px;
+      font-size: 0.85rem;
+      margin-bottom: 4px;
     }
 
     .card-maximized .energy-stat-value {
@@ -2570,7 +2591,7 @@
         <div class="stepper-wrap" style="width:110px;">
           <button class="stepper-btn" onclick="stepValue('batteryCapacity', -0.5)">−</button>
           <input type="number" id="batteryCapacity" value="100" step="0.5"
-            style="font-size:9px !important; width: 70px; padding: 4px 5px; text-align:center;">
+            style="font-size:10px !important; width: 70px; padding: 4px 5px; text-align:center;">
           <button class="stepper-btn" onclick="stepValue('batteryCapacity', 0.5)">+</button>
         </div>
       </div>
@@ -2619,16 +2640,16 @@
         <div class="cm-label">ICE Fuel Price</div>
         <div class="cm-value" id="cmDieselPrice" style="color:var(--label-color); font-size: 0.55rem;">-- €</div>
         <div
-          style="font-size: 0.36rem; color: var(--label-color); margin-top: 2px; font-family: 'JetBrains Mono', monospace;"
-          id="cmDieselStatus">loading...</div>
+          style="font-size: 0.46rem; color: var(--label-color); margin-top: 0px; font-family: 'JetBrains Mono', monospace;"
+          id="cmDieselStatus">(loading...)</div>
       </div>
       <div class="cm-divider"></div>
       <div class="cm-section">
         <div class="cm-label">ICE Efficiency</div>
         <div class="cm-value" id="cmIceEfficiency" style="color:var(--label-color); font-size: 0.55rem;">-- Km/L</div>
         <div
-          style="font-size: 0.36rem; color: var(--label-color); margin-top: 2px; font-family: 'JetBrains Mono', monospace;"
-          id="cmIceEfficiencyStatus">loading...</div>
+          style="font-size: 0.46rem; color: var(--label-color); margin-top: 0px; font-family: 'JetBrains Mono', monospace;"
+          id="cmIceEfficiencyStatus">(loading...)</div>
       </div>
     </div>
 
@@ -2646,7 +2667,7 @@
           class="stat-value" id="altDisplay">-- m</span></div>
       <div class="stat-card" style="--accent-color: var(--warning);"><span class="stat-label">Road Grade</span><span
           class="stat-value" id="gradeDisplay">-- %</span></div>
-      <div class="stat-card" style="--accent-color: #ff9100;"><span class="stat-label">Instantaneous Power</span><span
+      <div class="stat-card" style="--accent-color: #ff9100;"><span class="stat-label">Instant Power</span><span
           class="stat-value" id="powerDisplay">-- W</span></div>
       <div class="stat-card" style="--accent-color: #b39ddb;"><span class="stat-label">Trip Time</span><span
           class="stat-value" id="tripTimeDisplay">--:--:--</span></div>
@@ -4270,6 +4291,14 @@
           responsive: true,
           maintainAspectRatio: false,
           animation: false,
+          layout: {
+            padding: {
+              top: 2,
+              right: 6,
+              bottom: 2,
+              left: 2
+            }
+          },
           plugins: {
             legend: {
               display: false
@@ -4316,7 +4345,7 @@
                 color: gridColor
               },
               title: {
-                display: true,
+                display: false,
                 text: 'Wh',
                 font: {
                   size: 8,
@@ -4328,18 +4357,23 @@
             y: {
               ticks: {
                 font: {
-                  size: 9,
+                  size: 8,
                   family: getChartFont(),
                   weight: '700'
                 },
-                color: tickColor
+                color: tickColor,
+                autoSkip: false,
+                padding: 4,
+                maxRotation: 0,
+                minRotation: 0
               },
               grid: {
                 display: false
               },
               border: {
-                color: gridColor
-              }
+                display: false
+              },
+              grace: 5
             }
           }
         }
@@ -6005,7 +6039,7 @@
       const priceEl = document.getElementById('cmDieselPrice');
       const statusEl = document.getElementById('cmDieselStatus');
 
-      if (statusEl) statusEl.textContent = 'fetching...';
+      if (statusEl) statusEl.textContent = '(fetching...)';
 
       try {
         const cached = localStorage.getItem(ICE_FUEL_PRICE_CACHE_KEY);
@@ -6014,7 +6048,7 @@
           if (Date.now() - parsed.timestamp < CACHE_TTL) {
             iceFuelPrice = parsed.price;
             if (priceEl) priceEl.textContent = iceFuelPrice.toFixed(3) + ' €';
-            if (statusEl) statusEl.textContent = 'cached';
+            if (statusEl) statusEl.textContent = '(cached)';
             updateCostMeter();
             iceFuelPriceLoading = false;
             return;
@@ -6039,7 +6073,7 @@
         console.warn('Failed to fetch ICE fuel price, using default:', error);
         iceFuelPrice = DEFAULT_PRICE;
         if (priceEl) priceEl.textContent = '€' + iceFuelPrice.toFixed(3);
-        if (statusEl) statusEl.textContent = 'default';
+        if (statusEl) statusEl.textContent = '(default)';
         updateCostMeter();
       } finally {
         iceFuelPriceLoading = false;
@@ -6054,7 +6088,7 @@
       const effEl = document.getElementById('cmIceEfficiency');
       const statusEl = document.getElementById('cmIceEfficiencyStatus');
 
-      if (statusEl) statusEl.textContent = 'fetching...';
+      if (statusEl) statusEl.textContent = '(fetching...)';
 
       try {
         const cached = localStorage.getItem(ICE_EFFICIENCY_CACHE_KEY);
@@ -6063,7 +6097,7 @@
           if (Date.now() - parsed.timestamp < CACHE_TTL) {
             iceEfficiency = parsed.efficiency;
             if (effEl) effEl.textContent = iceEfficiency.toFixed(1) + ' Km/L';
-            if (statusEl) statusEl.textContent = 'cached';
+            if (statusEl) statusEl.textContent = '(cached)';
             updateCostMeter();
             iceEfficiencyLoading = false;
             return;
@@ -6098,7 +6132,7 @@
         console.warn('Failed to fetch ICE efficiency, using default:', error);
         iceEfficiency = DEFAULT_EFFICIENCY;
         if (effEl) effEl.textContent = iceEfficiency.toFixed(1) + ' Km/L';
-        if (statusEl) statusEl.textContent = 'default';
+        if (statusEl) statusEl.textContent = '(default)';
         updateCostMeter();
       } finally {
         iceEfficiencyLoading = false;
