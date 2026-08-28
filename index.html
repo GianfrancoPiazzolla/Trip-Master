@@ -307,6 +307,13 @@
       flex-shrink: 0;
     }
 
+    .grid-costs {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 3px;
+      flex-shrink: 0;
+    }
+
     .stat-card {
       background: var(--card-bg);
       padding: 6px 3px 5px;
@@ -2615,44 +2622,46 @@
     </div>
 
     <!-- COST METER -->
-    <div class="cost-meter-card">
-      <div class="cm-section">
-        <div class="cm-label">Trip Cost</div>
-        <div class="cm-value spent" id="cmSpent">-- €</div>
-      </div>
-      <div class="cm-divider"></div>
-      <div class="cm-section">
-        <div class="cm-label">Cost Per Km</div>
-        <div class="cm-value perkm" id="cmPerKm">-- €</div>
-      </div>
-      <div class="cm-divider"></div>
-      <div class="cm-section">
-        <div class="cm-label">vs ICE Saved</div>
-        <div class="cm-value saved" id="cmSaved">-- €</div>
-      </div>
-      <div class="cm-divider"></div>
-      <div class="cm-section">
-        <div class="cm-label">ICE Cost</div>
-        <div class="cm-value" id="cmIceCost" style="color:var(--label-color)">-- €</div>
-      </div>
-      <div class="cm-divider"></div>
-      <div class="cm-section">
-        <div class="cm-label">ICE Fuel Price</div>
-        <div class="cm-value" id="cmDieselPrice" style="color:var(--label-color); font-size: 0.55rem;">-- €</div>
-        <div
-          style="font-size: 0.46rem; color: var(--label-color); margin-top: 0px; font-family: 'JetBrains Mono', monospace;"
-          id="cmDieselStatus">(loading...)</div>
-      </div>
-      <div class="cm-divider"></div>
-      <div class="cm-section">
-        <div class="cm-label">ICE Efficiency</div>
-        <div class="cm-value" id="cmIceEfficiency" style="color:var(--label-color); font-size: 0.55rem;">-- Km/L</div>
-        <div
-          style="font-size: 0.46rem; color: var(--label-color); margin-top: 0px; font-family: 'JetBrains Mono', monospace;"
-          id="cmIceEfficiencyStatus">(loading...)</div>
-      </div>
-    </div>
-
+	<div class="grid-costs">
+		<div class="cost-meter-card">
+		  <div class="cm-section">
+			<div class="cm-label">Trip Cost</div>
+			<div class="cm-value spent" id="cmSpent">-- €</div>
+		  </div>
+		  <div class="cm-divider"></div>
+		  <div class="cm-section">
+			<div class="cm-label">Cost Per Km</div>
+			<div class="cm-value perkm" id="cmPerKm">-- €</div>
+		  </div>
+		  <div class="cm-divider"></div>
+		  <div class="cm-section">
+			<div class="cm-label">vs ICE Saved</div>
+			<div class="cm-value saved" id="cmSaved">-- €</div>
+		  </div>
+		  <div class="cm-divider"></div>
+		  <div class="cm-section">
+			<div class="cm-label">ICE Cost</div>
+			<div class="cm-value" id="cmIceCost" style="color:var(--label-color)">-- €</div>
+		  </div>
+	    </div>
+		<div class="cost-meter-card">
+		  <div class="cm-section">
+			<div class="cm-label">ICE Fuel Price</div>
+			<div class="cm-value" id="cmDieselPrice" style="color:var(--label-color); font-size: 0.55rem;">-- €</div>
+			<div
+			  style="font-size: 0.46rem; color: var(--label-color); margin-top: 0px; font-family: 'JetBrains Mono', monospace;"
+			  id="cmDieselStatus">(loading...)</div>
+		  </div>
+		  <div class="cm-divider"></div>
+		  <div class="cm-section">
+			<div class="cm-label">ICE Efficiency</div>
+			<div class="cm-value" id="cmIceEfficiency" style="color:var(--label-color); font-size: 0.55rem;">-- Km/L</div>
+			<div
+			  style="font-size: 0.46rem; color: var(--label-color); margin-top: 0px; font-family: 'JetBrains Mono', monospace;"
+			  id="cmIceEfficiencyStatus">(loading...)</div>
+		  </div>
+		</div>
+	</div>
     <!-- STAT CARDS -->
     <div class="grid-stats">
       <div class="stat-card" style="--accent-color: var(--secondary);"><span class="stat-label">Trip
