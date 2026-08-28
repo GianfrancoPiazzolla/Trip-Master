@@ -65,8 +65,9 @@
     }
 
     .collapsed {
-      height: 32px !important;
-      min-height: 32px !important;
+      flex: 0 0 22px !important;
+      height: 22px !important;
+      min-height: 22px !important;
       overflow: hidden !important;
       padding-top: 0 !important;
       padding-bottom: 0 !important;
@@ -109,7 +110,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 10px 20px;
+      padding: 5px 10px;
       border-bottom: 1px solid var(--border-color);
       flex-shrink: 0;
       background: var(--header-bg);
@@ -131,28 +132,28 @@
 
     .header-btns {
       display: flex;
-      gap: 8px;
+      gap: 5px;
       align-items: center;
     }
 
     h1 {
       margin: 0;
       font-family: 'Syne', sans-serif;
-      font-size: 1.05rem;
+      font-size: 0.7rem;
       font-weight: 800;
       color: var(--tesla-red);
       text-transform: uppercase;
-      letter-spacing: 3px;
+      letter-spacing: 2px;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 5px;
     }
 
     h1::before {
       content: '';
       display: inline-block;
-      width: 8px;
-      height: 8px;
+      width: 5px;
+      height: 5px;
       background: var(--tesla-red);
       border-radius: 50%;
       box-shadow: 0 0 8px var(--tesla-red), 0 0 16px rgba(226, 16, 23, 0.4);
@@ -179,9 +180,9 @@
       border: 1px solid var(--border-color);
       color: var(--text-color);
       border-radius: 8px;
-      padding: 5px 12px;
+      padding: 3px 8px;
       cursor: pointer;
-      font-size: 0.85rem;
+      font-size: 0.58rem;
       font-family: 'Syne', sans-serif;
       font-weight: 600;
       transition: all 0.2s ease;
@@ -197,8 +198,8 @@
     .container {
       display: flex;
       flex-direction: column;
-      padding: 10px 14px;
-      gap: 8px;
+      padding: 5px 8px;
+      gap: 4px;
       flex: 1;
       min-height: 0;
       overflow-y: auto;
@@ -208,10 +209,10 @@
     .config-grid {
       display: grid;
       grid-template-columns: repeat(5, 1fr);
-      gap: 12px;
+      gap: 6px;
       background: var(--card-bg);
-      padding: 12px 14px;
-      border-radius: 12px;
+      padding: 6px 8px;
+      border-radius: 8px;
       border: 1px solid var(--border-color);
       flex-shrink: 0;
       box-shadow: var(--card-shadow);
@@ -230,9 +231,9 @@
     }
 
     .config-grid label {
-      font-size: 0.72rem;
+      font-size: 0.48rem;
       color: var(--label-color);
-      margin-bottom: 5px;
+      margin-bottom: 3px;
       display: block;
       text-transform: uppercase;
       letter-spacing: 1px;
@@ -244,8 +245,8 @@
     .segmented-control {
       display: flex;
       background: var(--input-bg);
-      border-radius: 8px;
-      padding: 2px;
+      border-radius: 5px;
+      padding: 1px;
       border: 1px solid var(--border-color);
     }
 
@@ -254,10 +255,10 @@
       border: none;
       background: transparent;
       color: var(--label-color);
-      padding: 8px 2px;
-      font-size: 0.78rem;
+      padding: 4px 1px;
+      font-size: 0.52rem;
       cursor: pointer;
-      border-radius: 6px;
+      border-radius: 4px;
       transition: all 0.18s ease;
       font-weight: 700;
       font-family: 'JetBrains Mono', monospace;
@@ -302,14 +303,14 @@
     .grid-stats {
       display: grid;
       grid-template-columns: repeat(8, 1fr);
-      gap: 6px;
+      gap: 3px;
       flex-shrink: 0;
     }
 
     .stat-card {
       background: var(--card-bg);
-      padding: 10px 6px 8px;
-      border-radius: 10px;
+      padding: 6px 3px 5px;
+      border-radius: 6px;
       border: 1px solid var(--border-color);
       text-align: center;
       box-shadow: var(--card-shadow);
@@ -337,23 +338,23 @@
       background: transparent;
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 4px;
       transition: all 0.3s ease;
     }
 
     .stat-label {
-      font-size: 0.62rem;
+      font-size: 0.4rem;
       color: var(--label-color);
       text-transform: uppercase;
       display: block;
       letter-spacing: 1px;
       font-family: 'JetBrains Mono', monospace;
       font-weight: 600;
-      margin-bottom: 4px;
+      margin-bottom: 2px;
     }
 
     .stat-value {
-      font-size: 0.82rem;
+      font-size: 0.55rem;
       font-weight: 700;
       font-family: 'JetBrains Mono', monospace;
       letter-spacing: -0.5px;
@@ -362,14 +363,14 @@
     /* === RANGE ESTIMATOR CARD === */
     .range-card {
       background: var(--card-bg);
-      border-radius: 10px;
+      border-radius: 6px;
       border: 1px solid var(--border-color);
-      padding: 10px 14px;
+      padding: 6px 8px;
       box-shadow: var(--card-shadow);
       display: flex;
       flex-direction: row;
       align-items: stretch;
-      gap: 16px;
+      gap: 8px;
       flex-shrink: 0;
       position: relative;
       overflow: hidden;
@@ -378,13 +379,13 @@
 
     .range-card.column-layout {
       flex-direction: column;
-      gap: 8px;
+      gap: 4px;
     }
 
     .range-card-content {
       display: flex;
       flex-direction: row;
-      gap: 16px;
+      gap: 8px;
       align-items: stretch;
       width: 100%;
     }
@@ -408,7 +409,7 @@
     }
 
     .range-label {
-      font-size: 0.6rem;
+      font-size: 0.42rem;
       color: var(--label-color);
       text-transform: uppercase;
       letter-spacing: 1px;
@@ -417,7 +418,7 @@
     }
 
     .range-value {
-      font-size: 1.1rem;
+      font-size: 0.72rem;
       font-weight: 700;
       font-family: 'JetBrains Mono', monospace;
     }
@@ -435,7 +436,7 @@
       flex: 1;
       height: 100%;
       background: var(--input-bg);
-      border: 2px solid var(--border-color);
+      border: 1px solid var(--border-color);
       border-radius: 4px;
       position: relative;
       overflow: hidden;
@@ -447,8 +448,8 @@
       right: -6px;
       top: 50%;
       transform: translateY(-50%);
-      width: 5px;
-      height: 10px;
+      width: 4px;
+      height: 8px;
       background: var(--border-color);
       border-radius: 0 3px 3px 0;
     }
@@ -484,7 +485,7 @@
       top: 35%;
       left: 50%;
       transform: translate(-50%, -50%);
-      font-size: 25px;
+      font-size: 15px;
       font-weight: 700;
       font-family: 'JetBrains Mono', monospace;
       color: var(--chart-tick);
@@ -498,7 +499,7 @@
       top: 80%;
       left: 50%;
       transform: translate(-50%, -50%);
-      font-size: 15px;
+      font-size: 9px;
       font-weight: 700;
       font-family: 'JetBrains Mono', monospace;
       color: var(--danger);
@@ -510,7 +511,7 @@
     .battery-range-group {
       display: flex;
       align-items: stretch;
-      gap: 16px;
+      gap: 8px;
       flex: 3;
     }
 
@@ -526,12 +527,12 @@
       flex: 1 1 100%;
       flex-direction: column;
       align-items: stretch;
-      gap: 8px;
+      gap: 4px;
     }
 
     .range-card.battery-stacked .battery-range-group .battery-widget {
       flex: none;
-      height: 18px;
+      height: 14px;
       align-items: center;
     }
 
@@ -544,11 +545,11 @@
     }
 
     .range-card.battery-stacked .battery-range-group .battery-widget .battery-soc-remaining-label {
-      font-size: 0.75rem;
+      font-size: 0.5rem;
     }
 
     .battery-soc-consumed-label {
-      font-size: 0.65rem;
+      font-size: 0.44rem;
     }
 
     .range-card.battery-stacked .battery-range-group .range-section {
@@ -561,13 +562,13 @@
     /* === MAIN DISPLAY === */
     .main-display {
       display: flex;
-      gap: 10px;
+      gap: 6px;
       flex: 1;
       min-height: 0;
     }
 
     #map {
-      border-radius: 12px;
+      border-radius: 8px;
       border: 1px solid var(--border-color);
       flex: 1;
       min-height: 0;
@@ -579,13 +580,13 @@
       flex: 1;
       min-height: 0;
       position: relative;
-      border-radius: 12px;
+      border-radius: 8px;
     }
 
     .map-wrapper #map {
       width: 100%;
       height: 100%;
-      border-radius: 12px;
+      border-radius: 8px;
     }
 
     #map3d {
@@ -594,7 +595,7 @@
       left: 0;
       width: 100%;
       height: 100%;
-      border-radius: 12px;
+      border-radius: 8px;
       border: 1px solid var(--border-color);
       box-shadow: var(--card-shadow);
       display: none;
@@ -603,16 +604,16 @@
 
     .map3d-toggle-btn {
       position: absolute;
-      top: 10px;
-      right: 130px;
+      top: 6px;
+      right: 85px;
       z-index: 20;
       background: var(--card-bg);
       border: 1px solid var(--border-color);
       color: var(--text-color);
       border-radius: 8px;
-      padding: 5px 10px;
+      padding: 3px 6px;
       cursor: pointer;
-      font-size: 0.75rem;
+      font-size: 0.5rem;
       font-family: 'JetBrains Mono', monospace;
       font-weight: 700;
       letter-spacing: 0.5px;
@@ -634,16 +635,16 @@
 
     .map-fullscreen-btn {
       position: absolute;
-      top: 10px;
-      right: 10px;
+      top: 6px;
+      right: 6px;
       z-index: 20;
       background: var(--card-bg);
       border: 1px solid var(--border-color);
       color: var(--text-color);
       border-radius: 8px;
-      padding: 5px 10px;
+      padding: 3px 6px;
       cursor: pointer;
-      font-size: 0.75rem;
+      font-size: 0.5rem;
       font-family: 'JetBrains Mono', monospace;
       font-weight: 700;
       letter-spacing: 0.5px;
@@ -665,16 +666,16 @@
 
     .map-weather-btn {
       position: absolute;
-      top: 10px;
-      right: 50px;
+      top: 6px;
+      right: 35px;
       z-index: 20;
       background: var(--card-bg);
       border: 1px solid var(--border-color);
       color: var(--text-color);
       border-radius: 8px;
-      padding: 5px 10px;
+      padding: 3px 6px;
       cursor: pointer;
-      font-size: 0.75rem;
+      font-size: 0.5rem;
       font-family: 'JetBrains Mono', monospace;
       font-weight: 700;
       letter-spacing: 0.5px;
@@ -696,16 +697,16 @@
 
     .map-poi-btn {
       position: absolute;
-      top: 10px;
-      right: 90px;
+      top: 6px;
+      right: 60px;
       z-index: 20;
       background: var(--card-bg);
       border: 1px solid var(--border-color);
       color: var(--text-color);
       border-radius: 8px;
-      padding: 5px 10px;
+      padding: 3px 6px;
       cursor: pointer;
-      font-size: 0.75rem;
+      font-size: 0.5rem;
       font-family: 'JetBrains Mono', monospace;
       font-weight: 700;
       letter-spacing: 0.5px;
@@ -728,21 +729,21 @@
     /* POI Panel */
     .poi-panel {
       position: absolute;
-      top: 46px;
-      right: 10px;
+      top: 32px;
+      right: 6px;
       z-index: 20;
       background: var(--card-bg);
       border: 1px solid var(--border-color);
       border-radius: 8px;
-      padding: 6px 8px;
+      padding: 4px 5px;
       box-shadow: var(--card-shadow);
       display: none;
       flex-direction: column;
       gap: 3px;
       font-family: 'JetBrains Mono', monospace;
-      font-size: 0.62rem;
+      font-size: 0.42rem;
       font-weight: 600;
-      min-width: 172px;
+      min-width: 120px;
     }
 
     .poi-panel.visible {
@@ -750,11 +751,11 @@
     }
 
     .poi-panel-title {
-      font-size: 0.58rem;
+      font-size: 0.4rem;
       text-transform: uppercase;
       letter-spacing: 1px;
       color: var(--label-color);
-      padding-bottom: 4px;
+      padding-bottom: 3px;
       border-bottom: 1px solid var(--border-color);
       margin-bottom: 2px;
     }
@@ -762,9 +763,9 @@
     .poi-panel-item {
       display: flex;
       align-items: center;
-      gap: 7px;
-      padding: 4px 5px;
-      border-radius: 6px;
+      gap: 5px;
+      padding: 3px 4px;
+      border-radius: 4px;
       cursor: pointer;
       transition: background 0.15s ease;
       user-select: none;
@@ -779,9 +780,9 @@
     }
 
     .poi-panel-emoji {
-      font-size: 0.95rem;
+      font-size: 0.6rem;
       line-height: 1;
-      width: 18px;
+      width: 14px;
       text-align: center;
     }
 
@@ -791,16 +792,16 @@
     }
 
     .poi-panel-check {
-      width: 14px;
-      height: 14px;
+      width: 10px;
+      height: 10px;
       border-radius: 3px;
-      border: 2px solid var(--border-color);
+      border: 1px solid var(--border-color);
       display: flex;
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
       transition: all 0.15s ease;
-      font-size: 0.6rem;
+      font-size: 0.4rem;
       color: #000;
       font-weight: 900;
     }
@@ -826,17 +827,17 @@
     }
 
     .poi-panel-loading {
-      font-size: 0.58rem;
+      font-size: 0.4rem;
       color: var(--label-color);
       text-align: center;
-      padding: 3px 0;
+      padding: 2px 0;
       letter-spacing: 0.5px;
     }
 
     .poi-panel.minimized {
       min-width: unset;
-      width: 30px;
-      height: 30px;
+      width: 20px;
+      height: 20px;
       padding: 0;
       overflow: hidden;
       cursor: pointer;
@@ -851,12 +852,12 @@
     .poi-panel.minimized::after {
       content: '🚩';
       font-family: 'JetBrains Mono', monospace;
-      font-size: 0.7rem;
+      font-size: 0.5rem;
       font-weight: 700;
       color: var(--text-color);
       white-space: nowrap;
       display: block;
-      padding: 3px 6px;
+      padding: 2px 4px;
     }
 
     body.map-fullscreen .header {
@@ -919,16 +920,16 @@
 
     .map-heading-btn {
       position: absolute;
-      top: 10px;
-      right: 170px;
+      top: 6px;
+      right: 115px;
       z-index: 20;
       background: var(--card-bg);
       border: 1px solid var(--border-color);
       color: var(--text-color);
       border-radius: 8px;
-      padding: 5px 10px;
+      padding: 3px 6px;
       cursor: pointer;
-      font-size: 0.75rem;
+      font-size: 0.5rem;
       font-family: 'JetBrains Mono', monospace;
       font-weight: 700;
       letter-spacing: 0.5px;
@@ -950,8 +951,8 @@
 
     .map-zoom-group {
       position: absolute;
-      top: 10px;
-      left: 10px;
+      top: 6px;
+      left: 6px;
       z-index: 20;
       display: flex;
       flex-direction: row;
@@ -963,9 +964,9 @@
       border: 1px solid var(--border-color);
       color: var(--text-color);
       border-radius: 8px;
-      padding: 5px 10px;
+      padding: 3px 6px;
       cursor: pointer;
-      font-size: 0.75rem;
+      font-size: 0.5rem;
       font-family: 'JetBrains Mono', monospace;
       font-weight: 700;
       letter-spacing: 0.5px;
@@ -983,15 +984,15 @@
     .charts-panel {
       display: flex;
       flex-direction: column;
-      gap: 8px;
-      width: 380px;
+      gap: 5px;
+      width: 260px;
       flex-shrink: 0;
       min-height: 0;
-      overflow-y: auto;
+      overflow: hidden;
     }
 
     .charts-panel::-webkit-scrollbar {
-      width: 4px;
+      width: 3px;
     }
 
     .charts-panel::-webkit-scrollbar-track {
@@ -1006,28 +1007,20 @@
     /* === CHART CONTAINER === */
     .chart-container {
       background: var(--card-bg);
-      border-radius: 12px;
+      border-radius: 8px;
       border: 1px solid var(--border-color);
       box-shadow: var(--card-shadow);
       display: flex;
       flex-direction: column;
-      flex-shrink: 0;
+      flex: 1 1 0;
+      min-height: 0;
       overflow: hidden;
       position: relative;
       transition: all 0.3s ease;
-      height: 160px;
     }
 
     .chart-container:hover {
       box-shadow: var(--card-shadow-hover);
-    }
-
-    .chart-container.tall {
-      height: 190px;
-    }
-
-    .chart-container.short {
-      height: 140px;
     }
 
     /* Chart header bar */
@@ -1035,7 +1028,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 7px 10px 5px;
+      padding: 4px 6px 3px;
       border-bottom: 1px solid var(--border-color);
       flex-shrink: 0;
       cursor: pointer;
@@ -1043,14 +1036,14 @@
     }
 
     .collapse-arrow {
-      margin-left: 6px;
-      font-size: 0.75rem;
+      margin-left: 4px;
+      font-size: 0.5rem;
       opacity: 0.8;
     }
 
     .chart-title {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 0.65rem;
+      font-size: 0.44rem;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 1.2px;
@@ -1059,9 +1052,9 @@
 
     .chart-badge {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 0.58rem;
+      font-size: 0.4rem;
       font-weight: 600;
-      padding: 2px 6px;
+      padding: 1px 4px;
       border-radius: 20px;
       text-transform: uppercase;
       letter-spacing: 0.5px;
@@ -1112,7 +1105,7 @@
     .chart-header-right {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 6px;
     }
 
     .maximize-btn {
@@ -1120,13 +1113,13 @@
       border: 1px solid var(--border-color);
       color: var(--label-color);
       border-radius: 4px;
-      width: 20px;
-      height: 20px;
+      width: 14px;
+      height: 14px;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      font-size: 14px;
+      font-size: 10px;
       padding: 0;
       transition: all 0.2s ease;
       line-height: 1;
@@ -1165,7 +1158,7 @@
     .chart-canvas-area {
       flex: 1;
       min-height: 0;
-      padding: 6px 8px;
+      padding: 4px 6px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -1182,7 +1175,7 @@
     .energy-stats-row {
       display: flex;
       justify-content: space-around;
-      padding: 4px 8px 6px;
+      padding: 2px 5px 3px;
       border-top: 1px solid var(--border-color);
       flex-shrink: 0;
     }
@@ -1193,7 +1186,7 @@
 
     .energy-stat-label {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 0.55rem;
+      font-size: 0.38rem;
       text-transform: uppercase;
       letter-spacing: 1px;
       color: var(--label-color);
@@ -1202,7 +1195,7 @@
 
     .energy-stat-value {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 0.72rem;
+      font-size: 0.48rem;
       font-weight: 700;
     }
 
@@ -1225,20 +1218,20 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 8px;
-      gap: 6px;
+      padding: 4px;
+      gap: 3px;
     }
 
     .regen-arc-label {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 0.72rem;
+      font-size: 0.48rem;
       font-weight: 700;
       color: var(--primary);
     }
 
     .regen-sub {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 0.58rem;
+      font-size: 0.4rem;
       color: var(--label-color);
       text-transform: uppercase;
       letter-spacing: 1px;
@@ -1247,37 +1240,38 @@
     /* === POWER FLOW BARS === */
     .powerflow-wrap {
       flex: 1;
-      padding: 6px 10px;
+      min-height: 0;
+      padding: 4px 6px;
       display: flex;
       flex-direction: column;
       justify-content: center;
-      gap: 7px;
+      gap: 4px;
     }
 
     .pf-row {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 4px;
     }
 
     .pf-icon {
-      font-size: 0.85rem;
-      width: 20px;
+      font-size: 0.58rem;
+      width: 14px;
       text-align: center;
     }
 
     .pf-label {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 0.6rem;
+      font-size: 0.4rem;
       color: var(--label-color);
       text-transform: uppercase;
       letter-spacing: 0.8px;
-      width: 58px;
+      width: 38px;
     }
 
     .pf-bar-bg {
       flex: 1;
-      height: 8px;
+      height: 5px;
       background: var(--input-bg);
       border-radius: 4px;
       overflow: hidden;
@@ -1307,9 +1301,9 @@
 
     .pf-val {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 0.65rem;
+      font-size: 0.44rem;
       font-weight: 700;
-      width: 38px;
+      width: 26px;
       text-align: right;
     }
 
@@ -1319,17 +1313,18 @@
       display: flex;
       align-items: center;
       justify-content: space-around;
-      gap: 5px;
+      gap: 3px;
       flex: 1;
-      padding: 0 4px;
+      min-height: 0;
+      padding: 0 2px;
     }
 
     .weather-column {
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 3px;
       flex: 1;
-      font-size: 0.7rem;
+      font-size: 0.5rem;
       color: var(--label-color);
     }
 
@@ -1341,20 +1336,20 @@
     }
 
     .weather-icon {
-      font-size: 4.5rem;
+      font-size: 2.4rem;
       display: block;
       line-height: 1;
-      padding-top: 5px;
-      padding-bottom: 5px;
+      padding-top: 3px;
+      padding-bottom: 3px;
     }
 
     .weather-icon.small {
-      font-size: 2.8rem;
-      padding-bottom: 10px;
+      font-size: 1.8rem;
+      padding-bottom: 6px;
     }
 
     .weather-temp {
-      font-size: 1.2rem;
+      font-size: 0.8rem;
       font-weight: 700;
       color: var(--text-color);
       display: block;
@@ -1367,7 +1362,7 @@
 
     .weather-item span.wlabel {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 0.58rem;
+      font-size: 0.4rem;
       text-transform: uppercase;
       letter-spacing: 0.8px;
       color: var(--label-color);
@@ -1376,7 +1371,7 @@
 
     .weather-item b {
       color: var(--text-color);
-      font-size: 0.82rem;
+      font-size: 0.55rem;
       font-family: 'JetBrains Mono', monospace;
       transition: color 0.3s ease;
     }
@@ -1385,16 +1380,16 @@
     .controls {
       display: grid;
       grid-template-columns: 1fr 1fr 1fr;
-      gap: 10px;
-      padding-bottom: 4px;
+      gap: 5px;
+      padding-bottom: 2px;
       flex-shrink: 0;
     }
 
     .action-btn {
       border: none;
-      padding: 13px;
-      border-radius: 10px;
-      font-size: 0.9rem;
+      padding: 7px;
+      border-radius: 6px;
+      font-size: 0.6rem;
       font-weight: 800;
       cursor: pointer;
       text-transform: uppercase;
@@ -1478,10 +1473,10 @@
     }
 
     input[type="number"] {
-      font-size: 15px !important;
+      font-size: 10px !important;
       font-weight: 700;
       font-family: 'JetBrains Mono', monospace;
-      padding: 9px 10px;
+      padding: 5px 6px;
       border-radius: 8px;
       border: 1px solid var(--border-color);
       background: var(--input-bg);
@@ -1494,6 +1489,21 @@
     input[type="number"]:focus {
       border-color: var(--secondary);
       box-shadow: 0 0 0 3px var(--glow-blue);
+    }
+
+    /* === CONFIG GRID UNIFORM INPUT HEIGHT === */
+    .config-grid input[type="number"] {
+      height: 26px;
+    }
+    .config-grid .segmented-control {
+      height: 26px;
+    }
+    .config-grid .segment {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 1px;
+      line-height: 1;
     }
 
     /* === MODAL === */
@@ -1512,11 +1522,11 @@
     .modal-content {
       background-color: var(--card-bg);
       margin: 10% auto;
-      padding: 28px;
+      padding: 18px;
       border: 1px solid var(--border-color);
       width: 80%;
-      max-width: 520px;
-      border-radius: 16px;
+      max-width: 380px;
+      border-radius: 10px;
       box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
       position: relative;
       line-height: 1.7;
@@ -1525,20 +1535,20 @@
     .modal-content h2 {
       font-family: 'Syne', sans-serif;
       font-weight: 800;
-      font-size: 1.1rem;
+      font-size: 0.75rem;
       letter-spacing: 2px;
       text-transform: uppercase;
       color: var(--tesla-red);
       margin-top: 0;
       border-bottom: 1px solid var(--border-color);
-      padding-bottom: 12px;
+      padding-bottom: 8px;
     }
 
     .close-modal {
       position: absolute;
-      top: 16px;
-      right: 20px;
-      font-size: 1.4rem;
+      top: 12px;
+      right: 14px;
+      font-size: 1rem;
       cursor: pointer;
       color: var(--label-color);
       line-height: 1;
@@ -1565,7 +1575,7 @@
     }
 
     .summary-item-label {
-      font-size: 0.62rem;
+      font-size: 0.42rem;
       color: var(--label-color);
       text-transform: uppercase;
       letter-spacing: 1px;
@@ -1574,7 +1584,7 @@
     }
 
     .summary-item-value {
-      font-size: 1rem;
+      font-size: 0.7rem;
       font-weight: 700;
       font-family: 'JetBrains Mono', monospace;
       margin-top: 2px;
@@ -1590,7 +1600,7 @@
       margin-top: 0px;
       font-family: 'JetBrains Mono', monospace;
       font-weight: 700;
-      font-size: 0.9rem;
+      font-size: 0.65rem;
     }
 
     .score-badge.excellent {
@@ -1612,7 +1622,7 @@
     }
 
     /* === RESPONSIVE === */
-    @media (max-width: 1300px) {
+    @media (max-width: 700px) {
       .main-display {
         flex-direction: column;
       }
@@ -1634,7 +1644,7 @@
       }
     }
 
-    @media (max-width: 800px) {
+    @media (max-width: 500px) {
       body {
         overflow-y: auto;
         height: auto;
@@ -1664,7 +1674,7 @@
 
       .chart-container {
         width: 100%;
-        height: 160px;
+        height: 120px;
       }
 
       .grid-stats {
@@ -1692,7 +1702,7 @@
       }
     }
 
-    @media (max-width: 600px) {
+    @media (max-width: 400px) {
       .config-grid {
         grid-template-columns: 1fr;
       }
@@ -1718,7 +1728,7 @@
     .stepper-wrap {
       display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 2px;
     }
 
     .stepper-wrap input[type="number"] {
@@ -1730,9 +1740,9 @@
       border: 1px solid var(--border-color);
       color: var(--text-color);
       border-radius: 6px;
-      width: 28px;
-      height: 28px;
-      font-size: 1rem;
+      width: 18px;
+      height: 18px;
+      font-size: 0.7rem;
       font-weight: 700;
       cursor: pointer;
       flex-shrink: 0;
@@ -1780,14 +1790,14 @@
     .profiles-list {
       display: flex;
       flex-direction: column;
-      gap: 8px;
-      margin-top: 12px;
-      max-height: 280px;
+      gap: 4px;
+      margin-top: 8px;
+      max-height: 200px;
       overflow-y: auto;
     }
 
     .profiles-list::-webkit-scrollbar {
-      width: 4px;
+      width: 3px;
     }
 
     .profiles-list::-webkit-scrollbar-thumb {
@@ -1802,8 +1812,8 @@
       background: var(--input-bg);
       border: 1px solid var(--border-color);
       border-radius: 8px;
-      padding: 8px 12px;
-      gap: 10px;
+      padding: 4px 8px;
+      gap: 6px;
     }
 
     .profile-item-info {
@@ -1815,13 +1825,13 @@
     .profile-item-name {
       font-family: 'JetBrains Mono', monospace;
       font-weight: 700;
-      font-size: 0.85rem;
+      font-size: 0.6rem;
       color: var(--text-color);
     }
 
     .profile-item-details {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 0.62rem;
+      font-size: 0.42rem;
       color: var(--label-color);
       margin-top: 2px;
       letter-spacing: 0.5px;
@@ -1829,7 +1839,7 @@
 
     .profile-item-actions {
       display: flex;
-      gap: 6px;
+      gap: 4px;
     }
 
     .profile-action-btn {
@@ -1838,8 +1848,8 @@
       color: var(--text-color);
       border-radius: 6px;
       padding: 0;
-      width: 30px;
-      height: 30px;
+      width: 20px;
+      height: 20px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -1887,25 +1897,25 @@
     .profile-save-row {
       display: flow;
       gap: 8px;
-      margin-top: 14px;
+      margin-top: 10px;
       align-items: center;
-      padding-top: 14px;
+      padding-top: 10px;
       border-top: 1px solid var(--border-color);
     }
 
     .profile-name-input {
       flex: 1;
-      font-size: 13px !important;
+      font-size: 9px !important;
       font-weight: 700;
       font-family: 'JetBrains Mono', monospace;
-      padding: 8px 10px;
+      padding: 4px 6px;
       border-radius: 8px;
       border: 1px solid var(--border-color);
       background: var(--input-bg);
       color: var(--text-color);
       outline: none;
       transition: border-color 0.2s ease;
-      width: 150px;
+      width: 100px;
     }
 
     .profile-name-input:focus {
@@ -1918,8 +1928,8 @@
       background: linear-gradient(135deg, var(--secondary), #0288d1);
       color: #000;
       border-radius: 8px;
-      padding: 8px 16px;
-      font-size: 0.8rem;
+      padding: 4px 10px;
+      font-size: 0.55rem;
       font-weight: 800;
       font-family: 'Syne', sans-serif;
       letter-spacing: 1px;
@@ -1937,9 +1947,9 @@
     .profiles-empty {
       text-align: center;
       color: var(--label-color);
-      font-size: 0.8rem;
+      font-size: 0.55rem;
       font-style: italic;
-      padding: 20px 0;
+      padding: 14px 0;
       font-family: 'JetBrains Mono', monospace;
     }
 
@@ -1949,7 +1959,8 @@
       border-radius: 12px;
       border: 1px solid var(--border-color);
       box-shadow: var(--card-shadow);
-      flex-shrink: 0;
+      flex: 1 1 0;
+      min-height: 0;
       display: flex;
       flex-direction: column;
       transition: all 0.3s ease;
@@ -1959,20 +1970,22 @@
 
     .energy-flow-svg {
       width: 100%;
-      height: 120px;
-      padding: 10px;
+      flex: 1;
+      min-height: 0;
+      height: auto;
+      padding: 5px;
       margin: auto 0;
     }
 
     .ef-node {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 9px;
+      font-size: 7px;
       font-weight: 700;
     }
 
     .ef-value {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 8px;
+      font-size: 6px;
       fill: var(--label-color);
     }
 
@@ -1999,15 +2012,15 @@
     /* === COST METER === */
     .cost-meter-card {
       background: var(--card-bg);
-      border-radius: 10px;
+      border-radius: 6px;
       border: 1px solid var(--border-color);
       box-shadow: var(--card-shadow);
-      padding: 8px 12px;
+      padding: 5px 8px;
       flex-shrink: 0;
       display: flex;
       flex-direction: row;
       align-items: center;
-      gap: 12px;
+      gap: 6px;
       position: relative;
       overflow: hidden;
       transition: all 0.3s ease;
@@ -2023,7 +2036,7 @@
       display: flex;
       flex-direction: row;
       align-items: center;
-      gap: 12px;
+      gap: 6px;
       width: 100%;
     }
 
@@ -2043,7 +2056,7 @@
     }
 
     .cm-label {
-      font-size: 0.55rem;
+      font-size: 0.38rem;
       color: var(--label-color);
       text-transform: uppercase;
       letter-spacing: 0.8px;
@@ -2052,7 +2065,7 @@
     }
 
     .cm-value {
-      font-size: 0.9rem;
+      font-size: 0.6rem;
       font-weight: 700;
       font-family: 'JetBrains Mono', monospace;
     }
@@ -2071,17 +2084,18 @@
 
     .cm-divider {
       width: 1px;
-      height: 30px;
+      height: 20px;
       background: var(--border-color);
     }
 
     /* === DRIVING STYLE === */
     .driving-style-card {
       background: var(--card-bg);
-      border-radius: 12px;
+      border-radius: 8px;
       border: 1px solid var(--border-color);
       box-shadow: var(--card-shadow);
-      flex-shrink: 0;
+      flex: 1 1 0;
+      min-height: 0;
       display: flex;
       flex-direction: column;
       transition: all 0.3s ease;
@@ -2092,12 +2106,14 @@
       align-items: center;
       justify-content: center;
       gap: 1px;
-      padding: 8px 10px 10px;
+      padding: 4px 6px 6px;
+      flex: 1;
+      min-height: 0;
     }
 
     .ds-gauge-svg {
-      width: 160px;
-      height: 100px;
+      width: 110px;
+      height: 68px;
       flex-shrink: 0;
     }
 
@@ -2116,21 +2132,21 @@
     }
 
     .ds-score-label {
-      font-size: 0.58rem;
+      font-size: 0.4rem;
       color: var(--label-color);
       text-transform: uppercase;
       letter-spacing: 0.5px;
       font-family: 'JetBrains Mono', monospace;
       font-weight: 600;
-      width: 90px;
+      width: 62px;
       flex-shrink: 0;
-      padding: 8px;
+      padding: 4px;
     }
 
     .ds-score-bar-bg {
       flex: 1;
       min-width: 0;
-      height: 6px;
+      height: 4px;
       background: var(--input-bg);
       border-radius: 3px;
       overflow: hidden;
@@ -2155,10 +2171,10 @@
     }
 
     .ds-score-val {
-      font-size: 0.65rem;
+      font-size: 0.44rem;
       font-weight: 700;
       font-family: 'JetBrains Mono', monospace;
-      width: 28px;
+      width: 20px;
       text-align: right;
     }
 
@@ -2167,7 +2183,7 @@
       flex-direction: column;
     }
 
-    @media (max-width: 1300px) {
+    @media (max-width: 700px) {
 
       .energy-flow-card,
       .driving-style-card {
@@ -2180,7 +2196,7 @@
       }
     }
 
-    @media (max-width: 800px) {
+    @media (max-width: 500px) {
 
       .energy-flow-card,
       .driving-style-card {
@@ -2399,8 +2415,8 @@
       <p><strong>More Apps:</strong> <a href="https://github.com/GianfrancoPiazzolla?tab=repositories" target="_blank"
           style="color:var(--secondary); text-decoration:none;">GitHub</a></p>
       <p><strong>License:</strong> Distributed under the MIT License. Feel free to use, modify, and share.</p>
-      <hr style="border:0; border-top:1px solid var(--border-color); margin:20px 0;">
-      <p style="font-style:italic; font-size:0.9rem; color:var(--label-color);">Developed for the sustainable mobility
+      <hr style="border:0; border-top:1px solid var(--border-color); margin:12px 0;">
+      <p style="font-style:italic; font-size:0.6rem; color:var(--label-color);">Developed for the sustainable mobility
         community. If you find this tool helpful, please leave a ⭐ on GitHub!</p>
     </div>
   </div>
@@ -2415,11 +2431,11 @@
       </div>
       <div style="display:flex; gap:10px; margin-top:16px; padding-top:14px; border-top:1px solid var(--border-color);">
         <button onclick="exportTrip()"
-          style="flex:1; border:none; padding:10px; border-radius:8px; font-size:0.82rem; font-weight:800; cursor:pointer; text-transform:uppercase; font-family:'Syne',sans-serif; letter-spacing:1.5px; background:linear-gradient(135deg,var(--secondary),#0288d1); color:#000; transition:all 0.18s ease;"
+          style="flex:1; border:none; padding:6px; border-radius:8px; font-size:0.55rem; font-weight:800; cursor:pointer; text-transform:uppercase; font-family:'Syne',sans-serif; letter-spacing:1.5px; background:linear-gradient(135deg,var(--secondary),#0288d1); color:#000; transition:all 0.18s ease;"
           onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform=''">⬇ Export
           Trip</button>
         <button onclick="document.getElementById('importTripInput').click()"
-          style="flex:1; border:none; padding:10px; border-radius:8px; font-size:0.82rem; font-weight:800; cursor:pointer; text-transform:uppercase; font-family:'Syne',sans-serif; letter-spacing:1.5px; background:linear-gradient(135deg,var(--primary),#00c853); color:#000; transition:all 0.18s ease;"
+          style="flex:1; border:none; padding:6px; border-radius:8px; font-size:0.55rem; font-weight:800; cursor:pointer; text-transform:uppercase; font-family:'Syne',sans-serif; letter-spacing:1.5px; background:linear-gradient(135deg,var(--primary),#00c853); color:#000; transition:all 0.18s ease;"
           onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform=''">⬆ Import
           Trip</button>
       </div>
@@ -2470,19 +2486,19 @@
     <div class="range-card">
       <div class="range-section">
         <span class="range-label">Battery (kWh)</span>
-        <div class="stepper-wrap" style="width:140px;">
+        <div class="stepper-wrap" style="width:95px;">
           <button class="stepper-btn" onclick="stepValue('batteryCapacity', -0.5)">−</button>
           <input type="number" id="batteryCapacity" value="100" step="0.5"
-            style="font-size:13px !important; padding: 6px 8px; text-align:center;">
+            style="font-size:9px !important; padding: 4px 5px; text-align:center;">
           <button class="stepper-btn" onclick="stepValue('batteryCapacity', 0.5)">+</button>
         </div>
       </div>
       <div class="range-section">
         <span class="range-label">Current SoC (%)</span>
-        <div class="stepper-wrap" style="width:140px;">
+        <div class="stepper-wrap" style="width:95px;">
           <button class="stepper-btn" onclick="stepValue('socInput', -1)">−</button>
           <input type="number" id="socInput" value="100" min="0" max="100" step="1"
-            style="font-size:13px !important; padding:6px 8px; text-align:center;"
+            style="font-size:9px !important; padding:4px 5px; text-align:center;"
             onchange="recalibrateSoc(this.value)">
           <button class="stepper-btn" onclick="stepValue('socInput', 1)">+</button>
         </div>
@@ -2530,17 +2546,17 @@
       <div class="cm-divider"></div>
       <div class="cm-section">
         <div class="cm-label">ICE Fuel Price</div>
-        <div class="cm-value" id="cmDieselPrice" style="color:var(--label-color); font-size: 0.82rem;">-- €</div>
+        <div class="cm-value" id="cmDieselPrice" style="color:var(--label-color); font-size: 0.55rem;">-- €</div>
         <div
-          style="font-size: 0.52rem; color: var(--label-color); margin-top: 2px; font-family: 'JetBrains Mono', monospace;"
+          style="font-size: 0.36rem; color: var(--label-color); margin-top: 2px; font-family: 'JetBrains Mono', monospace;"
           id="cmDieselStatus">loading...</div>
       </div>
       <div class="cm-divider"></div>
       <div class="cm-section">
         <div class="cm-label">ICE Efficiency</div>
-        <div class="cm-value" id="cmIceEfficiency" style="color:var(--label-color); font-size: 0.82rem;">-- Km/L</div>
+        <div class="cm-value" id="cmIceEfficiency" style="color:var(--label-color); font-size: 0.55rem;">-- Km/L</div>
         <div
-          style="font-size: 0.52rem; color: var(--label-color); margin-top: 2px; font-family: 'JetBrains Mono', monospace;"
+          style="font-size: 0.36rem; color: var(--label-color); margin-top: 2px; font-family: 'JetBrains Mono', monospace;"
           id="cmIceEfficiencyStatus">loading...</div>
       </div>
     </div>
@@ -2655,7 +2671,7 @@
         </div>
 
         <!-- ENERGY BALANCE -->
-        <div class="chart-container short" style="height:160px;">
+        <div class="chart-container short">
           <div class="chart-header" onclick="toggleCardCollapse(this)">
             <span class="chart-title">Energy Balance <span class="collapse-arrow">▴</span></span>
             <div class="chart-header-right">
@@ -2683,7 +2699,7 @@
         </div>
 
         <!-- POWER BREAKDOWN BARS -->
-        <div class="chart-container short" style="height:160px;">
+        <div class="chart-container short">
           <div class="chart-header" onclick="toggleCardCollapse(this)">
             <span class="chart-title">Power Breakdown <span class="collapse-arrow">▴</span></span>
             <div class="chart-header-right">
@@ -2728,7 +2744,7 @@
         </div>
 
         <!-- ENERGY FLOW DASHBOARD -->
-        <div class="energy-flow-card" style="height:160px;">
+        <div class="energy-flow-card">
           <div class="chart-header" onclick="toggleCardCollapse(this)">
             <span class="chart-title">Energy Flow <span class="collapse-arrow">▴</span></span>
             <div class="chart-header-right">
@@ -2741,7 +2757,7 @@
         </div>
 
         <!-- DRIVING STYLE ANALYZER -->
-        <div class="driving-style-card" style="height:160px;">
+        <div class="driving-style-card">
           <div class="chart-header" onclick="toggleCardCollapse(this)">
             <span class="chart-title">Driving Style Analyzer <span class="collapse-arrow">▴</span></span>
             <div class="chart-header-right">
@@ -2778,7 +2794,7 @@
         </div>
 
         <!-- WEATHER PANEL -->
-        <div class="chart-container" style="height:160px;">
+        <div class="chart-container">
           <div class="chart-header" onclick="toggleCardCollapse(this)">
             <span class="chart-title">Weather Condition <span class="collapse-arrow">▴</span></span>
             <div class="chart-header-right">
@@ -2786,7 +2802,7 @@
               <span class="chart-badge weather">Live</span>
             </div>
           </div>
-          <div class="chart-canvas-area" style="padding:4px 6px;" onclick="maximizeCard(this, event)">
+          <div class="chart-canvas-area" style="padding:3px 4px;" onclick="maximizeCard(this, event)">
             <div class="weather-display">
               <div class="weather-column" style="text-align:right;">
                 <div class="weather-item">
@@ -5141,7 +5157,7 @@
       points.forEach(function (p) {
         var markerEl = createPoiMarkerElement(poi.emoji, poi.color);
         var popupHtml =
-          '<div style="font-family:\'JetBrains Mono\',monospace;font-size:0.75rem;' +
+          '<div style="font-family:\'JetBrains Mono\',monospace;font-size:0.5rem;' +
           'font-weight:700;color:#0d0d12;padding:4px 6px;line-height:1.5;">' +
           poi.emoji + ' ' + poi.label +
           (p.name ? '<br><span style="font-weight:400;color:#444;">' + p.name + '</span>' : '') +
@@ -5533,9 +5549,9 @@
       const overallScore = Math.round((drivingStyle.accelScore + drivingStyle.brakeScore + drivingStyle.smoothScore) / 3);
       const drivingStyleHtml = `
             <div style="margin-top:6px; padding:5px; background:var(--input-bg); border-radius:8px; border:1px solid var(--border-color);">
-                <div style="font-family:'JetBrains Mono',monospace; font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--label-color); margin-bottom:6px;">🎯 Driving Style Score</div>
+                <div style="font-family:'JetBrains Mono',monospace; font-size:0.5rem; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--label-color); margin-bottom:6px;">🎯 Driving Style Score</div>
                 <div style="display:flex; gap:12px; align-items:center;">
-                    <div style="font-size:1.8rem; font-weight:800; color:${overallScore >= 80 ? 'var(--primary)' : overallScore >= 60 ? 'var(--warning)' : 'var(--danger)'}; font-family:'JetBrains Mono',monospace;">${overallScore}</div>
+                    <div style="font-size:1.2rem; font-weight:800; color:${overallScore >= 80 ? 'var(--primary)' : overallScore >= 60 ? 'var(--warning)' : 'var(--danger)'}; font-family:'JetBrains Mono',monospace;">${overallScore}</div>
                     <div style="flex:1;">
                         <div style="font-size:0.65rem; color:var(--label-color); font-family:'JetBrains Mono',monospace;">Accel: <b style="color:var(--text-color)">${Math.round(drivingStyle.accelScore)}</b> · Brake: <b style="color:var(--text-color)">${Math.round(drivingStyle.brakeScore)}</b> · Smooth: <b style="color:var(--text-color)">${Math.round(drivingStyle.smoothScore)}</b></div>
                     </div>
