@@ -95,7 +95,7 @@ The app runs entirely client-side. There is no server, no database, and no build
 | 🔄 **2D / 3D Map Toggle** | One-click button to switch between flat 2D view and immersive 3D view |
 | 🧭 **Heading / North-Up Toggle** | One-click button to switch the active map between heading-up (travel direction) and north-up orientation |
 | ↕️ **Map Fullscreen Mode** | One-click button to expand the map to the full viewport, hiding all UI panels |
-| 🔍 **Map Zoom Controls** | Floating `−` / `⊕` / `+` buttons to zoom out, re-center on GPS, or zoom in on the active map |
+| 🔍 **Map Zoom Controls** | Floating `−` / `⊕` / `+` buttons to zoom out, re-center on GPS, or zoom in on the active map; the zoom level is persisted and restored on the next launch |
 | 📍 **Live GPS Position Marker** | Custom blue dot marker tracking real-time position on both 2D and 3D maps |
 | 🟢 **Start & End Markers** | Green `S` and red `E` circular markers placed automatically at the first and last coordinate of any imported trip file |
 | 📊 **4 Live Charts** | Elevation profile, heat-map style consumption profile with average line tracking, speed profile with 130 km/h warning, energy balance |
@@ -1130,7 +1130,7 @@ const LAST_SETTINGS_KEY = 'tripmaster_last_settings';
 
 ### 📦 Saved Parameters
 
-Each autosave snapshot captures **eleven** configuration fields:
+Each autosave snapshot captures **thirteen** configuration fields:
 
 | 🔑 Field | 🏷️ Source | 📋 Type | 📖 Description |
 |---|---|---|---|
@@ -1145,6 +1145,8 @@ Each autosave snapshot captures **eleven** configuration fields:
 | `poiTypeEnabled` | `poiTypeEnabled` runtime object | `Object` | Shallow copy (`Object.assign`) of POI layer toggle states |
 | `isWeatherOverlayOn` | `isWeatherOverlayOn` runtime variable | `boolean` | Whether the RainViewer precipitation radar overlay was active |
 | `theme` | `currentTheme` runtime variable | `string` | Active UI theme at save time — `"light"` ☀️ or `"dark"` 🌙 |
+| `mapZoom2d` | `map.getZoom()` / `savedZoom2d` variable | `number` | 2D map zoom level at save time |
+| `mapZoom3d` | `map3d.getZoom()` / `savedZoom3d` variable | `number` | 3D map zoom level at save time |
 
 > 💡 **Note:** Temperature efficiency (`η_T`) is **not** included in the autosave — it represents a real-time environmental condition and is expected to be re-set manually at each session start.
 
@@ -1165,7 +1167,9 @@ function saveLastSettings() {
         is3DMode:           is3DMode,
         poiTypeEnabled:     Object.assign({}, poiTypeEnabled),
         isWeatherOverlayOn: isWeatherOverlayOn,
-        theme:              currentTheme
+        theme:              currentTheme,
+        mapZoom2d:          map ? map.getZoom() : (savedZoom2d !== null ? savedZoom2d : 13),
+        mapZoom3d:          map3d ? map3d.getZoom() : (savedZoom3d !== null ? savedZoom3d : 15)
     };
     localStorage.setItem(LAST_SETTINGS_KEY, JSON.stringify(settings));
 }
@@ -1173,6 +1177,7 @@ function saveLastSettings() {
 
 - 📸 Collects the live values from all relevant DOM inputs and runtime state variables at the moment of the call.
 - 🎨 The `theme` field captures the value of `currentTheme` (`"light"` ☀️ or `"dark"` 🌙) so that the active UI appearance is seamlessly restored on the next page load.
+- 🔍 The `mapZoom2d` / `mapZoom3d` fields capture the current zoom of each map instance (falling back to the last stored value when a given map isn't instantiated yet), so the zoom level is restored on the next launch (see [Zoom Persistence](#-zoom-persistence)).
 - 🔒 The `poiTypeEnabled` object is **shallow-copied** via `Object.assign({}, poiTypeEnabled)` to prevent future mutations of the live object from affecting the stored snapshot.
 - 💽 Serializes the complete settings object to a JSON string and writes it to `localStorage` under `LAST_SETTINGS_KEY`, overwriting any previous entry.
 
@@ -1180,7 +1185,7 @@ function saveLastSettings() {
 
 ### ⏰ Invocation Triggers
 
-`saveLastSettings()` is called automatically in **two distinct scenarios**:
+`saveLastSettings()` is called automatically in **three distinct scenarios**:
 
 #### 🔄 1. Periodic Autosave
 
@@ -1212,6 +1217,20 @@ function stopTracking() {
 ```
 
 This guarantees that the **final state** of all settings at the exact moment the user stops tracking is always persisted — even if less than 60 seconds have elapsed since the last periodic autosave.
+
+#### 🔍 3. Immediate Save on Zoom Change
+
+When the user changes the map zoom level (via the `−` / `+` buttons, the mouse wheel, or a pinch gesture), the map fires a `zoomend` event that immediately persists the new zoom:
+
+```javascript
+map.on('zoomend', function () {
+    savedZoom2d = map.getZoom();
+    saveLastSettings();  // ← persist zoom right away
+});
+// map3d uses the same pattern with savedZoom3d / map3d.getZoom()
+```
+
+This guarantees the zoom level is re-established even before the next 60 s autosave or trip stop, keeping it safe across an unexpected close or refresh (see [Zoom Persistence](#-zoom-persistence)).
 
 ---
 
@@ -1268,6 +1287,7 @@ The restore sequence applies each field conditionally — only if the field is p
 | 9️⃣ | If `s.is3DMode` is a `boolean` that differs from the current `is3DMode` state, `toggle3DMap()` is called |
 | 🔟 | If `s.isWeatherOverlayOn` is a `boolean` that differs from the current `isWeatherOverlayOn` state, `toggleWeatherOverlay()` is called |
 | 1️⃣1️⃣ | If `s.poiTypeEnabled` is an object, each key is merged into the live `poiTypeEnabled` object (only strict `boolean` values); the `.poi-panel-item` CSS classes are updated accordingly; `savePoiPrefs()` is called to keep the dedicated POI preferences storage in sync |
+| 1️⃣2️⃣ | 🔍 If `s.mapZoom2d` / `s.mapZoom3d` are numbers, they are stored in `savedZoom2d` / `savedZoom3d` and reapplied to each map when its `load` event fires (see [Zoom Persistence](#-zoom-persistence)) |
 
 > ⚠️ **Note:** Steps 6–9 use **diff-based toggling**: the restore function only calls the toggle function if the stored state differs from the current default — preventing double-invocations that would result in no net change.
 
@@ -1307,7 +1327,7 @@ Trip Master uses **three distinct persistence mechanisms** in `localStorage`, ea
 
 | 🔑 Storage Key | 🏷️ Mechanism | 📖 Scope | 🔄 When Written |
 |---|---|---|---|
-| `tripmaster_last_settings` | 💾 Last Settings Auto-Save | Operational params + transient runtime state | Every 60 s during trip + on trip stop |
+| `tripmaster_last_settings` | 💾 Last Settings Auto-Save | Operational params + transient runtime state | Every 60 s during trip + on trip stop + on every zoom change |
 | `tripmaster_profiles` | 🚘 User Profiles | Named snapshots (no `windSpeed`, no `currentSoc`) | On explicit Save / Overwrite action |
 | `tripmaster_poi_prefs` | 📌 POI Preferences | POI layer toggle state only | On every POI toggle, profile load, profile overwrite |
 
@@ -1329,7 +1349,7 @@ localStorage.removeItem('tripmaster_profiles');
 localStorage.removeItem('tripmaster_poi_prefs');
 ```
 
-> ⚠️ **Note:** After clearing `tripmaster_last_settings`, the app will start with its compiled-in defaults on the next page load — no vehicle weight, no wind speed override, GPS polling at 5 s, SOC at 100%, 2D map mode, north-up orientation, weather overlay off, ☀️ light theme, and all POI layers at their last `tripmaster_poi_prefs` state (which is restored independently by `loadPoiPrefs()`).
+> ⚠️ **Note:** After clearing `tripmaster_last_settings`, the app will start with its compiled-in defaults on the next page load — no vehicle weight, no wind speed override, GPS polling at 5 s, SOC at 100%, 2D map mode, north-up orientation, **default map zoom (13 on the 2D map, 15 on the 3D map)**, weather overlay off, ☀️ light theme, and all POI layers at their last `tripmaster_poi_prefs` state (which is restored independently by `loadPoiPrefs()`).
 
 ---
 
@@ -1703,7 +1723,7 @@ The default map mode uses **MapLibre GL JS v4.7.1** rendering a flat, top-down v
 | 🌍 Route layer type | `line` (GeoJSON `LineString`) — source ID `trip-path-2d` |
 | 🎨 Route color | `#e21017` |
 | 📏 Route line width | `5` px |
-| 🔍 Initial zoom | `15` (set on first GPS fix) |
+| 🔍 Initial zoom | `15` (set on first GPS fix) — overridden by the persisted `mapZoom2d` when present (see [Zoom Persistence](#-zoom-persistence)) |
 | 🧭 Map follows GPS | `map.setCenter([longitude, latitude])` on each GPS step |
 
 The 2D map is contained in the `<div id="map">` element and initialized at page load via `setupMap()`. The route is built incrementally: each new GPS coordinate is pushed into the shared `map3dCoords` buffer and applied to the GeoJSON source via `pathLine.setData(...)`.
@@ -1726,7 +1746,7 @@ The 3D mode reuses **MapLibre GL JS v4.7.1** with a pitched, tilted camera that 
 | 🌍 Route layer type | `line` (GeoJSON `LineString`) — source ID `trip-path` |
 | 🎨 Route color | `#e21017` |
 | 📏 Route line width | `5` px |
-| 🔍 Initial zoom | `15` |
+| 🔍 Initial zoom | `15` — overridden by the persisted `mapZoom3d` when present (see [Zoom Persistence](#-zoom-persistence)) |
 
 The 3D map is rendered inside `<div id="map3d">`, which is overlaid absolutely on top of the 2D map container via `z-index: 5` and initially hidden (`display: none`). When 3D mode is activated, the 2D `#map` is hidden and `#map3d` is revealed.
 
@@ -1826,6 +1846,21 @@ A set of three floating **zoom and re-center buttons** is overlaid in the **top-
 | `+` | `mapZoomIn()` | Increases zoom level by 1 on the active map instance |
 
 All three functions resolve the currently active map as `const activeMap = is3DMode ? map3d : map` and call `activeMap.easeTo()` with a `duration: 250 ms` (zoom) or `400 ms` (center) smooth transition. `mapCenterOnGPS()` fires a fresh `navigator.geolocation.getCurrentPosition()` request with `enableHighAccuracy: true` before recentering.
+
+### 💾 Zoom Persistence
+
+The zoom level is **persisted across sessions** and restored automatically on the next app launch, so the driver never has to re-establish it manually. Each map instance keeps its own saved zoom level:
+
+| Storage Field | Applied To | Source |
+|---|---|---|
+| `mapZoom2d` | 2D map (`map`) | `savedZoom2d` variable / `map.getZoom()` |
+| `mapZoom3d` | 3D map (`map3d`) | `savedZoom3d` variable / `map3d.getZoom()` |
+
+- **🖱️ Saving** — a `zoomend` listener on each map fires whenever the zoom changes (via the `−` / `+` buttons, the mouse wheel, or pinch gestures) and writes the current level into the corresponding `savedZoom*` variable plus `saveLastSettings()`.
+- **🔄 Restoring** — on startup, `restoreLastSettings()` reads `mapZoom2d` / `mapZoom3d` into `savedZoom2d` / `savedZoom3d`. When the map fires its `load` event, the saved level is reapplied via `map.setZoom(savedZoom2d)` (2D) and `map3d.setZoom(savedZoom3d)` (3D).
+- **✨ GPS guard** — the initial `setZoom(15)` on the first GPS fix is skipped when a saved zoom exists, so the persisted level is never overwritten by the route-centering behaviour on launch.
+
+This persistence is part of the [Last Settings Auto-Save](#-last-settings-auto-save) mechanism, so it is captured both by the runtime `mapZoom2d`/`mapZoom3d` fields and on every trip stop or 60 s autosave during an active trip.
 
 The zoom group container (`#mapZoomGroup`) is automatically hidden when the map wrapper height drops below 50 px (see [Map Overlay Button Auto-Hide](#-responsive-layout-adaptations)).
 
