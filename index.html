@@ -577,7 +577,7 @@
 
     .battery-soc-consumed-label {
       position: absolute;
-      top: 80%;
+      top: 69%;
       left: 50%;
       transform: translate(-50%, -50%);
       font-size: 9px;
@@ -1578,6 +1578,7 @@
       font-size: 10px !important;
       font-weight: 700;
       font-family: 'JetBrains Mono', monospace;
+	  text-align: center;
       padding: 5px 6px;
       border-radius: 8px;
       border: 1px solid var(--border-color);
@@ -6076,7 +6077,7 @@
           timestamp: Date.now()
         }));
         if (priceEl) priceEl.textContent = '€' + iceFuelPrice.toFixed(3);
-        if (statusEl) statusEl.textContent = 'live';
+        if (statusEl) statusEl.textContent = '(live)';
         updateCostMeter();
       } catch (error) {
         console.warn('Failed to fetch ICE fuel price, using default:', error);
@@ -6135,7 +6136,7 @@
           timestamp: Date.now()
         }));
         if (effEl) effEl.textContent = iceEfficiency.toFixed(1) + ' Km/L';
-        if (statusEl) statusEl.textContent = 'live';
+        if (statusEl) statusEl.textContent = '(live)';
         updateCostMeter();
       } catch (error) {
         console.warn('Failed to fetch ICE efficiency, using default:', error);
