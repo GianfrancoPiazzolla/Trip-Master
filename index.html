@@ -2976,6 +2976,8 @@
     let map3d = null,
       map3dSource = null,
       is3DMode = false;
+    let savedZoom2d = null,
+      savedZoom3d = null;
     let isMapFullscreen = false;
     let map3dCoords = [];
     let currentTripStartIndex = 0;
@@ -3746,7 +3748,7 @@
                 longitude
               } = pos.coords;
               map.setCenter([longitude, latitude]);
-              map.setZoom(15);
+              if (savedZoom2d === null) map.setZoom(15);
               positionMarker = new maplibregl.Marker({
                 element: createBlueMarkerElement(),
                 anchor: 'center'
@@ -3776,6 +3778,12 @@
             .addTo(map);
           fetchWeather(ROME_LAT, ROME_LNG);
         }
+
+        if (savedZoom2d !== null) map.setZoom(savedZoom2d);
+        map.on('zoomend', function () {
+          savedZoom2d = map.getZoom();
+          saveLastSettings();
+        });
       });
     }
 
@@ -3871,6 +3879,12 @@
           .addTo(map3d);
 
         syncPoiMarkersToMap(map, map3d);
+
+        if (savedZoom3d !== null) map3d.setZoom(savedZoom3d);
+        map3d.on('zoomend', function () {
+          savedZoom3d = map3d.getZoom();
+          saveLastSettings();
+        });
       });
     }
 
@@ -4643,7 +4657,9 @@
         is3DMode: is3DMode,
         poiTypeEnabled: Object.assign({}, poiTypeEnabled),
         isWeatherOverlayOn: isWeatherOverlayOn,
-        theme: currentTheme
+        theme: currentTheme,
+        mapZoom2d: map ? map.getZoom() : (savedZoom2d !== null ? savedZoom2d : 13),
+        mapZoom3d: map3d ? map3d.getZoom() : (savedZoom3d !== null ? savedZoom3d : 15)
       };
       localStorage.setItem(LAST_SETTINGS_KEY, JSON.stringify(settings));
     }
@@ -4686,6 +4702,9 @@
       }
 
       if (s.theme && s.theme !== currentTheme) toggleTheme();
+
+      if (typeof s.mapZoom2d === 'number') savedZoom2d = s.mapZoom2d;
+      if (typeof s.mapZoom3d === 'number') savedZoom3d = s.mapZoom3d;
 
       if (typeof s.isHeadingUp === 'boolean' && s.isHeadingUp !== isHeadingUp) toggleHeadingMode();
 
