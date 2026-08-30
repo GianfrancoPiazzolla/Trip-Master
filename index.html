@@ -209,9 +209,9 @@
     .config-grid {
       display: grid;
       grid-template-columns: repeat(5, 1fr);
-      gap: 6px;
+      gap: 20px;
       background: var(--card-bg);
-      padding: 6px 8px;
+      padding: 4px 8px;
       border-radius: 8px;
       border: 1px solid var(--border-color);
       flex-shrink: 0;
@@ -256,7 +256,7 @@
       background: transparent;
       color: var(--label-color);
       padding: 4px 1px;
-      font-size: 0.52rem;
+      font-size: 0.6rem;
       cursor: pointer;
       border-radius: 4px;
       transition: all 0.18s ease;
@@ -357,11 +357,11 @@
       letter-spacing: 1px;
       font-family: 'JetBrains Mono', monospace;
       font-weight: 600;
-      margin-bottom: 0px;
+      margin-bottom: -4px;
     }
 
     .stat-value {
-      font-size: 0.55rem;
+      font-size: 0.6rem;
       font-weight: 700;
       font-family: 'JetBrains Mono', monospace;
       letter-spacing: -0.5px;
@@ -372,7 +372,7 @@
       background: var(--card-bg);
       border-radius: 6px;
       border: 1px solid var(--border-color);
-      padding: 6px 8px;
+      padding: 4px 8px;
       box-shadow: var(--card-shadow);
       display: flex;
       flex-direction: row;
@@ -423,6 +423,7 @@
       letter-spacing: 1px;
       font-family: 'JetBrains Mono', monospace;
       font-weight: 600;
+      margin-bottom: 3px;
     }
 
     .range-value {
@@ -952,6 +953,7 @@
 
     body.map-fullscreen .container>.config-grid,
     body.map-fullscreen .container>.range-card,
+    body.map-fullscreen .container>.grid-costs,
     body.map-fullscreen .container>.grid-stats,
     body.map-fullscreen .container>.cost-meter-card,
     body.map-fullscreen .container>.controls {
@@ -1575,7 +1577,7 @@
     }
 
     input[type="number"] {
-      font-size: 10px !important;
+      font-size: 12px !important;
       font-weight: 700;
       font-family: 'JetBrains Mono', monospace;
 	  text-align: center;
@@ -1584,7 +1586,7 @@
       border: 1px solid var(--border-color);
       background: var(--input-bg);
       color: var(--text-color);
-      width: 100%;
+      width: 95%;
       transition: border-color 0.2s ease;
       outline: none;
     }
@@ -1596,10 +1598,10 @@
 
     /* === CONFIG GRID UNIFORM INPUT HEIGHT === */
     .config-grid input[type="number"] {
-      height: 26px;
+      height: 22px;
     }
     .config-grid .segmented-control {
-      height: 26px;
+      height: 22px;
     }
     .config-grid .segment {
       display: flex;
@@ -2118,7 +2120,7 @@
       border-radius: 6px;
       border: 1px solid var(--border-color);
       box-shadow: var(--card-shadow);
-      padding: 5px 4px;
+      padding: 4px 4px;
       flex-shrink: 0;
       display: flex;
       flex-direction: row;
@@ -2186,10 +2188,77 @@
       color: var(--warning);
     }
 
+    .cm-value.icecost {
+      color: var(--accent-purple);
+    }
+
     .cm-divider {
       width: 1px;
       height: 20px;
       background: var(--border-color);
+    }
+
+    .grid-costs > .cost-meter-card:nth-child(2) {
+      background: transparent;
+      border: none;
+      box-shadow: none;
+      padding: 0;
+      gap: 3px;
+      margin: 0;
+    }
+
+    .grid-costs > .cost-meter-card:nth-child(2)::before {
+      display: none;
+    }
+
+    .grid-costs > .cost-meter-card:nth-child(2) .cm-divider {
+      display: none;
+    }
+
+    .grid-costs > .cost-meter-card:nth-child(2) .cm-section {
+      background: var(--card-bg);
+      padding: 6px 3px 5px;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      text-align: center;
+      box-shadow: var(--card-shadow);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      transition: all 0.3s ease;
+    }
+
+    .grid-costs > .cost-meter-card:nth-child(2) .cm-section:hover {
+      box-shadow: var(--card-shadow-hover);
+      transform: translateY(-1px);
+    }
+
+    .grid-costs > .cost-meter-card:nth-child(2) .cm-section::before {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      border-radius: 0 0 10px 10px;
+    }
+
+    .grid-costs > .cost-meter-card:nth-child(2) .cm-section:nth-child(1)::before {
+      background: var(--danger);
+    }
+
+    .grid-costs > .cost-meter-card:nth-child(2) .cm-section:nth-child(3)::before {
+      background: var(--warning);
+    }
+
+    .grid-costs > .cost-meter-card:nth-child(2) .cm-section:nth-child(5)::before {
+      background: var(--primary);
+    }
+
+    .grid-costs > .cost-meter-card:nth-child(2) .cm-section:nth-child(7)::before {
+      background: var(--accent-purple);
     }
 
     /* === DRIVING STYLE === */
@@ -2599,7 +2668,7 @@
         <div class="stepper-wrap" style="width:110px;">
           <button class="stepper-btn" onclick="stepValue('batteryCapacity', -0.5)">−</button>
           <input type="number" id="batteryCapacity" value="100" step="0.5"
-            style="font-size:10px !important; width: 70px; padding: 4px 5px; text-align:center;">
+            style="font-size:12px !important; width: 70px; padding: 3px 5px; text-align:center;">
           <button class="stepper-btn" onclick="stepValue('batteryCapacity', 0.5)">+</button>
         </div>
       </div>
@@ -2626,42 +2695,46 @@
 	<div class="grid-costs">
 		<div class="cost-meter-card">
 		  <div class="cm-section">
-			<div class="cm-label">Trip Cost</div>
-			<div class="cm-value spent" id="cmSpent">-- €</div>
+			<div style="display:flex; align-items:center; justify-content:center; gap:5px;">
+			  <div class="cm-label">ICE Fuel Price</div>
+			  <div
+			    style="font-size: 0.46rem; color: var(--label-color); margin-top: 0px; font-family: 'JetBrains Mono', monospace;"
+			    id="cmDieselStatus">(loading...)</div>
+			</div>
+			<div class="cm-value" id="cmDieselPrice" style="color:var(--label-color); font-size: 0.6rem;">-- €</div>
 		  </div>
 		  <div class="cm-divider"></div>
 		  <div class="cm-section">
-			<div class="cm-label">Cost Per Km</div>
-			<div class="cm-value perkm" id="cmPerKm">-- €</div>
-		  </div>
-		  <div class="cm-divider"></div>
-		  <div class="cm-section">
-			<div class="cm-label">vs ICE Saved</div>
-			<div class="cm-value saved" id="cmSaved">-- €</div>
-		  </div>
-		  <div class="cm-divider"></div>
-		  <div class="cm-section">
-			<div class="cm-label">ICE Cost</div>
-			<div class="cm-value" id="cmIceCost" style="color:var(--label-color)">-- €</div>
-		  </div>
-	    </div>
-		<div class="cost-meter-card">
-		  <div class="cm-section">
-			<div class="cm-label">ICE Fuel Price</div>
-			<div class="cm-value" id="cmDieselPrice" style="color:var(--label-color); font-size: 0.55rem;">-- €</div>
-			<div
-			  style="font-size: 0.46rem; color: var(--label-color); margin-top: 0px; font-family: 'JetBrains Mono', monospace;"
-			  id="cmDieselStatus">(loading...)</div>
-		  </div>
-		  <div class="cm-divider"></div>
-		  <div class="cm-section">
-			<div class="cm-label">ICE Efficiency</div>
-			<div class="cm-value" id="cmIceEfficiency" style="color:var(--label-color); font-size: 0.55rem;">-- Km/L</div>
-			<div
-			  style="font-size: 0.46rem; color: var(--label-color); margin-top: 0px; font-family: 'JetBrains Mono', monospace;"
-			  id="cmIceEfficiencyStatus">(loading...)</div>
+			<div style="display:flex; align-items:center; justify-content:center; gap:5px;">
+			  <div class="cm-label">ICE Efficiency</div>
+			  <div
+			    style="font-size: 0.46rem; color: var(--label-color); margin-top: 0px; font-family: 'JetBrains Mono', monospace;"
+			    id="cmIceEfficiencyStatus">(loading...)</div>
+			</div>
+			<div class="cm-value" id="cmIceEfficiency" style="color:var(--label-color); font-size: 0.6rem;">-- Km/L</div>
 		  </div>
 		</div>
+		<div class="cost-meter-card">
+		  <div class="cm-section">
+        <div class="cm-label">Trip Cost</div>
+        <div class="cm-value spent" id="cmSpent">-- €</div>
+		  </div>
+		  <div class="cm-divider"></div>
+		  <div class="cm-section">
+        <div class="cm-label">Cost Per Km</div>
+        <div class="cm-value perkm" id="cmPerKm">-- €</div>
+		  </div>
+		  <div class="cm-divider"></div>
+		  <div class="cm-section">
+        <div class="cm-label">vs ICE Saved</div>
+        <div class="cm-value saved" id="cmSaved">-- €</div>
+		  </div>
+		  <div class="cm-divider"></div>
+		  <div class="cm-section">
+        <div class="cm-label">ICE Cost</div>
+        <div class="cm-value icecost" id="cmIceCost">-- €</div>
+		  </div>
+	  </div>
 	</div>
     <!-- STAT CARDS -->
     <div class="grid-stats">
@@ -2679,8 +2752,8 @@
           class="stat-value" id="gradeDisplay">-- %</span></div>
       <div class="stat-card" style="--accent-color: #ff9100;"><span class="stat-label">Instant Power</span><span
           class="stat-value" id="powerDisplay">-- W</span></div>
-      <div class="stat-card" style="--accent-color: #b39ddb;"><span class="stat-label">Trip Time</span><span
-          class="stat-value" id="tripTimeDisplay">--:--:--</span></div>
+      <div class="stat-card" style="--accent-color: var(--label-color);"><span class="stat-label">Trip Time</span><span
+          class="stat-value" id="tripTimeDisplay" style="color: var(--secondary);">--:--:--</span></div>
     </div>
 
     <!-- MAP + CHARTS SIDE BY SIDE -->
@@ -2731,7 +2804,7 @@
       <div class="charts-panel">
 
         <!-- ALTITUDE PROFILE -->
-        <div class="chart-container">
+        <div class="chart-container" data-id="elevation">
           <div class="chart-header" onclick="toggleCardCollapse(this)">
             <span class="chart-title">Elevation Profile <span class="collapse-arrow">▴</span></span>
             <div class="chart-header-right">
@@ -2745,7 +2818,7 @@
         </div>
 
         <!-- CONSUMPTION VS SPEED SCATTER -->
-        <div class="chart-container">
+        <div class="chart-container" data-id="consumption">
           <div class="chart-header" onclick="toggleCardCollapse(this)">
             <span class="chart-title">Consumption Profile <span class="collapse-arrow">▴</span></span>
             <div class="chart-header-right">
@@ -2759,7 +2832,7 @@
         </div>
 
         <!-- SPEED OVER DISTANCE -->
-        <div class="chart-container">
+        <div class="chart-container" data-id="speed">
           <div class="chart-header" onclick="toggleCardCollapse(this)">
             <span class="chart-title">Speed Profile <span class="collapse-arrow">▴</span></span>
             <div class="chart-header-right">
@@ -2773,7 +2846,7 @@
         </div>
 
         <!-- ENERGY BALANCE -->
-        <div class="chart-container short">
+        <div class="chart-container short" data-id="energy">
           <div class="chart-header" onclick="toggleCardCollapse(this)">
             <span class="chart-title">Energy Balance <span class="collapse-arrow">▴</span></span>
             <div class="chart-header-right">
@@ -2801,7 +2874,7 @@
         </div>
 
         <!-- POWER BREAKDOWN BARS -->
-        <div class="chart-container short">
+        <div class="chart-container short" data-id="power">
           <div class="chart-header" onclick="toggleCardCollapse(this)">
             <span class="chart-title">Power Breakdown <span class="collapse-arrow">▴</span></span>
             <div class="chart-header-right">
@@ -2846,7 +2919,7 @@
         </div>
 
         <!-- ENERGY FLOW DASHBOARD -->
-        <div class="energy-flow-card">
+        <div class="energy-flow-card" data-id="energyflow">
           <div class="chart-header" onclick="toggleCardCollapse(this)">
             <span class="chart-title">Energy Flow <span class="collapse-arrow">▴</span></span>
             <div class="chart-header-right">
@@ -2859,7 +2932,7 @@
         </div>
 
         <!-- DRIVING STYLE ANALYZER -->
-        <div class="driving-style-card">
+        <div class="driving-style-card" data-id="driving">
           <div class="chart-header" onclick="toggleCardCollapse(this)">
             <span class="chart-title">Driving Style Analyzer <span class="collapse-arrow">▴</span></span>
             <div class="chart-header-right">
@@ -2896,7 +2969,7 @@
         </div>
 
         <!-- WEATHER PANEL -->
-        <div class="chart-container">
+        <div class="chart-container" data-id="weather">
           <div class="chart-header" onclick="toggleCardCollapse(this)">
             <span class="chart-title">Weather Condition <span class="collapse-arrow">▴</span></span>
             <div class="chart-header-right">
@@ -6305,6 +6378,8 @@
       });
     })();
 
+    const CHART_STATE_KEY = 'tripmaster_chart_state';
+
     function toggleCardCollapse(header) {
       const card = header.parentElement;
       if (card.classList.contains('card-maximized')) return;
@@ -6313,7 +6388,36 @@
       if (arrow) {
         arrow.textContent = isCollapsed ? '▾' : '▴';
       }
+      saveChartState();
     }
+
+    function saveChartState() {
+      const state = {};
+      document.querySelectorAll('.charts-panel > [data-id]').forEach(function (card) {
+        state[card.dataset.id] = card.classList.contains('collapsed');
+      });
+      try {
+        localStorage.setItem(CHART_STATE_KEY, JSON.stringify(state));
+      } catch (e) {}
+    }
+
+    function restoreChartState() {
+      let state = {};
+      try {
+        state = JSON.parse(localStorage.getItem(CHART_STATE_KEY)) || {};
+      } catch (e) {
+        state = {};
+      }
+      document.querySelectorAll('.charts-panel > [data-id]').forEach(function (card) {
+        const id = card.dataset.id;
+        if (state[id]) {
+          card.classList.add('collapsed');
+          const arrow = card.querySelector('.collapse-arrow');
+          if (arrow) arrow.textContent = '▾';
+        }
+      });
+    }
+    window.addEventListener('DOMContentLoaded', restoreChartState);
     let maximizedCard = null;
 
     function maximizeCard(contentArea, event) {
