@@ -63,7 +63,7 @@ https://trip-master-one.vercel.app/
 41. [Driving Style Analyzer](#-driving-style-analyzer)
 42. [Real-Time Cost Meter](#-real-time-cost-meter)
 43. [Responsive Layout Adaptations](#-responsive-layout-adaptations)
-44. [Card Folding & Maximized Map View](#-card-folding--maximized-map-view)
+44. [Card Folding, Persistence & Maximized Map View](#-card-folding-persistence--maximized-map-view)
 45. [Interactive Card Enlargement](#-interactive-card-enlargement)
 46. [Dependencies](#-dependencies)
 47. [Getting Started](#-getting-started)
@@ -590,6 +590,55 @@ The app derives a "typical" ICE efficiency based on official **EEA (European Env
 The cost data is displayed in a dedicated panel and in the final trip summary, using **dynamic coloring**:
 - 🟢 **Green:** Positive savings (Electric is cheaper)
 - 🔴 **Red:** Higher cost than ICE (Rare, but possible with high electricity prices)
+- 🌟 **Other colors** follow the per-metric semantics described in the [Cost Meter Card Layout](#️-cost-meter-card-layout) section below.
+
+### 🏗️ Cost Meter Card Layout 🧱
+
+The trip cost is rendered inside the **`grid-costs`** container as **two side-by-side cards**:
+
+#### 1️⃣ Unified Card (ICE Data) 🧮
+
+The **first** card is a **unified** horizontal block that combines the external reference data:
+- ⛽ **ICE Fuel Price** — alongside its live status label.
+- 🧪 **ICE Efficiency** — alongside its live status label.
+
+Each section is separated by a thin vertical **divider**, and both share a single card background with a gradient accent stripe, exactly like other modal-info rows.
+
+#### 2️⃣ Segmented Card (Trip Economics) 📊
+
+The **second** card is **segmented into four independent stat-style cells**, each rendered as a mini card with its own background, border, shadow, hover lift, and a **colored bottom bar**. The bottom bar color matches the corresponding `cm-value` color 📏:
+
+| # | Metric | `cm-value` class | Bottom bar / value color | CSS var |
+|---|---|---|---|---|
+| 1 | 💶 **Trip Cost** | `.spent` | Red | `--danger` |
+| 2 | 🛣️ **Cost Per Km** | `.perkm` | Yellow | `--warning` |
+| 3 | 🤑 **vs ICE Saved** | `.saved` | Green | `--primary` |
+| 4 | ⛽ **ICE Cost** | `.icecost` | Purple | `--accent-purple` |
+
+> 🎨 This stat-style presentation is visually identical to the cards in the **`grid-stats`** row above, providing a consistent dashboard aesthetic.
+
+### 🏷️ Live Status Labels 📡
+
+Each reference-data section (**ICE Fuel Price** and **ICE Efficiency**) exposes a compact status label that reflects the origin of the displayed value. The label is rendered **on the same row as the corresponding `cm-label`** (not as a separate third line), keeping each section compact 📐:
+
+| State | Label shown | Meaning |
+|---|---|---|
+| ⏳ Fetched | `(fetching...)` | A network request to the remote API is currently in progress |
+| 🔄 Loaded | `(live)` | Fresh data just retrieved from the API |
+| 💾 Cached | `(cached)` | Data served from the 6‑hour `localStorage` cache |
+| 🧨 Fallback | `(default)` | API unreachable — using the compiled-in baseline value |
+
+```html
+<div class="cm-section">
+  <div style="display:flex; align-items:center; justify-content:center; gap:5px;">
+    <div class="cm-label">ICE Fuel Price</div>
+    <div id="cmDieselStatus">(loading...)</div>
+  </div>
+  <div class="cm-value" id="cmDieselPrice">-- €</div>
+</div>
+```
+
+The labels are updated programmatically by `fetchIceFuelPrice()` and `fetchIceEfficiency()` on the `#cmDieselStatus` and `#cmIceEfficiencyStatus` elements respectively.
 
 ---
 
@@ -2975,39 +3024,93 @@ A `ResizeObserver` on `.range-card` re-evaluates the layout breakpoint on every 
 
 ---
 
-## 📂 Card Folding & Maximized Map View
+## 📂 Card Folding, Persistence & Maximized Map View
 
-To maximize the screen real estate dedicated to the map view without entering full-screen mode, Trip Master implements a **collapsible card system** 📁. This allows users to hide non-essential charts and panels dynamically.
+To maximize the screen real estate dedicated to the map view without entering full-screen mode, Trip Master implements a **collapsible card system** 📁. This allows users to hide non-essential charts and panels dynamically, and the collapsed state of every card is **persisted across app restarts** 🛟.
 
 ### ↕️ Interaction Mechanism
 
-- 🖱️ **Clickable Headers**: All cards in the **Charts Panel** (Elevation, Consumption, Speed, Energy Balance, Energy Flow, Driving Style, and Weather) feature interactive headers.
+- 🖱️ **Clickable Headers**: All cards in the **Charts Panel** feature interactive headers. The eight foldable cards are: **Elevation Profile**, **Consumption Profile**, **Speed Profile**, **Energy Balance**, **Power Breakdown**, **Energy Flow**, **Driving Style Analyzer**, and **Weather Condition**.
 - 🔼 **Visual Indicators**: A dynamic arrow (`▴` for expanded, `▾` for collapsed) provides immediate feedback on the card's state.
-- 📏 **Vertical Compression**: Collapsed cards are reduced to a fixed height of **32px**, hiding all internal content while keeping the title visible.
+- 📏 **Vertical Compression**: Collapsed cards are reduced to a fixed height of **16px**, hiding all internal content while keeping the header (title) visible.
+- 🗂️ **Stable Identity**: Each foldable card carries a unique `data-id` attribute (`elevation`, `consumption`, `speed`, `energy`, `power`, `energyflow`, `driving`, `weather`) used as the persistence key.
 
 ### ⚙️ Logic Implementation
 
-The folding logic is handled by a unified CSS class and a JavaScript toggle:
+The folding logic is handled by a unified CSS class and a set of JavaScript functions:
 
 ```javascript
+const CHART_STATE_KEY = 'tripmaster_chart_state';
+
 function toggleCardCollapse(header) {
-    const card = header.parentElement;
-    card.classList.toggle('collapsed');
-    const arrow = header.querySelector('.collapse-arrow');
-    if (arrow) {
-        arrow.textContent = card.classList.contains('collapsed') ? '▾' : '▴';
-    }
+  const card = header.parentElement;
+  if (card.classList.contains('card-maximized')) return;
+  const isCollapsed = card.classList.toggle('collapsed');
+  const arrow = header.querySelector('.collapse-arrow');
+  if (arrow) {
+    arrow.textContent = isCollapsed ? '▾' : '▴';
+  }
+  saveChartState();
 }
 ```
 
 ```css
 .collapsed {
-    height: 32px !important;
-    overflow: hidden !important;
-    padding-top: 0 !important;
-    padding-bottom: 0 !important;
+  flex: 0 0 16px !important;
+  height: 16px !important;
+  min-height: 16px !important;
+  overflow: hidden !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+.collapsed > *:not(.chart-header) {
+  display: none !important;
 }
 ```
+
+### 🛟 State Persistence
+
+The collapsed state of every card is saved to and restored from `localStorage` under the key **`tripmaster_chart_state`**, so the displayed panels remain coherent between one launch and the next 🧩.
+
+```javascript
+const CHART_STATE_KEY = 'tripmaster_chart_state';
+
+function saveChartState() {
+  const state = {};
+  document.querySelectorAll('.charts-panel > [data-id]').forEach(function (card) {
+    state[card.dataset.id] = card.classList.contains('collapsed');
+  });
+  try {
+    localStorage.setItem(CHART_STATE_KEY, JSON.stringify(state));
+  } catch (e) {}
+}
+
+function restoreChartState() {
+  let state = {};
+  try {
+    state = JSON.parse(localStorage.getItem(CHART_STATE_KEY)) || {};
+  } catch (e) {
+    state = {};
+  }
+  document.querySelectorAll('.charts-panel > [data-id]').forEach(function (card) {
+    const id = card.dataset.id;
+    if (state[id]) {
+      card.classList.add('collapsed');
+      const arrow = card.querySelector('.collapse-arrow');
+      if (arrow) arrow.textContent = '▾';
+    }
+  });
+}
+
+window.addEventListener('DOMContentLoaded', restoreChartState);
+```
+
+### 🔄 Persistence Lifecycle
+
+1. **💾 Save on Toggle**: `toggleCardCollapse()` calls `saveChartState()` after every collapse/expand action, writing a JSON map of `data-id → boolean`.
+2. **🧭 Restore on Boot**: `restoreChartState()` runs on the `DOMContentLoaded` event, re-applying the `.collapsed` class and the `▾` arrow to any card previously stored as collapsed.
+3. **🛡️ Failure Tolerance**: `getItem`/`setItem` calls are wrapped in `try/catch`, so blocked or corrupted storage (e.g. `localStorage` unavailable) never breaks the toggle ❌.
 
 ### 🔍 Focus Mode
 
